@@ -1,0 +1,69 @@
+name: booking-system
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: booking_system
+      POSTGRES_USER: booking_user
+      POSTGRES_PASSWORD: booking_password
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/booking_system
+      SPRING_DATASOURCE_USERNAME: booking_user
+      SPRING_DATASOURCE_PASSWORD: booking_password
+      SPRING_DOCKER_COMPOSE_ENABLED: "false"
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      org.springframework.boot.ignore: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/api/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
+
+  frontend:
+    build:
+      context: ./frontend
+    init: true
+    environment:
+      API_PROXY_TARGET: http://backend:8080
+      USE_POLLING: "true"
+    ports:
+      - "127.0.0.1:5173:5173"
+    volumes:
+      - ./frontend/src:/app/src:ro
+      - ./frontend/public:/app/public:ro
+      - ./frontend/index.html:/app/index.html:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    labels:
+      org.springframework.boot.ignore: "true"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:5173/"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+volumes:
+  postgres_data:
