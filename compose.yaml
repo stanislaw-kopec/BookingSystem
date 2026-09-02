@@ -26,6 +26,7 @@ services:
       SPRING_DATASOURCE_USERNAME: booking_user
       SPRING_DATASOURCE_PASSWORD: booking_password
       SPRING_DOCKER_COMPOSE_ENABLED: "false"
+      SPRING_PROFILES_ACTIVE: local
     ports:
       - "127.0.0.1:8080:8080"
     depends_on:

@@ -1,12 +1,11 @@
-export default function App() {
-  const nazwaSerwisu: string = 'Auto Serwis';
-  const liczbaStanowisk: number = 3;
+import { AuthProvider } from './features/auth/AuthProvider'
+import { HomePage } from './pages/HomePage'
+import './App.css'
 
+export default function App() {
   return (
-      <main>
-        <h1>{nazwaSerwisu}</h1>
-        <p>Liczba stanowisk: {liczbaStanowisk}</p>
-        <button>Umów wizytę</button>
-      </main>
-  );
+    <AuthProvider>
+      <HomePage />
+    </AuthProvider>
+  )
 }

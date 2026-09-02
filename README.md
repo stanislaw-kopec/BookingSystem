@@ -26,9 +26,9 @@ Nie uruchamiaj równocześnie lokalnego Springa lub Vite na tych samych portach.
 | Ten sam stan przez frontend | http://localhost:5173/api/health |
 | PostgreSQL | `localhost:5433` |
 
-Endpoint stanu powinien zwrócić `{"status":"UP"}`. Backend nie ma jeszcze
-kontrolera strony głównej, więc odpowiedź 404 pod `http://localhost:8080/`
-jest oczekiwana. Stronę otwieraj pod adresem frontendu.
+Endpoint stanu powinien zwrócić odpowiedź zawierającą `"status":"UP"`. Backend udostępnia API,
+a stronę otwieraj pod adresem frontendu. Jego katalog usług jest dostępny także
+przez `http://localhost:8080/api/services`.
 
 Uruchomienie w tle i sprawdzenie gotowości wszystkich usług:
 
@@ -91,13 +91,15 @@ Backend, w pierwszym terminalu:
 
 ```powershell
 cd backend
-.\mvnw.cmd spring-boot:run
+.\mvnw.cmd spring-boot:run "-Dspring-boot.run.profiles=local"
 ```
 
 Spring uruchamia automatycznie tylko usługę `postgres` i odczytuje jej dane
 połączenia. Można też uruchomić `AutoServiceApiApplication` z IDE, z katalogiem
 roboczym ustawionym na główny folder projektu lub `backend`.
 W kontenerze ta integracja jest wyłączona, ponieważ usługami zarządza Compose.
+Profil `local` tworzy konta demonstracyjne opisane poniżej; w IDE ustaw go jako
+aktywny profil. Bez tego profilu backend nie tworzy kont demo.
 
 Frontend, w drugim terminalu otwartym w głównym folderze projektu:
 
@@ -131,6 +133,103 @@ Lokalne dane połączenia do narzędzia takiego jak klient bazy w IntelliJ:
 
 Te dane służą do lokalnego developmentu. Baza jest dostępna tylko z tego komputera.
 Port `5433` pozwala uniknąć konfliktu z usługą, która już korzysta z portu `5432`.
+
+## Katalog usług
+
+Strona główna zawiera opis warsztatu oraz kategorie z usługami pobranymi z bazy.
+Link „Usługi” przewija do sekcji na tej samej stronie. Oferta jest widoczna
+bez logowania i dla zalogowanego klienta.
+
+Po zalogowaniu jako mechanik lub administrator pojawia się „Zarządzaj ofertą”.
+Panel pozwala dodawać, edytować i usuwać kategorie oraz usługi, a także przenosić
+usługę do innej kategorii. Po zapisie publiczna lista na tej stronie jest odświeżana.
+Pozostałe otwarte przeglądarki pobiorą zmiany po odświeżeniu strony.
+
+Każda usługa należy do jednej kategorii. Nazwy kategorii są unikalne,
+a nazwy usług unikalne w obrębie kategorii, bez rozróżniania wielkości liter.
+Kategorii zawierającej usługi nie można usunąć: najpierw przenieś lub usuń jej usługi.
+
+Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
+Mechanika i Wulkanizacja, łącznie sześć usług. Ich późniejsza edycja odbywa się
+w panelu; restart nie przywraca poprzedniej oferty. Nie zmieniaj zastosowanych
+migracji — nowe zmiany schematu zapisuj w kolejnych plikach migracji.
+
+## Lokalne konta demonstracyjne
+
+Compose włącza profil Springa `local`. Przy uruchomieniu powstają brakujące konta:
+
+| Login | Hasło | Dostęp do katalogu |
+| --- | --- | --- |
+| `mechanic` | `mechanic-local-2026` | Odczyt i edycja |
+| `admin` | `admin-local-2026` | Odczyt i edycja |
+| `client` | `client-local-2026` | Odczyt |
+
+Skorzystaj z jednego przycisku „Logowanie / Rejestracja” w nagłówku.
+Logowanie i wylogowanie działają. Rejestracja i profile klientów są kolejnym etapem.
+
+To konta wyłącznie do lokalnej nauki. Hasła są zapisywane w bazie jako skróty BCrypt.
+Wartości dla nowych kont można ustawić zmiennymi `DEV_ADMIN_PASSWORD`,
+`DEV_MECHANIC_PASSWORD` i `DEV_CLIENT_PASSWORD` w środowisku procesu backendu.
+W Dockerze trzeba przekazać te zmienne do `environment` usługi backend;
+samo wpisanie ich do pliku `.env` nie przekazuje ich do kontenera.
+Zmiana zmiennej nie nadpisuje hasła już istniejącego konta.
+Wyłączenie profilu nie usuwa kont z bazy, więc bazy demonstracyjnej nie należy
+używać jako bazy produkcyjnej.
+
+Spring Security utrzymuje sesję przez ciasteczko HttpOnly. Operacje zapisu
+wymagają właściwej roli oraz tokenu CSRF. Ukrywanie panelu we frontendzie
+uzupełnia kontrolę uprawnień backendu.
+
+## Dostępne API
+
+| Metoda i ścieżka | Działanie | Dostęp |
+| --- | --- | --- |
+| `GET /api/services` | Kategorie z zagnieżdżonymi listami usług | Publiczny |
+| `GET /api/services/{id}` | Szczegóły usługi | Publiczny |
+| `GET /api/service-categories/{id}` | Kategoria z jej usługami | Publiczny |
+| `POST /api/service-categories` | Dodanie kategorii | MECHANIC, ADMIN |
+| `PUT /api/service-categories/{id}` | Edycja kategorii | MECHANIC, ADMIN |
+| `DELETE /api/service-categories/{id}` | Usunięcie pustej kategorii | MECHANIC, ADMIN |
+| `POST /api/services` | Dodanie usługi | MECHANIC, ADMIN |
+| `PUT /api/services/{id}` | Edycja lub przeniesienie usługi | MECHANIC, ADMIN |
+| `DELETE /api/services/{id}` | Usunięcie usługi | MECHANIC, ADMIN |
+| `GET /api/auth/me` | Aktualny użytkownik lub `user: null` | Publiczny |
+| `GET /api/auth/csrf` | Token i nazwa nagłówka CSRF | Publiczny |
+| `POST /api/auth/login` | Logowanie: formularz `username`, `password` | Publiczny, CSRF |
+| `POST /api/auth/logout` | Zakończenie sesji | CSRF |
+
+Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
+Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
+`Location`, aktualizacja 200, a usunięcie 204. Błędy mają wspólny kształt
+`{ "status": 400, "message": "...", "fieldErrors": { "name": "..." } }`.
+Nieprawidłowe dane to 400, brak zasobu 404, a duplikat lub niepusta kategoria 409.
+Brak logowania przy poprawnym tokenie CSRF zwraca 401; niewłaściwa rola
+lub brak albo nieprawidłowy token CSRF — 403.
+
+## Nauka i sprawdzanie zmian
+
+[Przewodnik krok po kroku po katalogu usług](docs/service-catalog-walkthrough.md)
+wyjaśnia strukturę folderów, komponenty, props, stan oraz drogę danych do Springa.
+Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
+kolory w zmiennych na początku `frontend/src/index.css`.
+
+Testy backendu wymagają Docker Desktop i uruchamiają własną, tymczasową bazę
+PostgreSQL przez Testcontainers. Nie korzystają z danych roboczych aplikacji.
+Z folderu `backend`:
+
+```powershell
+.\mvnw.cmd test
+```
+
+Z folderu `frontend`:
+
+```powershell
+npm run build
+npm run lint
+```
+
+Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję i CSRF.
+Budowa obrazu Docker pomija uruchomienie testów — sprawdzaj je osobno.
 
 Szczegóły mechanizmów: [gotowość usług w Compose](https://docs.docker.com/compose/how-tos/startup-order/),
 [proxy i wykrywanie zmian w Vite](https://vite.dev/config/server-options),
