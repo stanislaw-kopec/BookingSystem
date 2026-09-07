@@ -10,7 +10,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Grupuj kod według funkcjonalności w `src/features`, gdy dana funkcjonalność powstaje.
   Wspólne komponenty przeznaczaj na elementy używane w wielu miejscach.
 - Strona startowa i katalog z `GET /api/services` są zaimplementowane.
-  `App.tsx` udostępnia kontekst logowania, a `pages/HomePage.tsx` składa widok.
+  `App.tsx` definiuje trasy React Router, `AppLayout` składa wspólny nagłówek,
+  komunikaty konta i stopkę, a pliki w `pages` składają zawartość podstron.
   Opis warsztatu, usługi i logowanie są w osobnych katalogach `features`.
 - Oddzielaj typy danych, komunikację z API i prezentację. Korzystaj z istniejącego
   sposobu stylowania. Router, biblioteki formularzy, UI czy pobierania danych dodawaj
@@ -23,8 +24,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R01–R02: publiczna strona z informacjami o warsztacie i usługami; menu u góry oraz
   jeden przycisk „Logowanie / Rejestracja” po prawej. Jeden punkt wejścia może prowadzić
   do widoku przełączającego formularze logowania i rejestracji.
-- R03: sekcja „Mój profil” jest widoczna tylko dla CLIENT. Formularz edytuje wymagane
-  dane kontaktowe i adres, a przełącznik firmy odsłania wymagane pola rozliczeniowe.
+- R03: link „Mój profil” oraz osobna podstrona `/profil` są dostępne tylko dla CLIENT.
+  Formularz edytuje wymagane dane kontaktowe i adres, a przełącznik firmy odsłania
+  wymagane pola rozliczeniowe. Nie umieszczaj formularza na stronie startowej.
 - R04–R05: „Moje pojazdy” z listą i dodawaniem pojazdu; szczegóły wybranego pojazdu
   pokazują historię napraw wynikającą z faktur, z odniesieniem do właściwego dokumentu.
 - R06–R07: zakładka rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku
@@ -75,7 +77,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Przewodnik po tym przepływie jest w `docs/client-registration-walkthrough.md`.
 - Funkcja profilu znajduje się w `features/profile`: typy opisują kontrakt,
   `profileApi` odpowiada za HTTP, a `ClientProfileSection` zarządza pobraniem i zapisem.
-  Wylogowanie odmontowuje sekcję i usuwa jej dane ze stanu Reacta.
+  `ProfilePage` składa podstronę, a `RequireClient` chroni trasę w interfejsie.
+  Backend pozostaje źródłem rzeczywistych uprawnień. Wylogowanie przekierowuje ze strony
+  profilu i odmontowuje sekcję, usuwając jej dane ze stanu Reacta.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.

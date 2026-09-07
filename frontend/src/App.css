@@ -13,6 +13,7 @@
 .site-header nav a:hover { text-decoration: underline; }
 .account-menu { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-left: auto; font-size: 0.9rem; }
 .page-content { max-width: 1168px; margin: 0 auto; padding: 0 24px; }
+.app-message { padding-top: 24px; }
 .page-section { padding: 48px 0; scroll-margin-top: 24px; }
 .page-section + .page-section { border-top: 1px solid var(--border); }
 .section-heading { margin-bottom: 24px; }

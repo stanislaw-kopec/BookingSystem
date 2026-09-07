@@ -93,7 +93,17 @@ pozostawieniem nieaktualnych danych rozliczeniowych.
 
 ## 5. Struktura Reacta
 
-Kod znajduje się w `frontend/src/features/profile`:
+Trasy aplikacji definiuje [App.tsx](../frontend/src/App.tsx). React Router dopasowuje
+adres `/` do strony startowej, a `/profil` do [ProfilePage.tsx](../frontend/src/pages/ProfilePage.tsx).
+Komponent [RequireClient.tsx](../frontend/src/features/auth/components/RequireClient.tsx)
+czeka na odczyt sesji i wpuszcza na tę trasę wyłącznie użytkownika z rolą `CLIENT`.
+Jest to zabezpieczenie interfejsu; backend niezależnie sprawdza rolę przy każdym żądaniu.
+
+Wspólny nagłówek, logowanie i stopkę zawiera
+[AppLayout.tsx](../frontend/src/components/layout/AppLayout.tsx). `Outlet` w tym komponencie
+oznacza miejsce, w którym React Router wyświetla aktualnie wybraną stronę.
+
+Kod samego formularza znajduje się w `frontend/src/features/profile`:
 
 ```text
 profile/
@@ -154,8 +164,9 @@ Jest to renderowanie warunkowe, a nie osobna strona.
 
 ```text
 logowanie klienta
-→ HomePage rozpoznaje rolę CLIENT
-→ montuje ClientProfileSection
+→ menu prowadzi do /profil
+→ RequireClient sprawdza rolę CLIENT
+→ ProfilePage montuje ClientProfileSection
 → GET /api/profile/me
 → ProfileForm otrzymuje dane przez props
 → klient zmienia pola
@@ -165,8 +176,9 @@ logowanie klienta
 → odpowiedź odświeża formularz
 ```
 
-Po wylogowaniu `HomePage` przestaje renderować `ClientProfileSection`.
-Komponent zostaje odmontowany, więc profil znika również ze stanu Reacta.
+Po wylogowaniu `RequireClient` przekierowuje użytkownika na `/`.
+`ProfilePage` i `ClientProfileSection` zostają odmontowane, więc profil znika również
+ze stanu Reacta.
 
 ## 8. Jak czytać kod
 
@@ -184,4 +196,3 @@ Najlepsza kolejność:
 Małe ćwiczenie: zaloguj się jako `client`, zaznacz dane firmy i obserwuj,
 jak React dodaje pola bez przeładowania strony. Następnie odznacz przełącznik
 i sprawdź w serwisie, dlaczego ukryte wartości nie zostaną zapisane.
-

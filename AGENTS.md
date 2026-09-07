@@ -27,7 +27,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | --- | --- |
 | R01 | Publiczna strona startowa przedstawia podstawowe informacje o warsztacie, jego lokalizację i historię. Poniżej znajduje się oferta usług pogrupowanych w kategorie, dostępna także bez logowania. Link „Usługi” w menu prowadzi do tej sekcji strony. |
 | R02 | Na górze strony znajduje się menu. Po prawej stronie jest jeden wspólny przycisk „Logowanie / Rejestracja”, prowadzący do obu możliwości. Nie dodawaj dwóch osobnych przycisków w nagłówku. |
-| R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Link „Mój profil” jest widoczny po zalogowaniu klienta. |
+| R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem na osobnej podstronie `/profil`. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Link „Mój profil” jest widoczny po zalogowaniu klienta. |
 | R04 | Zakładka „Moje pojazdy” umożliwia dodanie pojazdu i przeglądanie własnych pojazdów. Wybranie pojazdu otwiera jego szczegóły i historię napraw. |
 | R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
 | R06 | Klient ma zakładkę rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku. Zgłoszenie zawiera wybrany termin, pojazd klienta i opis usterki. |

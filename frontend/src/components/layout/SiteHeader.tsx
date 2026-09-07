@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import type { CurrentUser } from '../../features/auth/types'
 
 interface Props {
@@ -13,13 +14,13 @@ interface Props {
 export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewProfile, onLogin, onLogout }: Props) {
   return (
     <header className="site-header">
-      <a className="brand" href="#start">Auto Serwis</a>
+      <Link className="brand" to="/">Auto Serwis</Link>
       <nav aria-label="Menu główne">
-        <a href="#o-warsztacie">O warsztacie</a>
-        <a href="#uslugi">Usługi</a>
-        <a href="#lokalizacja">Lokalizacja</a>
-        {canViewProfile && <a href="#moj-profil">Mój profil</a>}
-        {canManage && <a href="#zarzadzanie-oferta">Zarządzaj ofertą</a>}
+        <a href="/#o-warsztacie">O warsztacie</a>
+        <a href="/#uslugi">Usługi</a>
+        <a href="/#lokalizacja">Lokalizacja</a>
+        {canViewProfile && <Link to="/profil">Mój profil</Link>}
+        {canManage && <a href="/#zarzadzanie-oferta">Zarządzaj ofertą</a>}
       </nav>
       <div className="account-menu">
         {user ? (
