@@ -165,6 +165,18 @@ Identyfikator klienta nie jest przesyłany z formularza — backend odczytuje w�
 z zalogowanej sesji. Mechanik, administrator i użytkownik anonimowy nie mają dostępu
 do endpointów profilu klienta.
 
+## Moje pojazdy
+
+Klient otwiera „Moje pojazdy” z menu konta w prawym górnym rogu. Podstrona
+`http://localhost:5173/vehicles` pokazuje jego pojazdy i formularz dodawania.
+Pojazd zawiera markę, model, rok produkcji, numer rejestracyjny i opcjonalny VIN.
+Numer rejestracyjny jest zapisywany wielkimi literami bez spacji.
+
+Kliknięcie pojazdu prowadzi do `http://localhost:5173/vehicles/{vehicleId}`.
+Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pozostaje pusta,
+dopóki nie powstanie moduł faktur — zgłoszenie usterki ani rezerwacja nie są dowodem
+wykonania naprawy. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
 Mechanika i Wulkanizacja, łącznie sześć usług. Ich późniejsza edycja odbywa się
 w panelu; restart nie przywraca poprzedniej oferty. Nie zmieniaj zastosowanych
@@ -183,7 +195,7 @@ Compose włącza profil Springa `local`. Przy uruchomieniu powstają brakujące 
 Skorzystaj z jednego przycisku „Logowanie / Rejestracja” w nagłówku.
 Można przełączać się między formularzami. Rejestracja wymaga unikalnego loginu
 i e-maila oraz hasła wpisanego dwukrotnie. Po utworzeniu konta klient jest
-automatycznie logowany. Profil z danymi kontaktowymi i rozliczeniowymi jest kolejnym etapem.
+automatycznie logowany. Może następnie uzupełnić profil i dodać własne pojazdy.
 
 To konta wyłącznie do lokalnej nauki. Hasła są zapisywane w bazie jako skróty BCrypt.
 Wartości dla nowych kont można ustawić zmiennymi `DEV_ADMIN_PASSWORD`,
@@ -218,6 +230,9 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/auth/logout` | Zakończenie sesji | CSRF |
 | `GET /api/profile/me` | Własny profil lub pusty formularz | CLIENT |
 | `PUT /api/profile/me` | Utworzenie albo aktualizacja własnego profilu | CLIENT, CSRF |
+| `GET /api/vehicles` | Lista własnych pojazdów | CLIENT |
+| `GET /api/vehicles/{vehicleId}` | Szczegóły własnego pojazdu | CLIENT |
+| `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
@@ -243,6 +258,20 @@ myślnik oraz podkreślenie. Hasło ma 8–64 znaki. Rola nie jest częścią ż
 backend zawsze nadaje nowemu kontu rolę `CLIENT`. E-mail jest przechowywany małymi
 literami. Login i e-mail są unikalne bez rozróżniania wielkości liter.
 
+Dodanie pojazdu przyjmuje JSON:
+
+```json
+{
+  "make": "Toyota",
+  "model": "Corolla",
+  "productionYear": 2020,
+  "registrationNumber": "KR12AB",
+  "vin": "WVWZZZ1JZXW000001"
+}
+```
+
+Pole `vin` może być pustym tekstem. Backend nie przyjmuje `ownerId`.
+
 ## Nauka i sprawdzanie zmian
 
 [Przewodnik krok po kroku po katalogu usług](docs/service-catalog-walkthrough.md)
@@ -251,6 +280,8 @@ wyjaśnia strukturę folderów, komponenty, props, stan oraz drogę danych do Sp
 pokazuje drogę danych z formularza Reacta do bazy i późniejszego logowania.
 [Przewodnik po profilu klienta](docs/client-profile-walkthrough.md)
 wyjaśnia relację z kontem, formularz warunkowy i ochronę własności danych.
+[Przewodnik po pojazdach klienta](docs/client-vehicles-walkthrough.md)
+opisuje model bazy, prywatne API, walidację oraz dwie podstrony Reacta.
 Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
 kolory w zmiennych na początku `frontend/src/index.css`.
 

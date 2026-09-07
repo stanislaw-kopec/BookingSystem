@@ -30,7 +30,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R01 | Publiczna strona startowa przedstawia podstawowe informacje o warsztacie, jego lokalizację i historię. Poniżej znajduje się oferta usług pogrupowanych w kategorie, dostępna także bez logowania. Link „Usługi” w menu prowadzi do tej sekcji strony. |
 | R02 | Na górze strony znajduje się menu. Po prawej stronie jest jeden wspólny przycisk „Logowanie / Rejestracja”, prowadzący do obu możliwości. Nie dodawaj dwóch osobnych przycisków w nagłówku. |
 | R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem na osobnej podstronie `/profile`. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Po zalogowaniu klient otwiera profil z menu konta w prawym górnym rogu. Zapisany profil domyślnie pokazuje podsumowanie; formularz pojawia się po wybraniu edycji. |
-| R04 | Zakładka „Moje pojazdy” umożliwia dodanie pojazdu i przeglądanie własnych pojazdów. Wybranie pojazdu otwiera jego szczegóły i historię napraw. |
+| R04 | Pozycja „Moje pojazdy” w menu konta prowadzi do `/vehicles`. Klient może dodać pojazd z marką, modelem, rokiem produkcji, numerem rejestracyjnym i opcjonalnym VIN oraz przeglądać wyłącznie własne pojazdy. Wybranie pojazdu otwiera osobną podstronę `/vehicles/:vehicleId` ze szczegółami i historią napraw. |
 | R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
 | R06 | Klient ma zakładkę rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku. Zgłoszenie zawiera wybrany termin, pojazd klienta i opis usterki. |
 | R07 | Wysłane zgłoszenie oczekuje na decyzję personelu. Mechanik/pracownik może je przyjąć albo odrzucić; klient widzi aktualny status. |
@@ -45,6 +45,10 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Personel korzysta z danych w zakresie przyznanych uprawnień.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
   przyjmuje identyfikatora użytkownika, którego profil ma zostać odczytany lub zapisany.
+- Właściciel pojazdu również wynika z sesji. Lista i szczegóły używają zapytań
+  ograniczonych do tego właściciela, a próba odczytu cudzego pojazdu zwraca 404.
+  Numer rejestracyjny i podany VIN są unikalne wśród pojazdów jednego klienta,
+  bez rozróżniania wielkości liter. Numer rejestracyjny zapisuj bez spacji i wielkimi literami.
 - Dane firmy są opcjonalne jako całość. Po włączeniu tej części wymagane są nazwa firmy,
   NIP, ulica i numer, kod pocztowy oraz miejscowość adresu rozliczeniowego.
 - Rezerwacja musi odnosić się do pojazdu należącego do klienta składającego zgłoszenie.
@@ -72,7 +76,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   przekładania wizyt oraz kolejne stany obsługi naprawy.
 - Podział pozostałych uprawnień administratora, pracownika i mechanika: harmonogram,
   konta oraz faktury. Edycję katalogu usług już przyznano rolom MECHANIC i ADMIN.
-- Zakres pól pojazdu. Sposób obsługi sprzedaży lub usunięcia pojazdu oraz dostępu
+- Sposób edycji, usunięcia lub sprzedaży pojazdu oraz dostępu nowego właściciela
   do wcześniejszych dokumentów. Dalsze rozszerzenia profilu, np. kraj lub osobny
   adres rozliczeniowy osoby prywatnej, wymagają nowego ustalenia.
 - Zakres fakturowania: tworzenie dokumentu w aplikacji czy zapis dokumentu zewnętrznego,
@@ -96,16 +100,17 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   edycji dla MECHANIC/ADMIN. Logowanie korzysta z sesji, haseł BCrypt i CSRF.
   Profil `local` tworzy konta demonstracyjne opisane w README. Klient może utworzyć
   konto z unikalnym loginem i e-mailem, a po rejestracji zostaje automatycznie
-  zalogowany z rolą CLIENT. Klient może utworzyć i aktualizować własny profil.
-  Pojazdy, rezerwacje, zlecenia i faktury pozostają do zbudowania.
+  zalogowany z rolą CLIENT. Klient może utworzyć i aktualizować własny profil,
+  dodawać własne pojazdy oraz otwierać ich szczegóły. Widok historii napraw jest gotowy,
+  ale pozostaje pusty do czasu wdrożenia faktur. Rezerwacje, zlecenia i faktury pozostają do zbudowania.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
 ## Kolejność rozwoju i jakość
 
-- Zrealizowane etapy: katalog usług, rejestracja i profil klienta.
-  Kolejne etapy obejmują pojazdy,
-  dostępność i zgłoszenia, panel personelu, zlecenia oraz faktury i historię napraw.
+- Zrealizowane etapy: katalog usług, rejestracja, profil klienta i jego pojazdy.
+  Kolejne etapy obejmują dostępność i zgłoszenia, panel personelu, zlecenia oraz
+  faktury z danymi historii napraw.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

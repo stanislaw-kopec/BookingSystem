@@ -4,6 +4,8 @@ import { AuthProvider } from './features/auth/AuthProvider'
 import { RequireClient } from './features/auth/components/RequireClient'
 import { HomePage } from './pages/HomePage'
 import { ProfilePage } from './pages/ProfilePage'
+import { VehiclePage } from './pages/VehiclePage'
+import { VehiclesPage } from './pages/VehiclesPage'
 import './App.css'
 
 export default function App() {
@@ -14,6 +16,8 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
             <Route path="profile" element={<RequireClient><ProfilePage /></RequireClient>} />
+            <Route path="vehicles" element={<RequireClient><VehiclesPage /></RequireClient>} />
+            <Route path="vehicles/:vehicleId" element={<RequireClient><VehiclePage /></RequireClient>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

@@ -28,8 +28,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Formularz edytuje wymagane dane kontaktowe i adres, a przełącznik firmy odsłania
   wymagane pola rozliczeniowe. Zapisane dane pokazuj najpierw w trybie podglądu,
   a formularz dopiero po wybraniu edycji. Nie umieszczaj formularza na stronie startowej.
-- R04–R05: „Moje pojazdy” z listą i dodawaniem pojazdu; szczegóły wybranego pojazdu
-  pokazują historię napraw wynikającą z faktur, z odniesieniem do właściwego dokumentu.
+- R04–R05: „Moje pojazdy” w menu konta prowadzi do `/vehicles` z listą i formularzem
+  dodawania. Szczegóły `/vehicles/:vehicleId` pokazują dane pojazdu i historię napraw
+  wynikającą z faktur, z odniesieniem do właściwego dokumentu. Do czasu wdrożenia faktur
+  pokazuj uczciwy pusty stan i nie twórz fikcyjnych napraw.
 - R06–R07: zakładka rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku
   oraz formularzem wyboru własnego pojazdu i opisu usterki. Klient widzi status zgłoszenia.
 - R08: panel personelu do obsługi zgłoszeń, przyjmowania zleceń i zarządzania wizytami,
@@ -81,6 +83,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   `ProfilePage` składa podstronę, a `RequireClient` chroni trasę w interfejsie.
   Backend pozostaje źródłem rzeczywistych uprawnień. Wylogowanie przekierowuje ze strony
   profilu i odmontowuje sekcję, usuwając jej dane ze stanu Reacta.
+- Funkcja pojazdów znajduje się w `features/vehicles`: `vehiclesApi` odpowiada za HTTP,
+  `VehicleForm` za dodawanie, `VehiclesSection` za listę, a `VehicleDetailsSection`
+  za dane wybranego pojazdu i stan historii. `VehiclesPage` i `VehiclePage` składają trasy.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.

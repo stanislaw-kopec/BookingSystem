@@ -32,6 +32,7 @@ public class SecurityConfig {
                     "/api/service-categories/*", "/api/auth/me", "/api/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                 .requestMatchers("/api/profile/**").hasRole("CLIENT")
+                .requestMatchers("/api/vehicles", "/api/vehicles/**").hasRole("CLIENT")
                 .requestMatchers("/api/services", "/api/services/**",
                     "/api/service-categories", "/api/service-categories/**")
                     .hasAnyRole("MECHANIC", "ADMIN")

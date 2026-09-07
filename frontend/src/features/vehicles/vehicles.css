@@ -1,0 +1,31 @@
+.vehicles-section, .vehicle-details-section { max-width: 900px; }
+.vehicles-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+.vehicle-form { padding: 24px; margin-bottom: 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.vehicle-form legend { margin-bottom: 12px; font-size: 1.15rem; font-weight: 700; }
+.vehicle-form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 20px; }
+.vehicle-form .form-field { min-width: 0; }
+.vehicle-form .form-field label, .vehicle-form .form-field small { display: block; }
+.vehicle-form .form-field small { margin-top: 4px; }
+.vehicle-vin-field { grid-column: 1 / -1; }
+.vehicle-form-actions { justify-content: flex-end; }
+.vehicle-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.vehicle-card { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px 20px; color: var(--text); text-decoration: none; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.vehicle-card:hover { border-color: var(--primary); }
+.vehicle-card strong, .vehicle-card small { display: block; }
+.vehicle-registration { font-weight: 700; letter-spacing: 0.04em; }
+.back-link { display: inline-block; margin-bottom: 28px; }
+.vehicle-title { margin-bottom: 24px; }
+.vehicle-details-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin: 0; padding: 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.vehicle-details-card dt { color: var(--muted); font-size: 0.85rem; }
+.vehicle-details-card dd { margin: 3px 0 0; font-weight: 600; overflow-wrap: anywhere; }
+.repair-history { margin-top: 32px; padding-top: 32px; border-top: 1px solid var(--border); }
+.repair-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.count-badge { padding: 3px 9px; color: var(--muted); font-size: 0.82rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); }
+@media (max-width: 650px) {
+  .vehicles-heading { align-items: stretch; flex-direction: column; }
+  .vehicles-heading .button { align-self: flex-start; }
+  .vehicle-form { padding: 18px; }
+  .vehicle-form-grid, .vehicle-details-card { grid-template-columns: 1fr; }
+  .vehicle-vin-field { grid-column: auto; }
+  .vehicle-card { align-items: flex-start; flex-direction: column; gap: 10px; }
+}

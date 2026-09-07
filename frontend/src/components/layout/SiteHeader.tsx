@@ -35,9 +35,14 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
             </summary>
             <div className="account-dropdown-panel">
               {canViewProfile && (
-                <Link className="account-dropdown-item" to="/profile" onClick={closeAccountMenu}>
-                  Mój profil
-                </Link>
+                <>
+                  <Link className="account-dropdown-item" to="/profile" onClick={closeAccountMenu}>
+                    Mój profil
+                  </Link>
+                  <Link className="account-dropdown-item" to="/vehicles" onClick={closeAccountMenu}>
+                    Moje pojazdy
+                  </Link>
+                </>
               )}
               <button type="button" className="account-dropdown-item" disabled={isLoggingOut} onClick={onLogout}>
                 {isLoggingOut ? 'Wylogowywanie…' : 'Wyloguj'}

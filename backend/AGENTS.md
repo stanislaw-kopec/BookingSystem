@@ -69,6 +69,21 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - E-mail kontaktowy profilu jest niezależny od e-maila konta używanego do rejestracji.
   Zwracaj wyłącznie DTO i zachowaj walidację zarówno Bean Validation, jak i reguł warunkowych.
 
+## Pojazdy klienta
+
+- Pakiet `vehicle` obsługuje `GET /api/vehicles`, `GET /api/vehicles/{vehicleId}`
+  i `POST /api/vehicles`. Endpointy są dostępne wyłącznie dla CLIENT, a POST wymaga CSRF.
+- Właściciela ustalaj przez nazwę użytkownika z `Authentication`. Żądanie nie zawiera
+  `ownerId`; pobieraj listę i szczegóły zapytaniami repozytorium ograniczonymi do właściciela.
+  Cudzy lub nieistniejący identyfikator pojazdu zwraca ten sam błąd 404.
+- Pojazd zawiera markę, model, rok produkcji, numer rejestracyjny i opcjonalny VIN.
+  Rok mieści się od 1886 do następnego roku kalendarzowego. VIN ma 17 znaków bez I, O i Q.
+- Numer rejestracyjny normalizuj do wielkich liter bez spacji, a VIN do wielkich liter.
+  Numer rejestracyjny i podany VIN są unikalne dla jednego właściciela bez rozróżniania
+  wielkości liter. Sprawdzaj konflikt w serwisie i zachowaj indeksy bazy na wypadek wyścigu.
+- Historia napraw będzie pochodziła z faktur. Obecny endpoint pojazdu nie tworzy
+  zastępczych wpisów historii ani nie uznaje zgłoszenia za wykonaną naprawę.
+
 ## Dostępność i współbieżność
 
 - Backend oblicza wolne terminy od poniedziałku do piątku na podstawie harmonogramu
@@ -108,7 +123,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `.\mvnw.cmd spring-boot:run` uruchamia lokalny backend. Na systemach Unix użyj `./mvnw`.
 - Testy wymagają działającego Docker Desktop. Automatyczne Compose i konta demo
   są wyłączone w profilu testowym. Testy katalogu obejmują CRUD, walidację,
-  uprawnienia, logowanie, rejestrację, profil, sesję i CSRF. Dockerfile pomija uruchamianie testów,
+  uprawnienia, logowanie, rejestrację, profil, pojazdy, sesję i CSRF. Dockerfile pomija uruchamianie testów,
   więc udany obraz nie potwierdza ich zaliczenia.
 - Z głównego folderu `docker compose up -d --build backend` przebudowuje backend.
   Po zmianie infrastruktury sprawdź stan usług i odpowiedź `/api/health`.

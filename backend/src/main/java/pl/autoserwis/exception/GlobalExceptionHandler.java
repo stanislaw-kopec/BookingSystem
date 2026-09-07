@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
 import pl.autoserwis.profile.ProfileValidationException;
+import pl.autoserwis.vehicle.VehicleConflictException;
+import pl.autoserwis.vehicle.VehicleValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -55,10 +57,22 @@ public class GlobalExceptionHandler {
             .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
     }
 
+    @ExceptionHandler(VehicleValidationException.class)
+    ResponseEntity<ApiError> vehicleValidation(VehicleValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(VehicleConflictException.class)
+    ResponseEntity<ApiError> vehicleConflict(VehicleConflictException exception) {
+        return ResponseEntity.status(409)
+            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ApiError> databaseConflict() {
         // Database constraints also protect concurrent writes.
-        return error(409, "Nazwa już istnieje lub element jest używany. Odśwież listę i spróbuj ponownie.");
+        return error(409, "Operacja powoduje konflikt z istniejącymi danymi. Odśwież widok i spróbuj ponownie.");
     }
 
     private ResponseEntity<ApiError> error(int status, String message) {
