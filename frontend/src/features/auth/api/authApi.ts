@@ -1,5 +1,5 @@
 import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
-import type { CurrentUser, UserRole } from '../types'
+import type { CurrentUser, RegistrationInput, UserRole } from '../types'
 
 function isRole(value: unknown): value is UserRole {
   return value === 'CLIENT' || value === 'MECHANIC' || value === 'ADMIN'
@@ -20,6 +20,14 @@ export async function login(username: string, password: string): Promise<void> {
   await apiRequest('/api/auth/login', {
     method: 'POST',
     body: new URLSearchParams({ username, password }),
+  })
+}
+
+export async function register(input: RegistrationInput): Promise<void> {
+  await apiRequest('/api/auth/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
   })
 }
 

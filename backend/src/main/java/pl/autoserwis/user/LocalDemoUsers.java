@@ -39,7 +39,7 @@ public class LocalDemoUsers implements ApplicationRunner {
     private void createIfMissing(String username, String password, UserRole role) {
         // Restarting the application must not reset an existing account.
         if (users.findByUsernameIgnoreCase(username).isEmpty()) {
-            users.save(new AppUser(username, passwords.encode(password), role));
+            users.save(new AppUser(username, username + "@local.invalid", passwords.encode(password), role));
         }
     }
 }

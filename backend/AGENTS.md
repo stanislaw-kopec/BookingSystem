@@ -45,6 +45,18 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - `local` tworzy brakujące konta demonstracyjne; nie zmienia haseł istniejących kont.
   Nie stosuj demonstracyjnej bazy ani jej kont we wdrożeniu produkcyjnym.
 
+## Rejestracja klienta
+
+- Publiczny `POST /api/auth/register` tworzy wyłącznie użytkownika z rolą CLIENT.
+  Żądanie zawiera `username`, `email`, `password` i `passwordConfirmation` oraz wymaga CSRF.
+- Login ma 3–30 znaków i ograniczony alfabet, e-mail jest normalizowany do małych liter,
+  a hasło ma 8–64 znaki i nie może przekroczyć limitu 72 bajtów BCrypt.
+  Login i e-mail są unikalne bez rozróżniania wielkości liter.
+- Backend ponownie sprawdza zgodność haseł. Nigdy nie przyjmuj roli z formularza rejestracji.
+  Po rejestracji frontend loguje użytkownika istniejącym mechanizmem sesji.
+- E-mail jest obecnie daną konta potrzebną do unikalności i przyszłego odzyskiwania
+  dostępu. Pełne dane kontaktowe i rozliczeniowe powstaną w osobnym profilu klienta.
+
 ## Dostępność i współbieżność
 
 - Backend oblicza wolne terminy od poniedziałku do piątku na podstawie harmonogramu
@@ -84,7 +96,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `.\mvnw.cmd spring-boot:run` uruchamia lokalny backend. Na systemach Unix użyj `./mvnw`.
 - Testy wymagają działającego Docker Desktop. Automatyczne Compose i konta demo
   są wyłączone w profilu testowym. Testy katalogu obejmują CRUD, walidację,
-  uprawnienia, logowanie, sesję i CSRF. Dockerfile pomija uruchamianie testów,
+  uprawnienia, logowanie, rejestrację, sesję i CSRF. Dockerfile pomija uruchamianie testów,
   więc udany obraz nie potwierdza ich zaliczenia.
 - Z głównego folderu `docker compose up -d --build backend` przebudowuje backend.
   Po zmianie infrastruktury sprawdź stan usług i odpowiedź `/api/health`.

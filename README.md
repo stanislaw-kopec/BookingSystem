@@ -165,7 +165,9 @@ Compose włącza profil Springa `local`. Przy uruchomieniu powstają brakujące 
 | `client` | `client-local-2026` | Odczyt |
 
 Skorzystaj z jednego przycisku „Logowanie / Rejestracja” w nagłówku.
-Logowanie i wylogowanie działają. Rejestracja i profile klientów są kolejnym etapem.
+Można przełączać się między formularzami. Rejestracja wymaga unikalnego loginu
+i e-maila oraz hasła wpisanego dwukrotnie. Po utworzeniu konta klient jest
+automatycznie logowany. Profil z danymi kontaktowymi i rozliczeniowymi jest kolejnym etapem.
 
 To konta wyłącznie do lokalnej nauki. Hasła są zapisywane w bazie jako skróty BCrypt.
 Wartości dla nowych kont można ustawić zmiennymi `DEV_ADMIN_PASSWORD`,
@@ -195,6 +197,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `DELETE /api/services/{id}` | Usunięcie usługi | MECHANIC, ADMIN |
 | `GET /api/auth/me` | Aktualny użytkownik lub `user: null` | Publiczny |
 | `GET /api/auth/csrf` | Token i nazwa nagłówka CSRF | Publiczny |
+| `POST /api/auth/register` | Utworzenie konta klienta | Publiczny, CSRF |
 | `POST /api/auth/login` | Logowanie: formularz `username`, `password` | Publiczny, CSRF |
 | `POST /api/auth/logout` | Zakończenie sesji | CSRF |
 
@@ -206,10 +209,28 @@ Nieprawidłowe dane to 400, brak zasobu 404, a duplikat lub niepusta kategoria 4
 Brak logowania przy poprawnym tokenie CSRF zwraca 401; niewłaściwa rola
 lub brak albo nieprawidłowy token CSRF — 403.
 
+Rejestracja przyjmuje JSON:
+
+```json
+{
+  "username": "jan.kowalski",
+  "email": "jan@example.com",
+  "password": "bezpieczne-haslo",
+  "passwordConfirmation": "bezpieczne-haslo"
+}
+```
+
+Login ma 3–30 znaków i może zawierać litery bez polskich znaków, cyfry, kropkę,
+myślnik oraz podkreślenie. Hasło ma 8–64 znaki. Rola nie jest częścią żądania:
+backend zawsze nadaje nowemu kontu rolę `CLIENT`. E-mail jest przechowywany małymi
+literami. Login i e-mail są unikalne bez rozróżniania wielkości liter.
+
 ## Nauka i sprawdzanie zmian
 
 [Przewodnik krok po kroku po katalogu usług](docs/service-catalog-walkthrough.md)
 wyjaśnia strukturę folderów, komponenty, props, stan oraz drogę danych do Springa.
+[Przewodnik po rejestracji klienta](docs/client-registration-walkthrough.md)
+pokazuje drogę danych z formularza Reacta do bazy i późniejszego logowania.
 Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
 kolory w zmiennych na początku `frontend/src/index.css`.
 

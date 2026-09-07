@@ -130,7 +130,8 @@ class ServiceCatalogIntegrationTest {
 
     @Test
     void loginUsesDatabasePasswordAndSessionWithFreshCsrfAfterAuthentication() throws Exception {
-        users.saveAndFlush(new AppUser("test-mechanic", passwords.encode("test-password"), UserRole.MECHANIC));
+        users.saveAndFlush(new AppUser("test-mechanic", "test-mechanic@local.invalid",
+            passwords.encode("test-password"), UserRole.MECHANIC));
         MvcResult csrfResult = mvc.perform(get("/api/auth/csrf")).andExpect(status().isOk()).andReturn();
         String token = JsonPath.read(csrfResult.getResponse().getContentAsString(), "$.token");
         String header = JsonPath.read(csrfResult.getResponse().getContentAsString(), "$.headerName");

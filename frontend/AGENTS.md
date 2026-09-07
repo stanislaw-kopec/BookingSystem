@@ -36,8 +36,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
 - Menu i widoki dostosuj do zalogowania oraz uprawnień. Konkretne nazwy pozostałych
   pozycji menu i wygląd po zalogowaniu dobieraj w ramach projektowania tych widoków.
-- Aktualnie wspólny przycisk otwiera działające logowanie i informację o przyszłej
-  rejestracji. Nie przedstawiaj rejestracji jako gotowej funkcji.
+- Wspólny przycisk otwiera okno przełączające działające formularze logowania
+  i rejestracji. Rejestracja wymaga loginu, e-maila, hasła i powtórzenia hasła,
+  pokazuje błędy przy polach i po sukcesie automatycznie loguje klienta.
 - Na tym etapie stosuj prosty CSS. Kolory są w zmiennych `src/index.css`,
   a opis i dane warsztatu w `features/workshop/workshopInfo.ts`.
   Rzeczywistego adresu i historii nie podano; zachowaj uczciwe teksty tymczasowe.
@@ -69,6 +70,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - `useServiceCatalog` w `HomePage` jest wspólnym źródłem katalogu dla oferty i panelu.
   Po zapisie odśwież dane z API. Przewodnik po tej strukturze jest w
   `docs/service-catalog-walkthrough.md` w głównym folderze repozytorium.
+- `AuthDialog` odpowiada za wybór trybu, a `LoginForm` i `RegistrationForm`
+  za własne pola oraz wysłanie danych. `AuthProvider` przechowuje bieżącego użytkownika.
+  Przewodnik po tym przepływie jest w `docs/client-registration-walkthrough.md`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.

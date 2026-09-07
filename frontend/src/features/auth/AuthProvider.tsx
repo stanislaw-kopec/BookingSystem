@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { errorMessage } from '../../api/apiClient'
 import * as authApi from './api/authApi'
 import { AuthContext } from './authContext'
-import type { CurrentUser } from './types'
+import type { CurrentUser, RegistrationInput } from './types'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<CurrentUser | null>(null)
@@ -31,6 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setError(null)
   }
 
+  async function register(input: RegistrationInput) {
+    await authApi.register(input)
+    await authApi.login(input.username, input.password)
+    setUser(await authApi.getCurrentUser())
+    setError(null)
+  }
+
   async function logout() {
     await authApi.logout()
     setUser(null)
@@ -38,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, error, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, error, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   )

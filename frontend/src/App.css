@@ -25,7 +25,9 @@
 .auth-dialog::backdrop { background: rgb(15 23 42 / 45%); }
 .dialog-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
 .dialog-heading h2 { margin: 0; }
-.registration-note { border-top: 1px solid var(--border); margin-top: 24px; padding-top: 16px; font-size: 0.9rem; }
+.auth-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.auth-tabs .active { color: var(--surface); background: var(--primary); border-color: var(--primary); }
+.auth-dialog small { display: block; margin-top: -6px; margin-bottom: 14px; }
 @media (max-width: 760px) {
   .site-header { gap: 16px; padding: 16px; }
   .site-header nav { order: 3; width: 100%; gap: 14px; }

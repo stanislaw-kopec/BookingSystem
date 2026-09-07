@@ -71,8 +71,8 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Zakres fakturowania: tworzenie dokumentu w aplikacji czy zapis dokumentu zewnętrznego,
   pozycje prac/części, dane rozliczenia, numeracja, korekty i ewentualny PDF.
   Nie zakładaj integracji księgowej ani płatności online.
-- Rejestracja klientów, odzyskiwanie haseł i zarządzanie kontami. Obecny katalog
-  używa sesji Spring Security i ochrony CSRF; ewentualna zmiana mechanizmu
+- Odzyskiwanie haseł i zarządzanie kontami. Rejestracja klienta jest dostępna;
+  obecne uwierzytelnianie używa sesji Spring Security i ochrony CSRF. Ewentualna zmiana mechanizmu
   uwierzytelniania wymaga konkretnej potrzeby, JWT nie jest wymaganiem.
 
 ## Architektura i stan techniczny
@@ -87,8 +87,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   Frontend korzysta z proxy Vite. Szczegóły uruchomienia zawiera `README.md`.
 - Działają katalog kategorii i usług w PostgreSQL, publiczna strona oraz panel
   edycji dla MECHANIC/ADMIN. Logowanie korzysta z sesji, haseł BCrypt i CSRF.
-  Profil `local` tworzy konta demonstracyjne opisane w README. Rejestracja, profile,
-  pojazdy, rezerwacje, zlecenia i faktury pozostają do zbudowania.
+  Profil `local` tworzy konta demonstracyjne opisane w README. Klient może utworzyć
+  konto z unikalnym loginem i e-mailem, a po rejestracji zostaje automatycznie
+  zalogowany z rolą CLIENT. Profile, pojazdy, rezerwacje, zlecenia i faktury pozostają do zbudowania.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 

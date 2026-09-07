@@ -6,6 +6,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pl.autoserwis.auth.RegistrationConflictException;
+import pl.autoserwis.auth.RegistrationValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,6 +34,18 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceConflictException.class)
     ResponseEntity<ApiError> conflict(ResourceConflictException exception) {
         return error(409, exception.getMessage());
+    }
+
+    @ExceptionHandler(RegistrationValidationException.class)
+    ResponseEntity<ApiError> registrationValidation(RegistrationValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(RegistrationConflictException.class)
+    ResponseEntity<ApiError> registrationConflict(RegistrationConflictException exception) {
+        return ResponseEntity.status(409)
+            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

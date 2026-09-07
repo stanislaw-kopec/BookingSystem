@@ -20,12 +20,16 @@ public class AppUser {
     @Column(name = "password_hash", nullable = false, length = 100)
     private String passwordHash;
 
+    @Column(nullable = false, length = 254)
+    private String email;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role;
 
-    public AppUser(String username, String passwordHash, UserRole role) {
+    public AppUser(String username, String email, String passwordHash, UserRole role) {
         this.username = username;
+        this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
     }

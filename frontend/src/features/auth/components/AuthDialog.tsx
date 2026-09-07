@@ -1,15 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import type { FormEvent } from 'react'
-import { errorMessage } from '../../../api/apiClient'
-import { useAuth } from '../hooks/useAuth'
+import { LoginForm } from './LoginForm'
+import { RegistrationForm } from './RegistrationForm'
+
+type AuthMode = 'login' | 'register'
 
 export function AuthDialog({ onClose }: { onClose: () => void }) {
   const dialog = useRef<HTMLDialogElement>(null)
-  const auth = useAuth()
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [mode, setMode] = useState<AuthMode>('login')
 
   useEffect(() => {
     const element = dialog.current
@@ -17,39 +14,20 @@ export function AuthDialog({ onClose }: { onClose: () => void }) {
     return () => element?.close()
   }, [])
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setIsSubmitting(true)
-    setError(null)
-    try {
-      await auth.login(username.trim(), password)
-      onClose()
-    } catch (cause) {
-      setError(errorMessage(cause))
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
   return (
-    <dialog ref={dialog} className="auth-dialog" aria-labelledby="login-heading" onCancel={onClose}>
+    <dialog ref={dialog} className="auth-dialog" aria-labelledby="auth-heading" onCancel={onClose}>
       <div className="dialog-heading">
-        <h2 id="login-heading">Logowanie</h2>
-        <button type="button" className="button secondary" onClick={onClose} aria-label="Zamknij logowanie">Zamknij</button>
+        <h2 id="auth-heading">{mode === 'login' ? 'Logowanie' : 'Rejestracja'}</h2>
+        <button type="button" className="button secondary" onClick={onClose}
+          aria-label="Zamknij okno logowania i rejestracji">Zamknij</button>
       </div>
-      <form onSubmit={handleSubmit}>
-        <fieldset disabled={isSubmitting}>
-          <label htmlFor="login-username">Login</label>
-          <input id="login-username" autoComplete="username" required maxLength={80}
-            value={username} onChange={(event) => setUsername(event.target.value)} />
-          <label htmlFor="login-password">Hasło</label>
-          <input id="login-password" type="password" autoComplete="current-password" required
-            value={password} onChange={(event) => setPassword(event.target.value)} />
-          {error && <p className="message error" role="alert">{error}</p>}
-          <button className="button" type="submit">{isSubmitting ? 'Logowanie…' : 'Zaloguj się'}</button>
-        </fieldset>
-      </form>
-      <p className="muted registration-note">Rejestracja klientów będzie dostępna w kolejnym etapie.</p>
+      <div className="auth-tabs" aria-label="Wybierz formularz">
+        <button type="button" className={'button secondary' + (mode === 'login' ? ' active' : '')}
+          aria-pressed={mode === 'login'} onClick={() => setMode('login')}>Logowanie</button>
+        <button type="button" className={'button secondary' + (mode === 'register' ? ' active' : '')}
+          aria-pressed={mode === 'register'} onClick={() => setMode('register')}>Rejestracja</button>
+      </div>
+      {mode === 'login' ? <LoginForm onSuccess={onClose} /> : <RegistrationForm onSuccess={onClose} />}
     </dialog>
   )
 }
