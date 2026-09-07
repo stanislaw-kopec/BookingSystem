@@ -94,7 +94,7 @@ pozostawieniem nieaktualnych danych rozliczeniowych.
 ## 5. Struktura Reacta
 
 Trasy aplikacji definiuje [App.tsx](../frontend/src/App.tsx). React Router dopasowuje
-adres `/` do strony startowej, a `/profil` do [ProfilePage.tsx](../frontend/src/pages/ProfilePage.tsx).
+adres `/` do strony startowej, a `/profile` do [ProfilePage.tsx](../frontend/src/pages/ProfilePage.tsx).
 Komponent [RequireClient.tsx](../frontend/src/features/auth/components/RequireClient.tsx)
 czeka na odczyt sesji i wpuszcza na tę trasę wyłącznie użytkownika z rolą `CLIENT`.
 Jest to zabezpieczenie interfejsu; backend niezależnie sprawdza rolę przy każdym żądaniu.
@@ -112,6 +112,7 @@ profile/
 │   └── profileApi.ts
 ├── components/
 │   ├── ClientProfileSection.tsx
+│   ├── ProfileDetails.tsx
 │   └── ProfileForm.tsx
 └── profile.css
 ```
@@ -121,7 +122,9 @@ i odpowiedź. [profileApi.ts](../frontend/src/features/profile/api/profileApi.ts
 zna adresy API oraz sprawdza odpowiedź w trakcie działania programu.
 
 [ClientProfileSection.tsx](../frontend/src/features/profile/components/ClientProfileSection.tsx)
-odpowiada za pobranie, stany ładowania, błąd, zapis i komunikat sukcesu.
+odpowiada za pobranie, stany ładowania, błąd, zapis oraz przełączanie między
+podglądem i edycją. [ProfileDetails.tsx](../frontend/src/features/profile/components/ProfileDetails.tsx)
+pokazuje zapisane dane bez pól formularza.
 [ProfileForm.tsx](../frontend/src/features/profile/components/ProfileForm.tsx)
 odpowiada za pola oraz utworzenie obiektu przekazywanego do zapisu.
 
@@ -164,16 +167,17 @@ Jest to renderowanie warunkowe, a nie osobna strona.
 
 ```text
 logowanie klienta
-→ menu prowadzi do /profil
+→ menu konta prowadzi do /profile
 → RequireClient sprawdza rolę CLIENT
 → ProfilePage montuje ClientProfileSection
 → GET /api/profile/me
-→ ProfileForm otrzymuje dane przez props
+→ zapisany profil wyświetla ProfileDetails
+→ przycisk „Edytuj profil” wyświetla ProfileForm
 → klient zmienia pola
 → PUT /api/profile/me + CSRF
 → backend ustala właściciela z sesji
 → walidacja i zapis w PostgreSQL
-→ odpowiedź odświeża formularz
+→ odpowiedź odświeża podgląd i zamyka formularz
 ```
 
 Po wylogowaniu `RequireClient` przekierowuje użytkownika na `/`.

@@ -30,8 +30,9 @@ App
 
 `HomePage` jest miejscem składania strony. Opis warsztatu występuje przed
 ofertą, bo `<WorkshopOverview />` stoi przed `<ServicesSection />`.
-Link `href="#uslugi"` przewija do sekcji mającej `id="uslugi"`.
-Do tego zachowania wystarcza HTML — nie dodawaliśmy biblioteki routingu.
+Link `href="#services"` przewija do sekcji mającej `id="services"`.
+Do samego przewijania nadal wystarcza HTML. React Router został później dodany
+do obsługi osobnych podstron, takich jak `/profile`.
 
 ## 2. Dlaczego takie foldery?
 
@@ -246,4 +247,3 @@ zapisane na początku `index.css` pozwalają zmienić podstawowe kolory w jednym
 Na początek najlepiej czytać kod w kolejności:
 **types → ServiceCategoryCard → ServicesSection → useServiceCatalog → HomePage**.
 Formularze i logowanie poznaj po zrozumieniu wyświetlania oferty.
-

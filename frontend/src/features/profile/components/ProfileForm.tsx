@@ -19,6 +19,7 @@ interface Props {
   isSaving: boolean
   fieldErrors: Record<string, string>
   onSave: (input: ClientProfileInput) => Promise<void>
+  onCancel?: () => void
 }
 
 function TextField({ id, label, value, error, maxLength, required = false,
@@ -35,7 +36,7 @@ function TextField({ id, label, value, error, maxLength, required = false,
   )
 }
 
-export function ProfileForm({ profile, isSaving, fieldErrors, onSave }: Props) {
+export function ProfileForm({ profile, isSaving, fieldErrors, onSave, onCancel }: Props) {
   const { configured: _configured, ...initialValues } = profile
   const [form, setForm] = useState<ClientProfileInput>(initialValues)
 
@@ -121,7 +122,14 @@ export function ProfileForm({ profile, isSaving, fieldErrors, onSave }: Props) {
           </div>
         )}
 
-        <button className="button" type="submit">{isSaving ? 'Zapisywanie…' : 'Zapisz profil'}</button>
+        <div className="profile-form-actions">
+          {onCancel && (
+            <button className="button secondary" type="button" onClick={onCancel}>Anuluj</button>
+          )}
+          <button className="button" type="submit">
+            {isSaving ? 'Zapisywanie…' : profile.configured ? 'Zapisz zmiany' : 'Zapisz profil'}
+          </button>
+        </div>
       </fieldset>
     </form>
   )

@@ -151,11 +151,14 @@ Kategorii zawierającej usługi nie można usunąć: najpierw przenieś lub usu�
 
 ## Profil klienta
 
-Po zalogowaniu z rolą klienta w menu pojawia się „Mój profil”. Link otwiera osobną
-podstronę `http://localhost:5173/profil`, na której można zapisać imię, nazwisko,
-telefon, kontaktowy e-mail oraz adres. Opcjonalny przełącznik firmy pokazuje nazwę
-firmy, NIP i osobny adres rozliczeniowy. Po włączeniu danych firmy wszystkie te pola
-są wymagane. Wyłączenie przełącznika podczas zapisu usuwa dane firmy z profilu.
+Po zalogowaniu z rolą klienta w prawym górnym rogu pojawia się menu konta. Zawiera
+ono odnośnik „Mój profil” oraz opcję wylogowania. Profil jest osobną podstroną
+`http://localhost:5173/profile`. Zapisane dane są najpierw wyświetlane jako czytelne
+podsumowanie, a formularz pojawia się dopiero po wybraniu „Edytuj profil”. Można w nim
+zapisać imię, nazwisko, telefon, kontaktowy e-mail oraz adres. Opcjonalny przełącznik
+firmy pokazuje nazwę firmy, NIP i osobny adres rozliczeniowy. Po włączeniu danych firmy
+wszystkie te pola są wymagane. Wyłączenie przełącznika podczas zapisu usuwa dane firmy
+z profilu.
 
 E-mail kontaktowy profilu może być inny niż e-mail konta podany przy rejestracji.
 Identyfikator klienta nie jest przesyłany z formularza — backend odczytuje właściciela

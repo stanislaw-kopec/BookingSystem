@@ -81,7 +81,7 @@ export function CatalogManager({ categories, isRefreshing, onChanged }: Props) {
   }
 
   return (
-    <section id="zarzadzanie-oferta" className="page-section" aria-labelledby="manager-heading">
+    <section id="service-management" className="page-section" aria-labelledby="manager-heading">
       <div className="section-heading">
         <p className="eyebrow">Panel personelu</p>
         <h2 id="manager-heading">Zarządzanie ofertą</h2>

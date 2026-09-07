@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as profileApi from '../api/profileApi'
 import type { ClientProfile, ClientProfileInput } from '../types'
+import { ProfileDetails } from './ProfileDetails'
 import { ProfileForm } from './ProfileForm'
 import '../profile.css'
 
@@ -13,7 +14,7 @@ export function ClientProfileSection() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
-  const [formVersion, setFormVersion] = useState(0)
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -36,6 +37,19 @@ export function ClientProfileSection() {
     setRevision((value) => value + 1)
   }
 
+  function startEditing() {
+    setError(null)
+    setFieldErrors({})
+    setNotice(null)
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setError(null)
+    setFieldErrors({})
+    setIsEditing(false)
+  }
+
   async function save(input: ClientProfileInput) {
     setIsSaving(true)
     setError(null)
@@ -43,7 +57,7 @@ export function ClientProfileSection() {
     setNotice(null)
     try {
       setProfile(await profileApi.saveProfile(input))
-      setFormVersion((value) => value + 1)
+      setIsEditing(false)
       setNotice('Profil został zapisany.')
     } catch (cause) {
       setError(errorMessage(cause))
@@ -54,11 +68,11 @@ export function ClientProfileSection() {
   }
 
   return (
-    <section id="moj-profil" className="page-section profile-section" aria-labelledby="profile-heading">
+    <section id="client-profile" className="page-section profile-section" aria-labelledby="profile-heading">
       <div className="section-heading">
         <p className="eyebrow">Konto klienta</p>
         <h2 id="profile-heading">Mój profil</h2>
-        <p className="muted">Aktualizuj dane kontaktowe oraz opcjonalne dane firmy.</p>
+        <p className="muted">Sprawdź swoje dane kontaktowe i rozliczeniowe.</p>
       </div>
       {isLoading && <p role="status">Ładowanie profilu…</p>}
       {!isLoading && error && !profile && (
@@ -72,8 +86,13 @@ export function ClientProfileSection() {
           {!profile.configured && <p className="message info">Uzupełnij profil przed dodaniem pierwszego pojazdu.</p>}
           {notice && <p className="message success" role="status">{notice}</p>}
           {error && <p className="message error" role="alert">{error}</p>}
-          <ProfileForm key={formVersion} profile={profile} isSaving={isSaving}
-            fieldErrors={fieldErrors} onSave={save} />
+          {profile.configured && !isEditing && (
+            <ProfileDetails profile={profile} onEdit={startEditing} />
+          )}
+          {(!profile.configured || isEditing) && (
+            <ProfileForm profile={profile} isSaving={isSaving} fieldErrors={fieldErrors}
+              onSave={save} onCancel={profile.configured ? cancelEditing : undefined} />
+          )}
         </>
       )}
     </section>

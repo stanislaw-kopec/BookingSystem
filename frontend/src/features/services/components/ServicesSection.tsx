@@ -11,7 +11,7 @@ interface Props {
 
 export function ServicesSection({ categories, isLoading, error, onRetry }: Props) {
   return (
-    <section id="uslugi" className="page-section" aria-labelledby="services-heading">
+    <section id="services" className="page-section" aria-labelledby="services-heading">
       <div className="section-heading">
         <p className="eyebrow">Oferta warsztatu</p>
         <h2 id="services-heading">Nasze usługi</h2>

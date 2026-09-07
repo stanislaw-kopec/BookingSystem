@@ -24,9 +24,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R01–R02: publiczna strona z informacjami o warsztacie i usługami; menu u góry oraz
   jeden przycisk „Logowanie / Rejestracja” po prawej. Jeden punkt wejścia może prowadzić
   do widoku przełączającego formularze logowania i rejestracji.
-- R03: link „Mój profil” oraz osobna podstrona `/profil` są dostępne tylko dla CLIENT.
+- R03: link „Mój profil” w menu konta oraz osobna podstrona `/profile` są dostępne tylko dla CLIENT.
   Formularz edytuje wymagane dane kontaktowe i adres, a przełącznik firmy odsłania
-  wymagane pola rozliczeniowe. Nie umieszczaj formularza na stronie startowej.
+  wymagane pola rozliczeniowe. Zapisane dane pokazuj najpierw w trybie podglądu,
+  a formularz dopiero po wybraniu edycji. Nie umieszczaj formularza na stronie startowej.
 - R04–R05: „Moje pojazdy” z listą i dodawaniem pojazdu; szczegóły wybranego pojazdu
   pokazują historię napraw wynikającą z faktur, z odniesieniem do właściwego dokumentu.
 - R06–R07: zakładka rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku

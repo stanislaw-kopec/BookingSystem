@@ -13,7 +13,7 @@ export default function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<HomePage />} />
-            <Route path="profil" element={<RequireClient><ProfilePage /></RequireClient>} />
+            <Route path="profile" element={<RequireClient><ProfilePage /></RequireClient>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

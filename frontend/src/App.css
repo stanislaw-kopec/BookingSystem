@@ -11,7 +11,16 @@
 .site-header nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: 0.95rem; }
 .site-header nav a { color: var(--text); text-decoration: none; }
 .site-header nav a:hover { text-decoration: underline; }
-.account-menu { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-left: auto; font-size: 0.9rem; }
+.account-menu { margin-left: auto; font-size: 0.9rem; }
+.account-dropdown { position: relative; }
+.account-trigger { display: flex; align-items: center; gap: 8px; min-width: 150px; padding: 9px 12px; cursor: pointer; list-style: none; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); }
+.account-trigger::-webkit-details-marker { display: none; }
+.account-trigger::after { content: '▾'; margin-left: auto; color: var(--muted); }
+.account-dropdown[open] .account-trigger::after { transform: rotate(180deg); }
+.account-dropdown-panel { position: absolute; z-index: 10; top: calc(100% + 8px); right: 0; min-width: 190px; padding: 6px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); box-shadow: 0 12px 28px rgb(15 23 42 / 14%); }
+.account-dropdown-item { display: block; width: 100%; padding: 10px 12px; color: var(--text); text-align: left; text-decoration: none; border: 0; border-radius: 5px; background: transparent; font: inherit; cursor: pointer; }
+.account-dropdown-item:hover { text-decoration: none; background: #f1f5f9; }
+.account-dropdown-item:disabled { cursor: wait; opacity: 0.65; }
 .page-content { max-width: 1168px; margin: 0 auto; padding: 0 24px; }
 .app-message { padding-top: 24px; }
 .page-section { padding: 48px 0; scroll-margin-top: 24px; }
@@ -33,7 +42,7 @@
   .site-header { gap: 16px; padding: 16px; }
   .site-header nav { order: 3; width: 100%; gap: 14px; }
   .account-menu { font-size: 0.82rem; }
-  .account-menu .muted { max-width: 130px; overflow-wrap: anywhere; }
+  .account-trigger { min-width: 130px; }
   .page-content { padding: 0 18px; }
   .page-section { padding: 32px 0; }
   .workshop-details { grid-template-columns: 1fr; gap: 20px; }

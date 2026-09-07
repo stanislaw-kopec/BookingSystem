@@ -2,7 +2,7 @@ import { workshopInfo } from '../workshopInfo'
 
 export function WorkshopOverview() {
   return (
-    <section id="o-warsztacie" className="page-section workshop-overview" aria-labelledby="workshop-heading">
+    <section id="about" className="page-section workshop-overview" aria-labelledby="workshop-heading">
       <p className="eyebrow">Warsztat samochodowy</p>
       <h1 id="workshop-heading">{workshopInfo.name}</h1>
       <p className="lead">{workshopInfo.description}</p>
@@ -12,12 +12,12 @@ export function WorkshopOverview() {
           <h2>O warsztacie</h2>
           <p>{workshopInfo.history}</p>
         </article>
-        <article id="lokalizacja">
+        <article id="location">
           <h2>Lokalizacja</h2>
           <p>{workshopInfo.address}</p>
         </article>
       </div>
-      <a className="button secondary" href="#uslugi">Zobacz usługi</a>
+      <a className="button secondary" href="#services">Zobacz usługi</a>
     </section>
   )
 }
