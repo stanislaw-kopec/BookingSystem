@@ -27,7 +27,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | --- | --- |
 | R01 | Publiczna strona startowa przedstawia podstawowe informacje o warsztacie, jego lokalizację i historię. Poniżej znajduje się oferta usług pogrupowanych w kategorie, dostępna także bez logowania. Link „Usługi” w menu prowadzi do tej sekcji strony. |
 | R02 | Na górze strony znajduje się menu. Po prawej stronie jest jeden wspólny przycisk „Logowanie / Rejestracja”, prowadzący do obu możliwości. Nie dodawaj dwóch osobnych przycisków w nagłówku. |
-| R03 | Klient może zalogować się, zarejestrować i zarządzać własnym profilem: aktualnymi danymi kontaktowymi oraz danymi rozliczeniowymi, także firmy, jeśli ją posiada. |
+| R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Link „Mój profil” jest widoczny po zalogowaniu klienta. |
 | R04 | Zakładka „Moje pojazdy” umożliwia dodanie pojazdu i przeglądanie własnych pojazdów. Wybranie pojazdu otwiera jego szczegóły i historię napraw. |
 | R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
 | R06 | Klient ma zakładkę rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku. Zgłoszenie zawiera wybrany termin, pojazd klienta i opis usterki. |
@@ -41,6 +41,10 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Wysłanie formularza nie jest automatycznym potwierdzeniem wizyty.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
   Personel korzysta z danych w zakresie przyznanych uprawnień.
+- Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
+  przyjmuje identyfikatora użytkownika, którego profil ma zostać odczytany lub zapisany.
+- Dane firmy są opcjonalne jako całość. Po włączeniu tej części wymagane są nazwa firmy,
+  NIP, ulica i numer, kod pocztowy oraz miejscowość adresu rozliczeniowego.
 - Rezerwacja musi odnosić się do pojazdu należącego do klienta składającego zgłoszenie.
 - Kalendarz pokazuje dostępność, ale backend ponownie sprawdza ją przy zapisie
   i przy przyjęciu zgłoszenia. Nie dopuszczaj do nakładających się potwierdzonych
@@ -66,8 +70,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   przekładania wizyt oraz kolejne stany obsługi naprawy.
 - Podział pozostałych uprawnień administratora, pracownika i mechanika: harmonogram,
   konta oraz faktury. Edycję katalogu usług już przyznano rolom MECHANIC i ADMIN.
-- Zakres pól profilu, danych firmy i pojazdu. Sposób obsługi sprzedaży lub usunięcia
-  pojazdu oraz dostępu do wcześniejszych dokumentów.
+- Zakres pól pojazdu. Sposób obsługi sprzedaży lub usunięcia pojazdu oraz dostępu
+  do wcześniejszych dokumentów. Dalsze rozszerzenia profilu, np. kraj lub osobny
+  adres rozliczeniowy osoby prywatnej, wymagają nowego ustalenia.
 - Zakres fakturowania: tworzenie dokumentu w aplikacji czy zapis dokumentu zewnętrznego,
   pozycje prac/części, dane rozliczenia, numeracja, korekty i ewentualny PDF.
   Nie zakładaj integracji księgowej ani płatności online.
@@ -89,14 +94,15 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   edycji dla MECHANIC/ADMIN. Logowanie korzysta z sesji, haseł BCrypt i CSRF.
   Profil `local` tworzy konta demonstracyjne opisane w README. Klient może utworzyć
   konto z unikalnym loginem i e-mailem, a po rejestracji zostaje automatycznie
-  zalogowany z rolą CLIENT. Profile, pojazdy, rezerwacje, zlecenia i faktury pozostają do zbudowania.
+  zalogowany z rolą CLIENT. Klient może utworzyć i aktualizować własny profil.
+  Pojazdy, rezerwacje, zlecenia i faktury pozostają do zbudowania.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
 ## Kolejność rozwoju i jakość
 
-- Zrealizowany etap: usługi warsztatu w PostgreSQL → `GET /api/services` → lista
-  na stronie startowej oraz edycja przez personel. Kolejne etapy obejmują konta i profile, pojazdy,
+- Zrealizowane etapy: katalog usług, rejestracja i profil klienta.
+  Kolejne etapy obejmują pojazdy,
   dostępność i zgłoszenia, panel personelu, zlecenia oraz faktury i historię napraw.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.

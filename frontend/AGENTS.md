@@ -23,8 +23,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R01–R02: publiczna strona z informacjami o warsztacie i usługami; menu u góry oraz
   jeden przycisk „Logowanie / Rejestracja” po prawej. Jeden punkt wejścia może prowadzić
   do widoku przełączającego formularze logowania i rejestracji.
-- R03: profil zalogowanego klienta z edycją danych kontaktowych i rozliczeniowych,
-  uwzględniający klienta z firmą. Pola i ich obowiązkowość doprecyzuj przy implementacji.
+- R03: sekcja „Mój profil” jest widoczna tylko dla CLIENT. Formularz edytuje wymagane
+  dane kontaktowe i adres, a przełącznik firmy odsłania wymagane pola rozliczeniowe.
 - R04–R05: „Moje pojazdy” z listą i dodawaniem pojazdu; szczegóły wybranego pojazdu
   pokazują historię napraw wynikającą z faktur, z odniesieniem do właściwego dokumentu.
 - R06–R07: zakładka rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku
@@ -73,6 +73,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - `AuthDialog` odpowiada za wybór trybu, a `LoginForm` i `RegistrationForm`
   za własne pola oraz wysłanie danych. `AuthProvider` przechowuje bieżącego użytkownika.
   Przewodnik po tym przepływie jest w `docs/client-registration-walkthrough.md`.
+- Funkcja profilu znajduje się w `features/profile`: typy opisują kontrakt,
+  `profileApi` odpowiada za HTTP, a `ClientProfileSection` zarządza pobraniem i zapisem.
+  Wylogowanie odmontowuje sekcję i usuwa jej dane ze stanu Reacta.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
+import pl.autoserwis.profile.ProfileValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -46,6 +47,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> registrationConflict(RegistrationConflictException exception) {
         return ResponseEntity.status(409)
             .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(ProfileValidationException.class)
+    ResponseEntity<ApiError> profileValidation(ProfileValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)

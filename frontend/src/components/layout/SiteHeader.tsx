@@ -5,11 +5,12 @@ interface Props {
   isLoading: boolean
   isLoggingOut: boolean
   canManage: boolean
+  canViewProfile: boolean
   onLogin: () => void
   onLogout: () => void
 }
 
-export function SiteHeader({ user, isLoading, isLoggingOut, canManage, onLogin, onLogout }: Props) {
+export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewProfile, onLogin, onLogout }: Props) {
   return (
     <header className="site-header">
       <a className="brand" href="#start">Auto Serwis</a>
@@ -17,6 +18,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, onLogin, 
         <a href="#o-warsztacie">O warsztacie</a>
         <a href="#uslugi">Usługi</a>
         <a href="#lokalizacja">Lokalizacja</a>
+        {canViewProfile && <a href="#moj-profil">Mój profil</a>}
         {canManage && <a href="#zarzadzanie-oferta">Zarządzaj ofertą</a>}
       </nav>
       <div className="account-menu">

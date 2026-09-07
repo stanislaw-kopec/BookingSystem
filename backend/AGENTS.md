@@ -57,6 +57,18 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - E-mail jest obecnie daną konta potrzebną do unikalności i przyszłego odzyskiwania
   dostępu. Pełne dane kontaktowe i rozliczeniowe powstaną w osobnym profilu klienta.
 
+## Profil klienta
+
+- `GET /api/profile/me` i `PUT /api/profile/me` są dostępne wyłącznie dla CLIENT.
+  Nazwę użytkownika pobieraj z `Authentication`; nie dodawaj identyfikatora właściciela do DTO.
+- Brak zapisanego profilu zwraca pusty formularz z e-mailem konta i `configured=false`.
+  PUT tworzy profil albo aktualizuje istniejący rekord jeden-do-jednego z `app_users`.
+- Wymagane dane to imię, nazwisko, telefon, kontaktowy e-mail, ulica i numer,
+  kod pocztowy oraz miejscowość. Jeśli `hasCompanyData=true`, wymagaj także nazwy
+  firmy, NIP i pełnego adresu rozliczeniowego. Przy `false` wyczyść dane firmy.
+- E-mail kontaktowy profilu jest niezależny od e-maila konta używanego do rejestracji.
+  Zwracaj wyłącznie DTO i zachowaj walidację zarówno Bean Validation, jak i reguł warunkowych.
+
 ## Dostępność i współbieżność
 
 - Backend oblicza wolne terminy od poniedziałku do piątku na podstawie harmonogramu
@@ -96,7 +108,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `.\mvnw.cmd spring-boot:run` uruchamia lokalny backend. Na systemach Unix użyj `./mvnw`.
 - Testy wymagają działającego Docker Desktop. Automatyczne Compose i konta demo
   są wyłączone w profilu testowym. Testy katalogu obejmują CRUD, walidację,
-  uprawnienia, logowanie, rejestrację, sesję i CSRF. Dockerfile pomija uruchamianie testów,
+  uprawnienia, logowanie, rejestrację, profil, sesję i CSRF. Dockerfile pomija uruchamianie testów,
   więc udany obraz nie potwierdza ich zaliczenia.
 - Z głównego folderu `docker compose up -d --build backend` przebudowuje backend.
   Po zmianie infrastruktury sprawdź stan usług i odpowiedź `/api/health`.

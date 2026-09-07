@@ -149,6 +149,19 @@ Każda usługa należy do jednej kategorii. Nazwy kategorii są unikalne,
 a nazwy usług unikalne w obrębie kategorii, bez rozróżniania wielkości liter.
 Kategorii zawierającej usługi nie można usunąć: najpierw przenieś lub usuń jej usługi.
 
+## Profil klienta
+
+Po zalogowaniu z rolą klienta w menu pojawia się „Mój profil”. Sekcja pozwala
+zapisać imię, nazwisko, telefon, kontaktowy e-mail oraz adres. Opcjonalny przełącznik
+firmy pokazuje nazwę firmy, NIP i osobny adres rozliczeniowy. Po włączeniu danych
+firmy wszystkie te pola są wymagane. Wyłączenie przełącznika podczas zapisu usuwa
+dane firmy z profilu.
+
+E-mail kontaktowy profilu może być inny niż e-mail konta podany przy rejestracji.
+Identyfikator klienta nie jest przesyłany z formularza — backend odczytuje właściciela
+z zalogowanej sesji. Mechanik, administrator i użytkownik anonimowy nie mają dostępu
+do endpointów profilu klienta.
+
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
 Mechanika i Wulkanizacja, łącznie sześć usług. Ich późniejsza edycja odbywa się
 w panelu; restart nie przywraca poprzedniej oferty. Nie zmieniaj zastosowanych
@@ -200,6 +213,8 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/auth/register` | Utworzenie konta klienta | Publiczny, CSRF |
 | `POST /api/auth/login` | Logowanie: formularz `username`, `password` | Publiczny, CSRF |
 | `POST /api/auth/logout` | Zakończenie sesji | CSRF |
+| `GET /api/profile/me` | Własny profil lub pusty formularz | CLIENT |
+| `PUT /api/profile/me` | Utworzenie albo aktualizacja własnego profilu | CLIENT, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
@@ -231,6 +246,8 @@ literami. Login i e-mail są unikalne bez rozróżniania wielkości liter.
 wyjaśnia strukturę folderów, komponenty, props, stan oraz drogę danych do Springa.
 [Przewodnik po rejestracji klienta](docs/client-registration-walkthrough.md)
 pokazuje drogę danych z formularza Reacta do bazy i późniejszego logowania.
+[Przewodnik po profilu klienta](docs/client-profile-walkthrough.md)
+wyjaśnia relację z kontem, formularz warunkowy i ochronę własności danych.
 Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
 kolory w zmiennych na początku `frontend/src/index.css`.
 
