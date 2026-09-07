@@ -24,6 +24,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
         <a href="/#about">O warsztacie</a>
         <a href="/#services">Usługi</a>
         <a href="/#location">Lokalizacja</a>
+        <Link to="/appointments">Umów wizytę</Link>
         {canManage && <a href="/#service-management">Zarządzaj ofertą</a>}
       </nav>
       <div className="account-menu">
@@ -42,7 +43,15 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
                   <Link className="account-dropdown-item" to="/vehicles" onClick={closeAccountMenu}>
                     Moje pojazdy
                   </Link>
+                  <Link className="account-dropdown-item" to="/appointments" onClick={closeAccountMenu}>
+                    Moje wizyty
+                  </Link>
                 </>
+              )}
+              {canManage && (
+                <Link className="account-dropdown-item" to="/staff/appointments" onClick={closeAccountMenu}>
+                  Zgłoszenia wizyt
+                </Link>
               )}
               <button type="button" className="account-dropdown-item" disabled={isLoggingOut} onClick={onLogout}>
                 {isLoggingOut ? 'Wylogowywanie…' : 'Wyloguj'}

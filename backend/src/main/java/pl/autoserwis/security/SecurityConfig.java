@@ -29,10 +29,15 @@ public class SecurityConfig {
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/api/health", "/api/services", "/api/services/*",
-                    "/api/service-categories/*", "/api/auth/me", "/api/auth/csrf").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
+                    "/api/service-categories/*", "/api/auth/me", "/api/auth/csrf",
+                    "/api/appointments/availability").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/appointments/guest")
+                    .permitAll()
                 .requestMatchers("/api/profile/**").hasRole("CLIENT")
                 .requestMatchers("/api/vehicles", "/api/vehicles/**").hasRole("CLIENT")
+                .requestMatchers("/api/staff/appointments", "/api/staff/appointments/**")
+                    .hasAnyRole("MECHANIC", "ADMIN")
+                .requestMatchers("/api/appointments", "/api/appointments/**").hasRole("CLIENT")
                 .requestMatchers("/api/services", "/api/services/**",
                     "/api/service-categories", "/api/service-categories/**")
                     .hasAnyRole("MECHANIC", "ADMIN")

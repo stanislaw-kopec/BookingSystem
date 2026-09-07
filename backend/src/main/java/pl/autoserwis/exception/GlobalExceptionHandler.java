@@ -6,6 +6,8 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import pl.autoserwis.appointment.AppointmentConflictException;
+import pl.autoserwis.appointment.AppointmentValidationException;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
 import pl.autoserwis.profile.ProfileValidationException;
@@ -65,6 +67,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(VehicleConflictException.class)
     ResponseEntity<ApiError> vehicleConflict(VehicleConflictException exception) {
+        return ResponseEntity.status(409)
+            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(AppointmentValidationException.class)
+    ResponseEntity<ApiError> appointmentValidation(AppointmentValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(AppointmentConflictException.class)
+    ResponseEntity<ApiError> appointmentConflict(AppointmentConflictException exception) {
         return ResponseEntity.status(409)
             .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
     }

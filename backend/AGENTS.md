@@ -21,9 +21,13 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Odwzoruj wymagania R01–R09. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
-- Zgłoszenie obejmuje klienta, jego pojazd, termin, opis usterki oraz status decyzji.
-  Przyjęcie i odrzucenie muszą być dostępnymi tylko personelowi operacjami serwisowymi.
-- Waliduj dozwolone przejścia statusów. Odnotowuj czas i autora decyzji personelu.
+- Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
+  kontaktowych i pojazdu, termin, opis usterki oraz status decyzji. Zgłoszenie gościa
+  przechowuje wyłącznie kopię podanych danych i nie tworzy konta ani pojazdu.
+- Przyjęcie, odrzucenie i proponowanie innego terminu są operacjami personelu.
+  Waliduj przejścia `PENDING` → `CONFIRMED`, `REJECTED` albo `TIME_PROPOSED`.
+  `TIME_PROPOSED` przechodzi do `CONFIRMED` po potwierdzeniu klienta z kontem albo
+  personelu po kontakcie z gościem. Odnotowuj czas i autora decyzji personelu.
   Nie pozwalaj na dwukrotne przetworzenie tego samego zgłoszenia.
 - Sprawdzaj własność pojazdu i zasobu na backendzie. Tożsamość klienta przy zapisie
   ma wynikać z uwierzytelnienia; dane przesłane przez przeglądarkę nie nadają uprawnień.
@@ -86,17 +90,41 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Dostępność i współbieżność
 
-- Backend oblicza wolne terminy od poniedziałku do piątku na podstawie harmonogramu
-  oraz ograniczeń zasobów, także gdy klient wysyła żądanie poza interfejsem kalendarza.
-- Reguły długości wizyty, przypisywania mechanika, dni zamknięcia i blokowania
-  terminów przez oczekujące zgłoszenia wymagają ustalenia przed budową kalendarza.
-- Przyjęcie zgłoszenia i zajęcie odpowiednich zasobów muszą być atomowe.
-  Samo odczytanie wolnego terminu przed zapisem nie zabezpiecza przed wyścigiem.
-  Dobierz zabezpieczenie transakcyjne/bazodanowe do modelu i sprawdź równoległe żądania.
-- Waliduj początek i koniec przedziału, zakaz rezerwowania przeszłości i nakładanie
-  wizyt. Jawnie ustal obsługę strefy czasowej; kontrakt API ma jednoznacznie opisywać czas.
+- Backend oblicza wolne terminy w strefie `Europe/Warsaw`: od poniedziałku do piątku,
+  08:00–16:00, w jednogodzinnych oknach i na najbliższe 30 dni. Kontrakt API zwraca
+  znaczniki czasu z jednoznacznym przesunięciem oraz nazwę strefy. Frontend nie wylicza
+  dostępności samodzielnie.
+- Pierwsza wersja używa jednego wspólnego zasobu warsztatu. Zgłoszenia `PENDING`,
+  `TIME_PROPOSED` i `CONFIRMED` blokują bieżący termin. `REJECTED` zwalnia termin,
+  a propozycja nowego terminu atomowo zwalnia poprzedni i zajmuje nowy.
+- Samo odczytanie wolnego terminu przed zapisem nie zabezpiecza przed wyścigiem.
+  Zachowaj częściowy unikalny indeks bazy dla aktywnego terminu oraz blokadę rekordu
+  podczas decyzji. Sprawdzaj własność, aktualny status i dostępność w tej samej transakcji.
+- Waliduj zakaz rezerwowania przeszłości, dzień tygodnia, pełną godzinę, godziny pracy
+  i horyzont 30 dni również wtedy, gdy żądanie omija interfejs kalendarza.
 - Konflikt dostępności zwracaj jako HTTP 409 z komunikatem umożliwiającym ponowny
   wybór terminu. Nie zgłaszaj sukcesu po nieudanym zapisie lub konflikcie.
+
+## Zgłoszenia wizyt
+
+- `GET /api/appointments/availability` jest publiczny. `POST /api/appointments/guest`
+  zapisuje gościa. `GET` i `POST /api/appointments` oraz
+  `POST /api/appointments/{id}/confirm-proposed` należą do CLIENT.
+- Endpointy pod `/api/staff/appointments` udostępniają MECHANIC/ADMIN listę oraz
+  akcje `accept`, `reject`, `propose-time` i `confirm-proposed` dla gościa.
+- Publiczny odczyt dostępności nie ujawnia danych klientów ani zgłoszeń. Publiczny
+  zapis gościa wymaga tokenu CSRF, imienia i nazwiska oraz co najmniej telefonu albo
+  poprawnego e-maila. Opis usterki ma od 10 do 2000 znaków.
+- CLIENT tworzy zgłoszenie bez `clientId`, statusu i danych właściciela. Backend
+  pobiera użytkownika z `Authentication`, wymaga uzupełnionego profilu i sprawdza,
+  czy wybrany `vehicleId` do niego należy.
+- CLIENT pobiera tylko własne zgłoszenia i może potwierdzić wyłącznie własną propozycję
+  z aktualnym statusem `TIME_PROPOSED`. Gość nie ma publicznego endpointu odczytu statusu.
+- MECHANIC i ADMIN pobierają kolejkę zgłoszeń i wykonują operacje decyzji. Propozycja
+  terminu musi wskazywać wolny termin zwrócony przez te same reguły dostępności.
+  Personel może zatwierdzić propozycję gościa dopiero po kontakcie poza aplikacją.
+- Przechowuj pierwotny termin, bieżący termin, kopie danych kontaktowych i pojazdu,
+  opis, publiczny losowy numer referencyjny, czas utworzenia oraz dane decyzji.
 
 ## Baza i dokumenty napraw
 
@@ -123,7 +151,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `.\mvnw.cmd spring-boot:run` uruchamia lokalny backend. Na systemach Unix użyj `./mvnw`.
 - Testy wymagają działającego Docker Desktop. Automatyczne Compose i konta demo
   są wyłączone w profilu testowym. Testy katalogu obejmują CRUD, walidację,
-  uprawnienia, logowanie, rejestrację, profil, pojazdy, sesję i CSRF. Dockerfile pomija uruchamianie testów,
-  więc udany obraz nie potwierdza ich zaliczenia.
+  uprawnienia, logowanie, rejestrację, profil, pojazdy, zgłoszenia wizyt i ich
+  współbieżność, sesję oraz CSRF. Dockerfile pomija uruchamianie testów, więc udany
+  obraz nie potwierdza ich zaliczenia.
 - Z głównego folderu `docker compose up -d --build backend` przebudowuje backend.
   Po zmianie infrastruktury sprawdź stan usług i odpowiedź `/api/health`.

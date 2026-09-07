@@ -152,7 +152,7 @@ Kategorii zawierającej usługi nie można usunąć: najpierw przenieś lub usu�
 ## Profil klienta
 
 Po zalogowaniu z rolą klienta w prawym górnym rogu pojawia się menu konta. Zawiera
-ono odnośnik „Mój profil” oraz opcję wylogowania. Profil jest osobną podstroną
+ono odnośniki „Mój profil”, „Moje pojazdy”, „Moje wizyty” oraz opcję wylogowania. Profil jest osobną podstroną
 `http://localhost:5173/profile`. Zapisane dane są najpierw wyświetlane jako czytelne
 podsumowanie, a formularz pojawia się dopiero po wybraniu „Edytuj profil”. Można w nim
 zapisać imię, nazwisko, telefon, kontaktowy e-mail oraz adres. Opcjonalny przełącznik
@@ -176,6 +176,37 @@ Kliknięcie pojazdu prowadzi do `http://localhost:5173/vehicles/{vehicleId}`.
 Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pozostaje pusta,
 dopóki nie powstanie moduł faktur — zgłoszenie usterki ani rezerwacja nie są dowodem
 wykonania naprawy. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+
+## Umawianie wizyty
+
+Publiczna pozycja „Umów wizytę” prowadzi do `http://localhost:5173/appointments`.
+Gość podaje imię, nazwisko, co najmniej telefon albo e-mail, dane pojazdu, wolny
+termin oraz opis usterki. Wysłanie nie tworzy konta ani pojazdu w „Moich pojazdach”.
+Po zapisie gość otrzymuje losowy numer referencyjny, a warsztat kontaktuje się z nim
+telefonicznie lub mailowo. Nie ma publicznego podglądu statusu zgłoszenia.
+
+Zalogowany klient wybiera jeden ze swoich pojazdów. Może też rozwinąć formularz
+dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utworzenie
+zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
+dane kontaktowe. Na tej samej stronie klient widzi swoje zgłoszenia i ich statusy.
+Jeśli personel zaproponuje inną godzinę, klient może ją potwierdzić w panelu.
+
+Mechanik i administrator otwierają `http://localhost:5173/staff/appointments`.
+Panel pozwala przyjąć lub odrzucić zgłoszenie oraz wskazać inny wolny termin.
+W przypadku gościa personel potwierdza nową godzinę po uzgodnieniu jej poza aplikacją.
+
+Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, godzin 08:00–16:00 od
+poniedziałku do piątku oraz jednogodzinnych terminów na najbliższe 30 dni. Jeden
+aktywny termin może mieć tylko jedno zgłoszenie. `PENDING`, `TIME_PROPOSED` i
+`CONFIRMED` blokują godzinę; odrzucenie ją zwalnia. Backend ponownie sprawdza
+dostępność podczas zapisu, a indeks PostgreSQL chroni także równoczesne żądania.
+
+| Status | Znaczenie |
+| --- | --- |
+| `PENDING` | Zgłoszenie oczekuje na decyzję warsztatu |
+| `TIME_PROPOSED` | Personel zaproponował inny termin |
+| `CONFIRMED` | Termin został potwierdzony |
+| `REJECTED` | Zgłoszenie zostało odrzucone, a termin zwolniony |
 
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
 Mechanika i Wulkanizacja, łącznie sześć usług. Ich późniejsza edycja odbywa się
@@ -233,6 +264,16 @@ uzupełnia kontrolę uprawnień backendu.
 | `GET /api/vehicles` | Lista własnych pojazdów | CLIENT |
 | `GET /api/vehicles/{vehicleId}` | Szczegóły własnego pojazdu | CLIENT |
 | `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
+| `GET /api/appointments/availability` | Kalendarz terminów na 30 dni | Publiczny |
+| `POST /api/appointments/guest` | Wysłanie zgłoszenia bez konta | Publiczny, CSRF |
+| `GET /api/appointments` | Lista własnych zgłoszeń | CLIENT |
+| `POST /api/appointments` | Zgłoszenie dla własnego pojazdu | CLIENT, CSRF |
+| `POST /api/appointments/{id}/confirm-proposed` | Potwierdzenie nowego terminu | Właściciel CLIENT, CSRF |
+| `GET /api/staff/appointments` | Kolejka wszystkich zgłoszeń | MECHANIC, ADMIN |
+| `POST /api/staff/appointments/{id}/accept` | Potwierdzenie zgłoszonego terminu | MECHANIC, ADMIN, CSRF |
+| `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |
+| `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego terminu | MECHANIC, ADMIN, CSRF |
+| `POST /api/staff/appointments/{id}/confirm-proposed` | Potwierdzenie terminu gościa po kontakcie | MECHANIC, ADMIN, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
@@ -272,6 +313,21 @@ Dodanie pojazdu przyjmuje JSON:
 
 Pole `vin` może być pustym tekstem. Backend nie przyjmuje `ownerId`.
 
+Zgłoszenie zalogowanego klienta przyjmuje:
+
+```json
+{
+  "vehicleId": 1,
+  "slotStartAt": "2026-09-09T08:00:00+02:00",
+  "problemDescription": "Podczas hamowania słychać metaliczny dźwięk."
+}
+```
+
+Gość zamiast `vehicleId` podaje pola `vehicleMake`, `vehicleModel`,
+`vehicleProductionYear`, `vehicleRegistrationNumber`, opcjonalny `vehicleVin` oraz
+`firstName`, `lastName`, `phoneNumber` i `contactEmail`. Co najmniej jeden z dwóch
+ostatnich sposobów kontaktu musi być podany. Opis ma od 10 do 2000 znaków.
+
 ## Nauka i sprawdzanie zmian
 
 [Przewodnik krok po kroku po katalogu usług](docs/service-catalog-walkthrough.md)
@@ -282,6 +338,9 @@ pokazuje drogę danych z formularza Reacta do bazy i późniejszego logowania.
 wyjaśnia relację z kontem, formularz warunkowy i ochronę własności danych.
 [Przewodnik po pojazdach klienta](docs/client-vehicles-walkthrough.md)
 opisuje model bazy, prywatne API, walidację oraz dwie podstrony Reacta.
+[Przewodnik po umawianiu wizyty](docs/appointment-booking-walkthrough.md)
+wyjaśnia statusy, dostępność, ochronę terminu przed równoczesnym zapisem oraz
+różnicę między formularzem klienta i gościa.
 Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
 kolory w zmiennych na początku `frontend/src/index.css`.
 

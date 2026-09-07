@@ -6,7 +6,7 @@ interface Props {
   isSaving: boolean
   fieldErrors: Record<string, string>
   onSave: (input: VehicleInput) => Promise<void>
-  onCancel: () => void
+  onCancel?: () => void
 }
 
 const currentYear = new Date().getFullYear()
@@ -83,7 +83,7 @@ export function VehicleForm({ isSaving, fieldErrors, onSave, onCancel }: Props) 
           </div>
         </div>
         <div className="actions vehicle-form-actions">
-          <button type="button" className="button secondary" onClick={onCancel}>Anuluj</button>
+          {onCancel && <button type="button" className="button secondary" onClick={onCancel}>Anuluj</button>}
           <button type="submit" className="button">{isSaving ? 'Dodawanie…' : 'Dodaj pojazd'}</button>
         </div>
       </fieldset>

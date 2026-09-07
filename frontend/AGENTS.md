@@ -32,10 +32,14 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   dodawania. Szczegóły `/vehicles/:vehicleId` pokazują dane pojazdu i historię napraw
   wynikającą z faktur, z odniesieniem do właściwego dokumentu. Do czasu wdrożenia faktur
   pokazuj uczciwy pusty stan i nie twórz fikcyjnych napraw.
-- R06–R07: zakładka rezerwacji z kalendarzem wolnych terminów od poniedziałku do piątku
-  oraz formularzem wyboru własnego pojazdu i opisu usterki. Klient widzi status zgłoszenia.
-- R08: panel personelu do obsługi zgłoszeń, przyjmowania zleceń i zarządzania wizytami,
-  z akcjami przyjęcia i odrzucenia dostępnymi zgodnie z uprawnieniami.
+- R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
+  własny pojazd albo dodaje go w formularzu, termin z API i opis usterki; na tej samej
+  stronie widzi własne zgłoszenia i potwierdza termin ze statusem `TIME_PROPOSED`.
+  Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
+  referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
+- R08: `/staff/appointments` jest chronionym panelem MECHANIC/ADMIN z kolejką klientów
+  i gości oraz akcjami potwierdzenia, odrzucenia i zaproponowania innego terminu.
+  Propozycję gościa personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
@@ -50,8 +54,15 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 
 ## Rezerwacje, formularze i prywatność
 
+- Publiczny link „Umów wizytę” w głównym menu prowadzi do `/appointments`. Podczas
+  sprawdzania sesji nie pokazuj chwilowo formularza gościa zalogowanemu użytkownikowi.
 - Pobieraj dostępność z backendu. Nie wyliczaj w przeglądarce, że termin jest wolny,
   wyłącznie na podstawie dnia tygodnia lub lokalnej listy wizyt.
+- Kalendarz grupuje jednogodzinne terminy zwrócone przez API według dni, pokazuje
+  strefę `Europe/Warsaw` i pozwala przejść przez 30-dniowy horyzont. Nie hardkoduj
+  listy wolnych godzin w przeglądarce.
+- Nowy pojazd CLIENT zapisuj istniejącym `POST /api/vehicles` i automatycznie wybieraj
+  go w formularzu. Dane pojazdu gościa wysyłaj wyłącznie jako część zgłoszenia.
 - Po wysłaniu zgłoszenia pokazuj „Oczekujące na decyzję warsztatu”. Potwierdzenie
   wizyty pokazuj dopiero po odpowiedzi informującej o przyjęciu przez personel.
 - Obsługuj sytuację, gdy termin stał się niedostępny: pokaż komunikat, odśwież terminy
@@ -62,6 +73,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   zapobiegaj ponownemu wysłaniu; błędy walidacji wiąż z odpowiednimi polami.
 - Ukrywanie panelu lub zabezpieczenie trasy nie zastępuje autoryzacji backendu.
   Po wylogowaniu usuwaj z widoku i pamięci klienta dane poprzedniej sesji.
+- Statusy przedstawiaj po polsku: `PENDING` jako „Oczekujące”, `TIME_PROPOSED` jako
+  „Zaproponowano nowy termin”, `CONFIRMED` jako „Potwierdzone”, a `REJECTED` jako
+  „Odrzucone”. Pokazuj pierwotny i proponowany termin bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Nie twórz fikcyjnych faktur
   ani lokalnych wpisów udających trwale zapisane dane.
 
@@ -86,6 +100,12 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Funkcja pojazdów znajduje się w `features/vehicles`: `vehiclesApi` odpowiada za HTTP,
   `VehicleForm` za dodawanie, `VehiclesSection` za listę, a `VehicleDetailsSection`
   za dane wybranego pojazdu i stan historii. `VehiclesPage` i `VehiclePage` składają trasy.
+- Funkcja wizyt znajduje się w `features/appointments`: `appointmentsApi` sprawdza
+  kontrakt HTTP, `useAppointmentAvailability` pobiera kalendarz, a osobne komponenty
+  obsługują formularz gościa, formularz i listę CLIENT oraz kolejkę personelu.
+  `AppointmentsPage` dobiera wariant po zakończeniu sprawdzania sesji, a
+  `StaffAppointmentsPage` chroni `RequireStaff`. Przewodnik znajduje się w
+  `docs/appointment-booking-walkthrough.md`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.
