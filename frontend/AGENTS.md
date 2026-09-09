@@ -45,7 +45,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   własny pojazd albo dodaje go w formularzu, termin z API i opis usterki. Osobna,
   chroniona trasa `/my-appointments` („Moje wizyty”) pokazuje własne zgłoszenia
   i pozwala potwierdzić termin ze statusem `TIME_PROPOSED` albo odwołać aktywną
-  wizytę. Obie pozycje są w górnym menu klienta, a link w menu konta prowadzi do `/my-appointments`.
+  wizytę. Główne menu zawiera publiczny link „Umów wizytę”, a prywatny link
+  „Moje wizyty” jest dostępny z menu konta.
   Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/appointments` jest chronionym panelem MECHANIC/ADMIN z kolejką klientów
@@ -54,8 +55,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
-- Menu i widoki dostosuj do zalogowania oraz uprawnień. Konkretne nazwy pozostałych
-  pozycji menu i wygląd po zalogowaniu dobieraj w ramach projektowania tych widoków.
+- Menu i widoki dostosuj do zalogowania oraz uprawnień. Główne menu nie powinno
+  dublować linków prywatnych z menu konta. Linki klienta, takie jak profil, pojazdy
+  i własne wizyty, grupuj w rozwijanym menu konta w prawym górnym rogu.
 - Wspólny przycisk otwiera okno przełączające działające formularze logowania
   i rejestracji. Rejestracja wymaga loginu, e-maila, hasła i powtórzenia hasła,
   pokazuje błędy przy polach i po sukcesie automatycznie loguje klienta.

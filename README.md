@@ -140,9 +140,9 @@ Strona główna zawiera opis warsztatu oraz kategorie z usługami pobranymi z ba
 Link „Usługi” przewija do sekcji na tej samej stronie. Oferta jest widoczna
 bez logowania i dla zalogowanego klienta.
 
-Po zalogowaniu jako mechanik lub administrator pojawia się „Zarządzaj ofertą”.
-Panel pozwala dodawać, edytować i usuwać kategorie oraz usługi, a także przenosić
-usługę do innej kategorii. Po zapisie publiczna lista na tej stronie jest odświeżana.
+Po zalogowaniu jako mechanik lub administrator w menu konta pojawia się
+„Zarządzaj ofertą”. Panel pozwala dodawać, edytować i usuwać kategorie oraz usługi,
+a także przenosić usługę do innej kategorii. Po zapisie publiczna lista na tej stronie jest odświeżana.
 Pozostałe otwarte przeglądarki pobiorą zmiany po odświeżeniu strony.
 
 Każda usługa należy do jednej kategorii. Nazwy kategorii są unikalne,
@@ -190,8 +190,8 @@ dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utwo
 zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
 dane kontaktowe. Osobna podstrona `/my-appointments` („Moje wizyty”) pokazuje
 własne zgłoszenia i ich statusy, pozwala potwierdzić zaproponowany termin oraz
-odwołać aktywną wizytę. Zalogowany klient ma w górnym menu osobne linki „Umów wizytę”
-oraz „Moje wizyty”; lista jest dostępna także z menu konta.
+odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”, a lista
+własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inną godzinę, klient może ją potwierdzić w panelu.
 
 Mechanik i administrator otwierają `http://localhost:5173/staff/appointments`.
