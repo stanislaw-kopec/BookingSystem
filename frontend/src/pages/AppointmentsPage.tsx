@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ClientAppointmentsSection } from '../features/appointments/components/ClientAppointmentsSection'
+import { ClientAppointmentForm } from '../features/appointments/components/ClientAppointmentForm'
 import { GuestAppointmentSection } from '../features/appointments/components/GuestAppointmentSection'
 import { useAuth } from '../features/auth/hooks/useAuth'
+import '../features/appointments/appointments.css'
 
 export function AppointmentsPage() {
   const auth = useAuth()
@@ -17,7 +18,9 @@ export function AppointmentsPage() {
   if (auth.user?.roles.includes('CLIENT')) {
     return (
       <main className="page-content">
-        <ClientAppointmentsSection key={auth.user.username} />
+        <div className="page-section appointments-section">
+          <ClientAppointmentForm key={auth.user.username} />
+        </div>
       </main>
     )
   }

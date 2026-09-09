@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import type { Appointment } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
-import { ClientAppointmentForm } from './ClientAppointmentForm'
 import '../appointments.css'
 
 const statusPriority = {
@@ -53,10 +53,6 @@ export function ClientAppointmentsSection() {
     setRevision((value) => value + 1)
   }
 
-  function addCreated(created: Appointment) {
-    setAppointments((current) => sortAppointments([created, ...(current ?? [])]))
-  }
-
   async function confirmProposedTime(appointmentId: number) {
     setConfirmingId(appointmentId)
     setActionError(null)
@@ -74,14 +70,13 @@ export function ClientAppointmentsSection() {
   }
 
   return (
-    <section className="page-section appointments-section" aria-label="Umawianie wizyty i moje zgłoszenia">
-      <ClientAppointmentForm onCreated={addCreated} />
-
+    <section className="page-section appointments-section" aria-label="Moje wizyty">
       <section className="appointment-block appointment-list-section" aria-labelledby="client-appointments-heading">
         <div className="section-heading">
           <p className="eyebrow">Konto klienta</p>
-          <h2 id="client-appointments-heading">Moje zgłoszenia wizyt</h2>
+          <h2 id="client-appointments-heading">Moje wizyty</h2>
           <p className="muted">Tutaj sprawdzisz decyzję warsztatu i potwierdzisz zaproponowany termin.</p>
+          <Link className="button" to="/appointments">Umów wizytę</Link>
         </div>
         {notice && <p className="message success" role="status">{notice}</p>}
         {actionError && <p className="message error" role="alert">{actionError}</p>}

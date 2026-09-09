@@ -33,8 +33,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   wynikającą z faktur, z odniesieniem do właściwego dokumentu. Do czasu wdrożenia faktur
   pokazuj uczciwy pusty stan i nie twórz fikcyjnych napraw.
 - R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
-  własny pojazd albo dodaje go w formularzu, termin z API i opis usterki; na tej samej
-  stronie widzi własne zgłoszenia i potwierdza termin ze statusem `TIME_PROPOSED`.
+  własny pojazd albo dodaje go w formularzu, termin z API i opis usterki. Osobna,
+  chroniona trasa `/my-appointments` („Moje wizyty”) pokazuje własne zgłoszenia
+  i pozwala potwierdzić termin ze statusem `TIME_PROPOSED`. Obie pozycje są w górnym
+  menu klienta, a link w menu konta prowadzi do `/my-appointments`.
   Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/appointments` jest chronionym panelem MECHANIC/ADMIN z kolejką klientów
@@ -103,7 +105,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Funkcja wizyt znajduje się w `features/appointments`: `appointmentsApi` sprawdza
   kontrakt HTTP, `useAppointmentAvailability` pobiera kalendarz, a osobne komponenty
   obsługują formularz gościa, formularz i listę CLIENT oraz kolejkę personelu.
-  `AppointmentsPage` dobiera wariant po zakończeniu sprawdzania sesji, a
+  `AppointmentsPage` dobiera wariant formularza po zakończeniu sprawdzania sesji.
+  `MyAppointmentsPage` wyświetla wyłącznie listę zgłoszeń i jest chroniona przez `RequireClient`, a
   `StaffAppointmentsPage` chroni `RequireStaff`. Przewodnik znajduje się w
   `docs/appointment-booking-walkthrough.md`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,

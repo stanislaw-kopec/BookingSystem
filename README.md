@@ -188,7 +188,9 @@ telefonicznie lub mailowo. Nie ma publicznego podglądu statusu zgłoszenia.
 Zalogowany klient wybiera jeden ze swoich pojazdów. Może też rozwinąć formularz
 dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utworzenie
 zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
-dane kontaktowe. Na tej samej stronie klient widzi swoje zgłoszenia i ich statusy.
+dane kontaktowe. Osobna podstrona `/my-appointments` („Moje wizyty”) pokazuje
+własne zgłoszenia i ich statusy. Zalogowany klient ma w górnym menu osobne linki
+„Umów wizytę” oraz „Moje wizyty”; lista jest dostępna także z menu konta.
 Jeśli personel zaproponuje inną godzinę, klient może ją potwierdzić w panelu.
 
 Mechanik i administrator otwierają `http://localhost:5173/staff/appointments`.

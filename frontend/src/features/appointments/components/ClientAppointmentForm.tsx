@@ -9,12 +9,7 @@ import '../../vehicles/vehicles.css'
 import * as appointmentsApi from '../api/appointmentsApi'
 import { formatAppointmentDateTime } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
-import type { Appointment } from '../types'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
-
-interface Props {
-  onCreated: (appointment: Appointment) => void
-}
 
 function sortVehicles(vehicles: Vehicle[]) {
   return [...vehicles].sort((first, second) =>
@@ -22,7 +17,7 @@ function sortVehicles(vehicles: Vehicle[]) {
       .localeCompare(`${second.make} ${second.model} ${second.registrationNumber}`, 'pl'))
 }
 
-export function ClientAppointmentForm({ onCreated }: Props) {
+export function ClientAppointmentForm() {
   const [vehicles, setVehicles] = useState<Vehicle[] | null>(null)
   const [vehicleLoadError, setVehicleLoadError] = useState<string | null>(null)
   const [vehicleRevision, setVehicleRevision] = useState(0)
@@ -92,12 +87,11 @@ export function ClientAppointmentForm({ onCreated }: Props) {
     setFieldErrors({})
     setNotice(null)
     try {
-      const created = await appointmentsApi.createClientAppointment({
+      await appointmentsApi.createClientAppointment({
         vehicleId: Number(selectedVehicleId),
         slotStartAt: selectedStartAt,
         problemDescription: problemDescription.trim(),
       })
-      onCreated(created)
       setSelectedStartAt('')
       setProblemDescription('')
       setNotice('Zgłoszenie zostało wysłane i oczekuje na decyzję warsztatu.')
@@ -126,7 +120,11 @@ export function ClientAppointmentForm({ onCreated }: Props) {
         <p className="muted">Wybierz pojazd i wolny termin, a następnie opisz usterkę.</p>
       </div>
 
-      {notice && <p className="message success" role="status">{notice}</p>}
+      {notice && (
+        <p className="message success" role="status">
+          {notice} <Link to="/my-appointments">Przejdź do moich wizyt</Link>.
+        </p>
+      )}
       {error && !fieldErrors.profile && <p className="message error" role="alert">{error}</p>}
       {fieldErrors.profile && (
         <p className="message error" role="alert">

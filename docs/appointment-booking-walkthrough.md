@@ -96,6 +96,12 @@ przez ochronę CSRF obsługiwaną przez wspólny `apiClient`.
 
 ## 7. Struktura Reacta
 
+`AppointmentsPage` pod `/appointments` wyświetla wyłącznie formularz umawiania
+wizyty. `MyAppointmentsPage` pod `/my-appointments` składa osobną stronę z
+`ClientAppointmentsSection`, czyli listą własnych zgłoszeń i potwierdzaniem propozycji.
+Trasę listy chroni `RequireClient`. Po wysłaniu formularza klient może przejść do niej
+przez link w komunikacie sukcesu lub pozycję „Moje wizyty” w menu.
+
 ```text
 appointments/
 ├── types.ts

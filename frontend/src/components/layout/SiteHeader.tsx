@@ -25,6 +25,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
         <a href="/#services">Usługi</a>
         <a href="/#location">Lokalizacja</a>
         <Link to="/appointments">Umów wizytę</Link>
+        {canViewProfile && <Link to="/my-appointments">Moje wizyty</Link>}
         {canManage && <a href="/#service-management">Zarządzaj ofertą</a>}
       </nav>
       <div className="account-menu">
@@ -43,7 +44,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
                   <Link className="account-dropdown-item" to="/vehicles" onClick={closeAccountMenu}>
                     Moje pojazdy
                   </Link>
-                  <Link className="account-dropdown-item" to="/appointments" onClick={closeAccountMenu}>
+                  <Link className="account-dropdown-item" to="/my-appointments" onClick={closeAccountMenu}>
                     Moje wizyty
                   </Link>
                 </>
