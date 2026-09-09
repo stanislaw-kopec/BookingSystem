@@ -189,8 +189,9 @@ Zalogowany klient wybiera jeden ze swoich pojazdów. Może też rozwinąć formu
 dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utworzenie
 zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
 dane kontaktowe. Osobna podstrona `/my-appointments` („Moje wizyty”) pokazuje
-własne zgłoszenia i ich statusy. Zalogowany klient ma w górnym menu osobne linki
-„Umów wizytę” oraz „Moje wizyty”; lista jest dostępna także z menu konta.
+własne zgłoszenia i ich statusy, pozwala potwierdzić zaproponowany termin oraz
+odwołać aktywną wizytę. Zalogowany klient ma w górnym menu osobne linki „Umów wizytę”
+oraz „Moje wizyty”; lista jest dostępna także z menu konta.
 Jeśli personel zaproponuje inną godzinę, klient może ją potwierdzić w panelu.
 
 Mechanik i administrator otwierają `http://localhost:5173/staff/appointments`.
@@ -274,6 +275,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `GET /api/appointments` | Lista własnych zgłoszeń | CLIENT |
 | `POST /api/appointments` | Zgłoszenie dla własnego pojazdu | CLIENT, CSRF |
 | `POST /api/appointments/{id}/confirm-proposed` | Potwierdzenie nowego terminu | Właściciel CLIENT, CSRF |
+| `POST /api/appointments/{id}/cancel` | Odwołanie aktywnej wizyty | Właściciel CLIENT, CSRF |
 | `GET /api/staff/appointments` | Kolejka wszystkich zgłoszeń | MECHANIC, ADMIN |
 | `POST /api/staff/appointments/{id}/accept` | Potwierdzenie zgłoszonego terminu | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |

@@ -46,4 +46,10 @@ public class AppointmentController {
             @PathVariable Long appointmentId) {
         return appointmentService.confirmProposedTime(authentication.getName(), appointmentId);
     }
+
+    @PostMapping("/{appointmentId}/cancel")
+    public AppointmentResponse cancelClientAppointment(Authentication authentication,
+            @PathVariable Long appointmentId) {
+        return appointmentService.cancelClientAppointment(authentication.getName(), appointmentId);
+    }
 }

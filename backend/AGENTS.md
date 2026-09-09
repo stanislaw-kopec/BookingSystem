@@ -29,6 +29,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `TIME_PROPOSED` przechodzi do `CONFIRMED` po potwierdzeniu klienta z kontem albo
   personelu po kontakcie z gościem. Odnotowuj czas i autora decyzji personelu.
   Nie pozwalaj na dwukrotne przetworzenie tego samego zgłoszenia.
+- Klient może odwołać wyłącznie własne aktywne zgłoszenie ze statusem `PENDING`,
+  `TIME_PROPOSED` albo `CONFIRMED`. Odwołanie ustawia `CANCELLED`, nie zapisuje
+  akcji personelu i zwalnia termin w kalendarzu.
 - Sprawdzaj własność pojazdu i zasobu na backendzie. Tożsamość klienta przy zapisie
   ma wynikać z uwierzytelnienia; dane przesłane przez przeglądarkę nie nadają uprawnień.
 - Zabezpieczaj prywatne dane i operacje przez istniejącą konfigurację Spring Security.
@@ -96,7 +99,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   dostępności samodzielnie.
 - Pierwsza wersja używa jednego wspólnego zasobu warsztatu. Zgłoszenia `PENDING`,
   `TIME_PROPOSED` i `CONFIRMED` blokują bieżący termin. `REJECTED` zwalnia termin,
-  a propozycja nowego terminu atomowo zwalnia poprzedni i zajmuje nowy.
+  `CANCELLED` zwalnia termin, a propozycja nowego terminu atomowo zwalnia poprzedni
+  i zajmuje nowy.
 - Samo odczytanie wolnego terminu przed zapisem nie zabezpiecza przed wyścigiem.
   Zachowaj częściowy unikalny indeks bazy dla aktywnego terminu oraz blokadę rekordu
   podczas decyzji. Sprawdzaj własność, aktualny status i dostępność w tej samej transakcji.
@@ -108,8 +112,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 ## Zgłoszenia wizyt
 
 - `GET /api/appointments/availability` jest publiczny. `POST /api/appointments/guest`
-  zapisuje gościa. `GET` i `POST /api/appointments` oraz
-  `POST /api/appointments/{id}/confirm-proposed` należą do CLIENT.
+  zapisuje gościa. `GET` i `POST /api/appointments`,
+  `POST /api/appointments/{id}/confirm-proposed` oraz
+  `POST /api/appointments/{id}/cancel` należą do CLIENT.
 - Endpointy pod `/api/staff/appointments` udostępniają MECHANIC/ADMIN listę oraz
   akcje `accept`, `reject`, `propose-time` i `confirm-proposed` dla gościa.
 - Publiczny odczyt dostępności nie ujawnia danych klientów ani zgłoszeń. Publiczny
@@ -118,8 +123,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - CLIENT tworzy zgłoszenie bez `clientId`, statusu i danych właściciela. Backend
   pobiera użytkownika z `Authentication`, wymaga uzupełnionego profilu i sprawdza,
   czy wybrany `vehicleId` do niego należy.
-- CLIENT pobiera tylko własne zgłoszenia i może potwierdzić wyłącznie własną propozycję
-  z aktualnym statusem `TIME_PROPOSED`. Gość nie ma publicznego endpointu odczytu statusu.
+- CLIENT pobiera tylko własne zgłoszenia, może potwierdzić wyłącznie własną propozycję
+  z aktualnym statusem `TIME_PROPOSED` i odwołać własne aktywne zgłoszenie. Gość
+  nie ma publicznego endpointu odczytu statusu.
 - MECHANIC i ADMIN pobierają kolejkę zgłoszeń i wykonują operacje decyzji. Propozycja
   terminu musi wskazywać wolny termin zwrócony przez te same reguły dostępności.
   Personel może zatwierdzić propozycję gościa dopiero po kontakcie poza aplikacją.

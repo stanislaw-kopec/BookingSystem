@@ -142,6 +142,11 @@ public class AppointmentRequest {
         updatedAt = actionAt;
     }
 
+    public void cancel(Instant actionAt) {
+        status = AppointmentStatus.CANCELLED;
+        updatedAt = actionAt;
+    }
+
     public void confirmGuestProposedTime(AppUser staff, Instant actionAt) {
         status = AppointmentStatus.CONFIRMED;
         recordStaffAction(staff, actionAt, staffMessage);

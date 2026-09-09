@@ -327,6 +327,34 @@ class AppointmentIntegrationTest {
             .andExpect(status().isForbidden());
     }
 
+    @Test
+    void owningClientCanCancelActiveAppointmentAndReleaseSlot() throws Exception {
+        AppUser client = createClient("cancelling-client", true);
+        AppUser other = createClient("cancelling-other", true);
+        Vehicle vehicle = createVehicle(client, "Opel", "Astra", "DW123", null);
+        OffsetDateTime startAt = workingSlot(3, 9);
+        createClientAppointment(client, vehicle, startAt);
+        AppointmentRequest appointment = appointments.findAll().getFirst();
+
+        mockMvc.perform(post("/api/appointments/{id}/cancel", appointment.getId())
+                .with(user(other.getUsername()).roles("CLIENT"))
+                .with(csrf()))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/appointments/{id}/cancel", appointment.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        mockMvc.perform(post("/api/appointments")
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(clientJson(vehicle.getId(), startAt, "Kontrolka silnika świeci się stale.")))
+            .andExpect(status().isCreated());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {"MECHANIC", "ADMIN"})
     void staffRolesCanListAllRequests(String role) throws Exception {

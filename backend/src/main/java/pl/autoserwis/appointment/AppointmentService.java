@@ -154,6 +154,22 @@ public class AppointmentService {
     }
 
     @Transactional
+    public AppointmentResponse cancelClientAppointment(String username, Long appointmentId) {
+        AppUser client = user(username);
+        AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
+                appointmentId, client.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+        if (appointment.getStatus() != AppointmentStatus.PENDING
+                && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED
+                && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
+            throw new AppointmentConflictException(
+                "Można odwołać wyłącznie aktywną wizytę.");
+        }
+        appointment.cancel(Instant.now());
+        return response(appointments.save(appointment));
+    }
+
+    @Transactional
     public AppointmentResponse confirmGuestProposedTime(String staffUsername, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getRequesterType() != AppointmentRequesterType.GUEST) {

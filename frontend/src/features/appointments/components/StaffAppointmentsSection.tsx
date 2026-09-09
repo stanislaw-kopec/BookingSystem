@@ -20,7 +20,8 @@ const statusPriority = {
   PENDING: 0,
   TIME_PROPOSED: 1,
   CONFIRMED: 2,
-  REJECTED: 3,
+  CANCELLED: 3,
+  REJECTED: 4,
 } as const
 
 function sortAppointments(appointments: Appointment[]) {

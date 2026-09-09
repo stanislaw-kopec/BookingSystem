@@ -18,7 +18,11 @@ function isDateTime(value: unknown): value is string {
 }
 
 function isAppointmentStatus(value: unknown): value is AppointmentStatus {
-  return value === 'PENDING' || value === 'TIME_PROPOSED' || value === 'CONFIRMED' || value === 'REJECTED'
+  return value === 'PENDING'
+    || value === 'TIME_PROPOSED'
+    || value === 'CONFIRMED'
+    || value === 'CANCELLED'
+    || value === 'REJECTED'
 }
 
 function isRequesterType(value: unknown): value is AppointmentRequesterType {
@@ -110,6 +114,12 @@ export async function getClientAppointments(signal?: AbortSignal): Promise<Appoi
 
 export async function confirmProposedTime(appointmentId: number): Promise<Appointment> {
   return appointmentFrom(await apiRequest(`/api/appointments/${appointmentId}/confirm-proposed`, {
+    method: 'POST',
+  }))
+}
+
+export async function cancelClientAppointment(appointmentId: number): Promise<Appointment> {
+  return appointmentFrom(await apiRequest(`/api/appointments/${appointmentId}/cancel`, {
     method: 'POST',
   }))
 }

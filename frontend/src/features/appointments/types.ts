@@ -1,4 +1,4 @@
-export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'REJECTED'
+export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED'
 
 export type AppointmentRequesterType = 'CLIENT' | 'GUEST'
 

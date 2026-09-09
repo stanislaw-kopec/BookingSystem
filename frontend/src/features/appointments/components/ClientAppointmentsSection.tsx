@@ -10,8 +10,15 @@ const statusPriority = {
   TIME_PROPOSED: 0,
   PENDING: 1,
   CONFIRMED: 2,
-  REJECTED: 3,
+  CANCELLED: 3,
+  REJECTED: 4,
 } as const
+
+const cancellableStatuses = new Set<Appointment['status']>([
+  'PENDING',
+  'TIME_PROPOSED',
+  'CONFIRMED',
+])
 
 function sortAppointments(appointments: Appointment[]) {
   return [...appointments].sort((first, second) => {
@@ -26,6 +33,7 @@ export function ClientAppointmentsSection() {
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
+  const [cancellingId, setCancellingId] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
@@ -69,6 +77,22 @@ export function ClientAppointmentsSection() {
     }
   }
 
+  async function cancelAppointment(appointmentId: number) {
+    setCancellingId(appointmentId)
+    setActionError(null)
+    setNotice(null)
+    try {
+      const updated = await appointmentsApi.cancelClientAppointment(appointmentId)
+      setAppointments((current) => sortAppointments((current ?? []).map((appointment) =>
+        appointment.id === updated.id ? updated : appointment)))
+      setNotice('Wizyta została odwołana.')
+    } catch (cause) {
+      setActionError(errorMessage(cause))
+    } finally {
+      setCancellingId(null)
+    }
+  }
+
   return (
     <section className="page-section appointments-section" aria-label="Moje wizyty">
       <section className="appointment-block appointment-list-section" aria-labelledby="client-appointments-heading">
@@ -95,14 +119,25 @@ export function ClientAppointmentsSection() {
             {appointments.map((appointment) => (
               <li className="appointment-card" key={appointment.id}>
                 <AppointmentDetails appointment={appointment} />
-                {appointment.status === 'TIME_PROPOSED' && (
-                  <div className="appointment-card-actions">
-                    <p>Sprawdź nowy termin wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
-                    <button type="button" className="button"
-                      disabled={confirmingId !== null}
-                      onClick={() => void confirmProposedTime(appointment.id)}>
-                      {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy termin'}
-                    </button>
+                {(appointment.status === 'TIME_PROPOSED' || cancellableStatuses.has(appointment.status)) && (
+                  <div className="appointment-card-actions actions">
+                    {appointment.status === 'TIME_PROPOSED' && (
+                      <>
+                        <p>Sprawdź nowy termin wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
+                        <button type="button" className="button"
+                          disabled={confirmingId !== null || cancellingId !== null}
+                          onClick={() => void confirmProposedTime(appointment.id)}>
+                          {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy termin'}
+                        </button>
+                      </>
+                    )}
+                    {cancellableStatuses.has(appointment.status) && (
+                      <button type="button" className="button secondary danger-button"
+                        disabled={confirmingId !== null || cancellingId !== null}
+                        onClick={() => void cancelAppointment(appointment.id)}>
+                        {cancellingId === appointment.id ? 'Odwoływanie…' : 'Odwołaj wizytę'}
+                      </button>
+                    )}
                   </div>
                 )}
               </li>

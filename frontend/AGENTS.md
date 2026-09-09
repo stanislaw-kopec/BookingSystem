@@ -44,8 +44,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
   własny pojazd albo dodaje go w formularzu, termin z API i opis usterki. Osobna,
   chroniona trasa `/my-appointments` („Moje wizyty”) pokazuje własne zgłoszenia
-  i pozwala potwierdzić termin ze statusem `TIME_PROPOSED`. Obie pozycje są w górnym
-  menu klienta, a link w menu konta prowadzi do `/my-appointments`.
+  i pozwala potwierdzić termin ze statusem `TIME_PROPOSED` albo odwołać aktywną
+  wizytę. Obie pozycje są w górnym menu klienta, a link w menu konta prowadzi do `/my-appointments`.
   Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/appointments` jest chronionym panelem MECHANIC/ADMIN z kolejką klientów
@@ -86,8 +86,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Ukrywanie panelu lub zabezpieczenie trasy nie zastępuje autoryzacji backendu.
   Po wylogowaniu usuwaj z widoku i pamięci klienta dane poprzedniej sesji.
 - Statusy przedstawiaj po polsku: `PENDING` jako „Oczekujące”, `TIME_PROPOSED` jako
-  „Zaproponowano nowy termin”, `CONFIRMED` jako „Potwierdzone”, a `REJECTED` jako
-  „Odrzucone”. Pokazuj pierwotny i proponowany termin bez sugerowania wykonanej naprawy.
+  „Zaproponowano nowy termin”, `CONFIRMED` jako „Potwierdzone”, `CANCELLED` jako
+  „Odwołane”, a `REJECTED` jako „Odrzucone”. Pokazuj pierwotny i proponowany termin
+  bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Nie twórz fikcyjnych faktur
   ani lokalnych wpisów udających trwale zapisane dane.
 

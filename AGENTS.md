@@ -33,16 +33,18 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R04 | Pozycja „Moje pojazdy” w menu konta prowadzi do `/vehicles`. Klient może dodać pojazd z marką, modelem, rokiem produkcji, numerem rejestracyjnym i opcjonalnym VIN oraz przeglądać wyłącznie własne pojazdy. Wybranie pojazdu otwiera osobną podstronę `/vehicles/:vehicleId` ze szczegółami i historią napraw. |
 | R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
 | R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych terminów od poniedziałku do piątku. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera termin i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, termin oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. |
-| R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny termin. Zalogowany klient widzi własne zgłoszenia i potwierdza zaproponowany termin na osobnej podstronie `/my-appointments` („Moje wizyty”). Górne menu klienta zawiera osobne pozycje „Umów wizytę” i „Moje wizyty”, a link w menu konta także prowadzi do listy wizyt. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
+| R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny termin. Zalogowany klient widzi własne zgłoszenia, potwierdza zaproponowany termin i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Górne menu klienta zawiera osobne pozycje „Umów wizytę” i „Moje wizyty”, a link w menu konta także prowadzi do listy wizyt. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
 | R08 | Mechanik i administrator mają panel `/staff/appointments` do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego terminu. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
 
 ## Reguły biznesowe i granice dostępu
 
-- Podstawowy przepływ zgłoszenia: `PENDING` → `CONFIRMED` albo `REJECTED`.
+- Podstawowy przepływ zgłoszenia: `PENDING` → `CONFIRMED`, `REJECTED` albo `CANCELLED`.
   Personel może też przejść z `PENDING` do `TIME_PROPOSED`; zalogowany klient
   potwierdza propozycję, a w przypadku gościa personel potwierdza ją po kontakcie.
-  Wysłanie formularza nie jest automatycznym potwierdzeniem wizyty.
+  Klient może odwołać własne aktywne zgłoszenie ze statusu `PENDING`,
+  `TIME_PROPOSED` albo `CONFIRMED`; status `CANCELLED` zwalnia termin. Wysłanie
+  formularza nie jest automatycznym potwierdzeniem wizyty.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
   Personel korzysta z danych w zakresie przyznanych uprawnień.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
@@ -83,7 +85,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   ustawieniem pierwszej wersji, dopóki użytkownik nie poda danych warsztatu.
 - Wiele stanowisk, różne długości usług, przypisywanie mechanika oraz odpowiedź,
   czy termin oznacza przyjęcie samochodu, czy czas całej naprawy.
-- Automatyczne wygasanie blokady zgłoszenia oczekującego, anulowanie i przekładanie
+- Automatyczne wygasanie blokady zgłoszenia oczekującego, przekładanie
   potwierdzonych wizyt oraz odrzucenie propozycji terminu przez klienta.
 - Powiadomienia e-mail/SMS i zabezpieczenie publicznego formularza przed spamem.
 - Podział pozostałych uprawnień administratora, pracownika i mechanika: harmonogram,
