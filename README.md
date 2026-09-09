@@ -194,9 +194,12 @@ odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”,
 własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inną godzinę, klient może ją potwierdzić w panelu.
 
-Mechanik i administrator otwierają `http://localhost:5173/staff/appointments`.
-Panel pozwala przyjąć lub odrzucić zgłoszenie oraz wskazać inny wolny termin.
-W przypadku gościa personel potwierdza nową godzinę po uzgodnieniu jej poza aplikacją.
+Mechanik i administrator mają w menu konta zakładkę
+`http://localhost:5173/staff/schedule` („Grafik”), która pokazuje aktywne zgłoszenia
+na tygodniowym kalendarzu pracy warsztatu. Szczegółowa kolejka zgłoszeń jest pod
+`http://localhost:5173/staff/appointments`. Panel pozwala przyjąć lub odrzucić
+zgłoszenie oraz wskazać inny wolny termin. W przypadku gościa personel potwierdza
+nową godzinę po uzgodnieniu jej poza aplikacją.
 
 Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, godzin 08:00–16:00 od
 poniedziałku do piątku oraz jednogodzinnych terminów na najbliższe 30 dni. Jeden

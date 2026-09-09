@@ -10,6 +10,7 @@ zgłoszeń przez personel. Najważniejsze rozróżnienie brzmi: klient najpierw 
 PENDING ───────────────> CONFIRMED
     │                         ▲
     ├───────────────> REJECTED
+    ├──────────────> CANCELLED
     │
     └──> TIME_PROPOSED ───────┘
 ```
@@ -17,6 +18,7 @@ PENDING ───────────────> CONFIRMED
 - `PENDING` oznacza zgłoszenie oczekujące na decyzję warsztatu.
 - `CONFIRMED` oznacza potwierdzony termin.
 - `REJECTED` kończy zgłoszenie i zwalnia termin.
+- `CANCELLED` oznacza wizytę odwołaną przez klienta i zwalnia termin.
 - `TIME_PROPOSED` oznacza, że personel wskazał inny termin. Klient z kontem
   potwierdza go w swoim panelu. Dla gościa personel zapisuje potwierdzenie po
   kontakcie telefonicznym lub mailowym.
@@ -74,6 +76,9 @@ Odrzucenie zmienia status na `REJECTED`, więc indeks przestaje blokować termin
 Propozycja personelu zmienia bieżący termin w jednej transakcji: poprzedni zostaje
 zwolniony, a nowy zajęty.
 
+Odwołanie przez klienta zmienia status na `CANCELLED`. Taki status także nie blokuje
+terminu, więc okno może wrócić do kalendarza.
+
 ## 6. Endpointy i uprawnienia
 
 ```text
@@ -104,6 +109,11 @@ i odwołaniem aktywnej wizyty.
 Trasę listy chroni `RequireClient`. Po wysłaniu formularza klient może przejść do niej
 przez link w komunikacie sukcesu lub pozycję „Moje wizyty” w menu konta.
 
+`StaffSchedulePage` pod `/staff/schedule` składa zakładkę „Grafik” dla MECHANIC/ADMIN.
+Używa tej samej listy zgłoszeń personelu co kolejka, ale prezentuje aktywne zgłoszenia
+w tygodniowej siatce poniedziałek-piątek. `StaffAppointmentsPage` pod
+`/staff/appointments` pozostaje miejscem podejmowania decyzji o zgłoszeniach.
+
 ```text
 appointments/
 ├── types.ts
@@ -118,6 +128,7 @@ appointments/
     ├── GuestAppointmentSection.tsx
     ├── ClientAppointmentsSection.tsx
     ├── StaffAppointmentsSection.tsx
+    ├── StaffScheduleSection.tsx
     ├── AppointmentDetails.tsx
     └── AppointmentStatusBadge.tsx
 ```
@@ -125,8 +136,10 @@ appointments/
 [appointmentsApi.ts](../frontend/src/features/appointments/api/appointmentsApi.ts)
 oddziela komunikację HTTP od komponentów i sprawdza odpowiedzi również podczas
 działania aplikacji. `useAppointmentAvailability` odpowiada za pobranie i odświeżenie
-kalendarza. Te same terminy wykorzystują formularz klienta, formularz gościa oraz
-proponowanie nowej godziny przez personel.
+kalendarza dostępnych terminów. Te same terminy wykorzystują formularz klienta,
+formularz gościa oraz proponowanie nowej godziny przez personel. Grafik personelu
+korzysta z `GET /api/staff/appointments`, bo pokazuje zapisane zgłoszenia, a nie
+wyliczoną dostępność.
 
 `ClientAppointmentForm` pobiera własne pojazdy. Jeśli klient doda samochód wewnątrz
 formularza, komponent używa istniejącego `POST /api/vehicles`, dopisuje odpowiedź do
@@ -134,7 +147,7 @@ listy i od razu wybiera nowy pojazd.
 
 ## 8. Co pozostaje na później
 
-Ta wersja nie wysyła e-maili ani SMS-ów, nie obsługuje anulowania wizyty, świąt,
-wielu stanowisk i różnych długości napraw. Termin jest obecnie wspólnym jednogodzinnym
-oknem warsztatu. Te reguły można później rozbudować bez zmiany znaczenia istniejących
+Ta wersja nie wysyła e-maili ani SMS-ów, nie obsługuje świąt, wielu stanowisk
+i różnych długości napraw. Termin jest obecnie wspólnym jednogodzinnym oknem
+warsztatu. Te reguły można później rozbudować bez zmiany znaczenia istniejących
 zgłoszeń i statusów.

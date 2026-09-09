@@ -70,6 +70,9 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
               {canManage && (
                 <>
                   <p className="account-dropdown-section">Panel warsztatu</p>
+                  <NavLink className={accountLinkClassName} to="/staff/schedule" onClick={closeAccountMenu}>
+                    Grafik
+                  </NavLink>
                   <NavLink className={accountLinkClassName} to="/staff/appointments" onClick={closeAccountMenu}>
                     Zgłoszenia wizyt
                   </NavLink>

@@ -49,15 +49,19 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   „Moje wizyty” jest dostępny z menu konta.
   Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
-- R08: `/staff/appointments` jest chronionym panelem MECHANIC/ADMIN z kolejką klientów
-  i gości oraz akcjami potwierdzenia, odrzucenia i zaproponowania innego terminu.
-  Propozycję gościa personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
+- R08: `/staff/schedule` jest chronioną zakładką MECHANIC/ADMIN z graficznym,
+  tygodniowym grafikiem aktywnych zgłoszeń od poniedziałku do piątku. `/staff/appointments`
+  jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości oraz akcjami
+  potwierdzenia, odrzucenia i zaproponowania innego terminu. Propozycję gościa
+  personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
 - Menu i widoki dostosuj do zalogowania oraz uprawnień. Główne menu nie powinno
   dublować linków prywatnych z menu konta. Linki klienta, takie jak profil, pojazdy
-  i własne wizyty, grupuj w rozwijanym menu konta w prawym górnym rogu.
+  i własne wizyty, grupuj w rozwijanym menu konta w prawym górnym rogu. Linki
+  personelu, takie jak grafik, zgłoszenia wizyt i zarządzanie ofertą, grupuj w sekcji
+  „Panel warsztatu” tego samego menu.
 - Wspólny przycisk otwiera okno przełączające działające formularze logowania
   i rejestracji. Rejestracja wymaga loginu, e-maila, hasła i powtórzenia hasła,
   pokazuje błędy przy polach i po sukcesie automatycznie loguje klienta.
@@ -120,7 +124,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   obsługują formularz gościa, formularz i listę CLIENT oraz kolejkę personelu.
   `AppointmentsPage` dobiera wariant formularza po zakończeniu sprawdzania sesji.
   `MyAppointmentsPage` wyświetla wyłącznie listę zgłoszeń i jest chroniona przez `RequireClient`, a
-  `StaffAppointmentsPage` chroni `RequireStaff`. Przewodnik znajduje się w
+  `StaffAppointmentsPage` i `StaffSchedulePage` chroni `RequireStaff`. Przewodnik znajduje się w
   `docs/appointment-booking-walkthrough.md`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
