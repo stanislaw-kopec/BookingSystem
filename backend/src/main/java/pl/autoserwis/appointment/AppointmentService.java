@@ -66,7 +66,7 @@ public class AppointmentService {
                 "Uzupełnij profil przed umówieniem wizyty."));
         Vehicle vehicle = vehicles.findByIdAndOwner_Id(request.vehicleId(), client.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu."));
-        Instant startAt = schedule.validateAndNormalize(request.slotStartAt());
+        Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String description = normalizedDescription(request.problemDescription());
 
         AppointmentRequest appointment = new AppointmentRequest(UUID.randomUUID(),
@@ -75,13 +75,13 @@ public class AppointmentService {
             profile.getContactEmail(), vehicle.getMake(), vehicle.getModel(),
             vehicle.getProductionYear(), vehicle.getRegistrationNumber(), optional(vehicle.getVin()),
             startAt, description, Instant.now());
-        return saveInAvailableSlot(appointment);
+        return saveInAvailableDay(appointment);
     }
 
     @Transactional
     public AppointmentResponse createForGuest(GuestAppointmentRequest request) {
         validateGuest(request);
-        Instant startAt = schedule.validateAndNormalize(request.slotStartAt());
+        Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String registrationNumber = normalizedRegistration(request.vehicleRegistrationNumber());
         String description = normalizedDescription(request.problemDescription());
 
@@ -91,7 +91,7 @@ public class AppointmentService {
             optionalLowercase(request.contactEmail()), request.vehicleMake().strip(),
             request.vehicleModel().strip(), request.vehicleProductionYear(), registrationNumber,
             optionalUppercase(request.vehicleVin()), startAt, description, Instant.now());
-        return saveInAvailableSlot(appointment);
+        return saveInAvailableDay(appointment);
     }
 
     @Transactional
@@ -110,7 +110,7 @@ public class AppointmentService {
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
             throw new AppointmentConflictException(
-                "Można odrzucić wyłącznie oczekujące zgłoszenie lub propozycję terminu.");
+                "Można odrzucić wyłącznie oczekujące zgłoszenie lub propozycję dnia.");
         }
         appointment.reject(user(staffUsername), optional(request.message()), Instant.now());
         return response(appointments.save(appointment));
@@ -123,13 +123,17 @@ public class AppointmentService {
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
             throw new AppointmentConflictException(
-                "Nowy termin można zaproponować tylko dla oczekującego zgłoszenia.");
+                "Nowy dzień można zaproponować tylko dla oczekującego zgłoszenia.");
         }
 
-        Instant proposedStartAt = schedule.validateAndNormalize(request.slotStartAt());
+        Instant proposedStartAt = schedule.validateAndNormalize(request.visitDate());
         if (proposedStartAt.equals(appointment.getCurrentStartAt())) {
-            throw new AppointmentValidationException(Map.of("slotStartAt",
-                "Zaproponuj termin inny niż obecny."));
+            throw new AppointmentValidationException(Map.of("visitDate",
+                "Zaproponuj dzień inny niż obecny."));
+        }
+        appointments.lockAppointmentDay(schedule.visitDate(proposedStartAt));
+        if (schedule.isFull(proposedStartAt)) {
+            throw unavailableDay();
         }
 
         appointment.proposeTime(user(staffUsername), proposedStartAt,
@@ -137,7 +141,7 @@ public class AppointmentService {
         try {
             return response(appointments.saveAndFlush(appointment));
         } catch (DataIntegrityViolationException exception) {
-            throw unavailableSlot();
+            throw unavailableDay();
         }
     }
 
@@ -148,7 +152,7 @@ public class AppointmentService {
                 appointmentId, client.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
-            "To zgłoszenie nie oczekuje na potwierdzenie nowego terminu.");
+            "To zgłoszenie nie oczekuje na potwierdzenie nowego dnia.");
         appointment.confirmProposedTime(Instant.now());
         return response(appointments.save(appointment));
     }
@@ -174,22 +178,23 @@ public class AppointmentService {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getRequesterType() != AppointmentRequesterType.GUEST) {
             throw new AppointmentConflictException(
-                "Klient posiadający konto sam potwierdza zaproponowany termin.");
+                "Klient posiadający konto sam potwierdza zaproponowany dzień.");
         }
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
-            "To zgłoszenie nie oczekuje na potwierdzenie nowego terminu.");
+            "To zgłoszenie nie oczekuje na potwierdzenie nowego dnia.");
         appointment.confirmGuestProposedTime(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
 
-    private AppointmentResponse saveInAvailableSlot(AppointmentRequest appointment) {
-        if (schedule.isOccupied(appointment.getCurrentStartAt())) {
-            throw unavailableSlot();
+    private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {
+        appointments.lockAppointmentDay(schedule.visitDate(appointment.getCurrentStartAt()));
+        if (schedule.isFull(appointment.getCurrentStartAt())) {
+            throw unavailableDay();
         }
         try {
             return response(appointments.saveAndFlush(appointment));
         } catch (DataIntegrityViolationException exception) {
-            throw unavailableSlot();
+            throw unavailableDay();
         }
     }
 
@@ -252,9 +257,9 @@ public class AppointmentService {
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika."));
     }
 
-    private AppointmentConflictException unavailableSlot() {
-        return new AppointmentConflictException("slotStartAt",
-            "Ten termin nie jest już dostępny. Wybierz inny termin.");
+    private AppointmentConflictException unavailableDay() {
+        return new AppointmentConflictException("visitDate",
+            "Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.");
     }
 
     private boolean blank(String value) {

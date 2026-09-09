@@ -1,9 +1,7 @@
 import { useMemo, useState } from 'react'
-import type { AppointmentAvailability, AppointmentSlot } from '../types'
+import type { AppointmentAvailability, AppointmentDay } from '../types'
 import {
-  appointmentDateKey,
   formatAppointmentDate,
-  formatAppointmentTime,
   mondayKey,
 } from '../dateTime'
 
@@ -11,29 +9,23 @@ interface Props {
   availability: AppointmentAvailability | null
   isLoading: boolean
   error: string | null
-  selectedStartAt: string
-  onSelect: (slot: AppointmentSlot) => void
+  selectedVisitDate: string
+  onSelect: (day: AppointmentDay) => void
   onRetry: () => void
   fieldError?: string
 }
 
 interface CalendarWeek {
   key: string
-  days: Array<{ key: string; slots: AppointmentSlot[] }>
+  days: AppointmentDay[]
 }
 
 function groupIntoWeeks(availability: AppointmentAvailability | null): CalendarWeek[] {
   if (!availability) return []
-  const days = new Map<string, AppointmentSlot[]>()
-  for (const slot of [...availability.slots].sort((first, second) => first.startAt.localeCompare(second.startAt))) {
-    const dayKey = appointmentDateKey(slot.startAt, availability.timeZone)
-    days.set(dayKey, [...(days.get(dayKey) ?? []), slot])
-  }
-
   const weeks = new Map<string, CalendarWeek['days']>()
-  for (const [dayKey, slots] of days) {
-    const weekKey = mondayKey(dayKey)
-    weeks.set(weekKey, [...(weeks.get(weekKey) ?? []), { key: dayKey, slots }])
+  for (const day of [...availability.days].sort((first, second) => first.date.localeCompare(second.date))) {
+    const weekKey = mondayKey(day.date)
+    weeks.set(weekKey, [...(weeks.get(weekKey) ?? []), day])
   }
   return [...weeks].map(([key, weekDays]) => ({ key, days: weekDays }))
 }
@@ -42,7 +34,7 @@ export function AvailabilityCalendar({
   availability,
   isLoading,
   error,
-  selectedStartAt,
+  selectedVisitDate,
   onSelect,
   onRetry,
   fieldError,
@@ -57,10 +49,10 @@ export function AvailabilityCalendar({
     <div className="availability-calendar" aria-labelledby="availability-heading">
       <div className="calendar-heading">
         <div>
-          <h3 id="availability-heading">Wybierz termin</h3>
+          <h3 id="availability-heading">Wybierz dzień</h3>
           <p className="muted">
-            Godziny warsztatu są podane w strefie {timeZone}.
-            {availability && ` Jeden termin trwa ${availability.slotDurationMinutes} min.`}
+            Wybierz dzień przyjęcia samochodu. Auto możesz zostawić rano albo po wcześniejszym uzgodnieniu dzień wcześniej.
+            {availability && ` Warsztat przyjmuje bazowo ${availability.dailyCapacity} auta dziennie.`}
           </p>
         </div>
         {weeks.length > 0 && (
@@ -79,7 +71,7 @@ export function AvailabilityCalendar({
         )}
       </div>
 
-      {isLoading && <p role="status">Pobieranie wolnych terminów…</p>}
+      {isLoading && <p role="status">Pobieranie wolnych dni…</p>}
       {!isLoading && error && (
         <div className="message error" role="alert">
           <p>{error}</p>
@@ -87,33 +79,26 @@ export function AvailabilityCalendar({
         </div>
       )}
       {!isLoading && !error && weeks.length === 0 && (
-        <p className="empty-state">Obecnie nie ma terminów dostępnych do rezerwacji.</p>
+        <p className="empty-state">Obecnie nie ma dni dostępnych do rezerwacji.</p>
       )}
       {!isLoading && !error && week && (
         <>
           <div className="calendar-days">
             {week.days.map((day) => (
-              <section className="calendar-day" key={day.key}>
-                <h4>{formatAppointmentDate(day.slots[0].startAt, timeZone)}</h4>
-                <div className="calendar-slots">
-                  {day.slots.map((slot) => {
-                    const selected = slot.startAt === selectedStartAt
-                    const label = `${formatAppointmentTime(slot.startAt, timeZone)}–${formatAppointmentTime(slot.endAt, timeZone)}`
-                    return (
-                      <button key={slot.startAt} type="button"
-                        className={'calendar-slot' + (selected ? ' selected' : '')}
-                        disabled={!slot.available} aria-pressed={selected}
-                        aria-label={`${formatAppointmentDate(slot.startAt, timeZone)}, ${label}${slot.available ? '' : ', termin niedostępny'}`}
-                        onClick={() => onSelect(slot)}>
-                        {label}
-                      </button>
-                    )
-                  })}
-                </div>
+              <section className="calendar-day" key={day.date}>
+                <h4>{formatAppointmentDate(day.startAt, timeZone)}</h4>
+                <button type="button"
+                  className={'calendar-day-choice' + (day.date === selectedVisitDate ? ' selected' : '')}
+                  disabled={!day.available} aria-pressed={day.date === selectedVisitDate}
+                  aria-label={`${formatAppointmentDate(day.startAt, timeZone)}, ${day.remainingCapacity} wolnych miejsc z ${day.capacity}${day.available ? '' : ', dzień niedostępny'}`}
+                  onClick={() => onSelect(day)}>
+                  <strong>{day.available ? 'Wybierz dzień' : 'Brak miejsc'}</strong>
+                  <span>{day.remainingCapacity} z {day.capacity} wolnych miejsc</span>
+                </button>
               </section>
             ))}
           </div>
-          <p className="calendar-legend muted">Przekreślone godziny są już niedostępne.</p>
+          <p className="calendar-legend muted">Dni bez wolnych miejsc są niedostępne do rezerwacji.</p>
         </>
       )}
       {fieldError && <small className="field-error calendar-error" role="alert">{fieldError}</small>}

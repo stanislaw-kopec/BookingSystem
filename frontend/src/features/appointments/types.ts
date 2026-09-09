@@ -2,21 +2,24 @@ export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'CAN
 
 export type AppointmentRequesterType = 'CLIENT' | 'GUEST'
 
-export interface AppointmentSlot {
+export interface AppointmentDay {
+  date: string
   startAt: string
   endAt: string
+  capacity: number
+  remainingCapacity: number
   available: boolean
 }
 
 export interface AppointmentAvailability {
   timeZone: string
-  slotDurationMinutes: number
-  slots: AppointmentSlot[]
+  dailyCapacity: number
+  days: AppointmentDay[]
 }
 
 export interface ClientAppointmentInput {
   vehicleId: number
-  slotStartAt: string
+  visitDate: string
   problemDescription: string
 }
 
@@ -30,7 +33,7 @@ export interface GuestAppointmentInput {
   vehicleProductionYear: number
   vehicleRegistrationNumber: string
   vehicleVin: string
-  slotStartAt: string
+  visitDate: string
   problemDescription: string
 }
 

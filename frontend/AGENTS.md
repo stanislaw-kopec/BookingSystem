@@ -42,17 +42,17 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   wynikającą z faktur, z odniesieniem do właściwego dokumentu. Do czasu wdrożenia faktur
   pokazuj uczciwy pusty stan i nie twórz fikcyjnych napraw.
 - R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
-  własny pojazd albo dodaje go w formularzu, termin z API i opis usterki. Osobna,
+  własny pojazd albo dodaje go w formularzu, dzień przyjęcia auta z API i opis usterki. Osobna,
   chroniona trasa `/my-appointments` („Moje wizyty”) pokazuje własne zgłoszenia
-  i pozwala potwierdzić termin ze statusem `TIME_PROPOSED` albo odwołać aktywną
+  i pozwala potwierdzić dzień ze statusem `TIME_PROPOSED` albo odwołać aktywną
   wizytę. Główne menu zawiera publiczny link „Umów wizytę”, a prywatny link
   „Moje wizyty” jest dostępny z menu konta.
-  Gość podaje dane kontaktowe, dane pojazdu, termin i opis. Po wysłaniu widzi numer
+  Gość podaje dane kontaktowe, dane pojazdu, dzień przyjęcia auta i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/schedule` jest chronioną zakładką MECHANIC/ADMIN z graficznym,
-  tygodniowym grafikiem aktywnych zgłoszeń od poniedziałku do piątku. `/staff/appointments`
+  tygodniowym grafikiem aktywnych zgłoszeń pogrupowanych według dni od poniedziałku do piątku. `/staff/appointments`
   jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości oraz akcjami
-  potwierdzenia, odrzucenia i zaproponowania innego terminu. Propozycję gościa
+  potwierdzenia, odrzucenia i zaproponowania innego dnia. Propozycję gościa
   personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
@@ -74,16 +74,16 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 
 - Publiczny link „Umów wizytę” w głównym menu prowadzi do `/appointments`. Podczas
   sprawdzania sesji nie pokazuj chwilowo formularza gościa zalogowanemu użytkownikowi.
-- Pobieraj dostępność z backendu. Nie wyliczaj w przeglądarce, że termin jest wolny,
+- Pobieraj dostępność z backendu. Nie wyliczaj w przeglądarce, że dzień jest wolny,
   wyłącznie na podstawie dnia tygodnia lub lokalnej listy wizyt.
-- Kalendarz grupuje jednogodzinne terminy zwrócone przez API według dni, pokazuje
-  strefę `Europe/Warsaw` i pozwala przejść przez 30-dniowy horyzont. Nie hardkoduj
-  listy wolnych godzin w przeglądarce.
+- Kalendarz grupuje wolne dni zwrócone przez API, pokazuje strefę `Europe/Warsaw`,
+  dzienną pojemność i liczbę wolnych miejsc oraz pozwala przejść przez 30-dniowy
+  horyzont. Nie hardkoduj listy wolnych dni ani limitu miejsc jako źródła dostępności.
 - Nowy pojazd CLIENT zapisuj istniejącym `POST /api/vehicles` i automatycznie wybieraj
   go w formularzu. Dane pojazdu gościa wysyłaj wyłącznie jako część zgłoszenia.
 - Po wysłaniu zgłoszenia pokazuj „Oczekujące na decyzję warsztatu”. Potwierdzenie
   wizyty pokazuj dopiero po odpowiedzi informującej o przyjęciu przez personel.
-- Obsługuj sytuację, gdy termin stał się niedostępny: pokaż komunikat, odśwież terminy
+- Obsługuj sytuację, gdy dzień stał się niedostępny: pokaż komunikat, odśwież dni
   i umożliw ponowny wybór bez utraty wpisanego opisu usterki.
 - Wyświetlaj daty według ustalonej strefy warsztatu i kontraktu API.
   Nie przyjmuj po cichu strefy komputera użytkownika jako strefy warsztatu.
@@ -92,8 +92,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Ukrywanie panelu lub zabezpieczenie trasy nie zastępuje autoryzacji backendu.
   Po wylogowaniu usuwaj z widoku i pamięci klienta dane poprzedniej sesji.
 - Statusy przedstawiaj po polsku: `PENDING` jako „Oczekujące”, `TIME_PROPOSED` jako
-  „Zaproponowano nowy termin”, `CONFIRMED` jako „Potwierdzone”, `CANCELLED` jako
-  „Odwołane”, a `REJECTED` jako „Odrzucone”. Pokazuj pierwotny i proponowany termin
+  „Zaproponowano nowy dzień”, `CONFIRMED` jako „Potwierdzone”, `CANCELLED` jako
+  „Odwołane”, a `REJECTED` jako „Odrzucone”. Pokazuj pierwotny i proponowany dzień
   bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Nie twórz fikcyjnych faktur
   ani lokalnych wpisów udających trwale zapisane dane.
@@ -141,6 +141,6 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Po zmianie kodu sprawdź odpowiednie budowanie/lint oraz zmieniony przepływ w UI.
   Widoki mają działać na telefonie i komputerze oraz być obsługiwane klawiaturą;
   formularze wymagają etykiet i czytelnych komunikatów.
-- Gdy powstaną interaktywne przepływy, dobierz testy do ich zachowania: wyboru terminu,
+- Gdy powstaną interaktywne przepływy, dobierz testy do ich zachowania: wyboru dnia,
   obsługi konfliktu, decyzji personelu i prezentacji historii właściwego pojazdu.
   Obecnie nie ma skonfigurowanego polecenia `npm test` ani frameworka testów UI.

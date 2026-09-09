@@ -22,16 +22,16 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
-  kontaktowych i pojazdu, termin, opis usterki oraz status decyzji. Zgłoszenie gościa
+  kontaktowych i pojazdu, dzień przyjęcia auta, opis usterki oraz status decyzji. Zgłoszenie gościa
   przechowuje wyłącznie kopię podanych danych i nie tworzy konta ani pojazdu.
-- Przyjęcie, odrzucenie i proponowanie innego terminu są operacjami personelu.
+- Przyjęcie, odrzucenie i proponowanie innego dnia są operacjami personelu.
   Waliduj przejścia `PENDING` → `CONFIRMED`, `REJECTED` albo `TIME_PROPOSED`.
   `TIME_PROPOSED` przechodzi do `CONFIRMED` po potwierdzeniu klienta z kontem albo
   personelu po kontakcie z gościem. Odnotowuj czas i autora decyzji personelu.
   Nie pozwalaj na dwukrotne przetworzenie tego samego zgłoszenia.
 - Klient może odwołać wyłącznie własne aktywne zgłoszenie ze statusem `PENDING`,
   `TIME_PROPOSED` albo `CONFIRMED`. Odwołanie ustawia `CANCELLED`, nie zapisuje
-  akcji personelu i zwalnia termin w kalendarzu.
+  akcji personelu i zwalnia miejsce w kalendarzu.
 - Sprawdzaj własność pojazdu i zasobu na backendzie. Tożsamość klienta przy zapisie
   ma wynikać z uwierzytelnienia; dane przesłane przez przeglądarkę nie nadają uprawnień.
 - Zabezpieczaj prywatne dane i operacje przez istniejącą konfigurację Spring Security.
@@ -93,21 +93,23 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Dostępność i współbieżność
 
-- Backend oblicza wolne terminy w strefie `Europe/Warsaw`: od poniedziałku do piątku,
-  08:00–16:00, w jednogodzinnych oknach i na najbliższe 30 dni. Kontrakt API zwraca
-  znaczniki czasu z jednoznacznym przesunięciem oraz nazwę strefy. Frontend nie wylicza
-  dostępności samodzielnie.
+- Backend oblicza wolne dni przyjęcia auta w strefie `Europe/Warsaw`: od poniedziałku
+  do piątku, z limitem 4 aktywnych zgłoszeń dziennie i na najbliższe 30 dni.
+  Kontrakt API zwraca datę, pojemność dnia, liczbę wolnych miejsc oraz techniczne
+  znaczniki początku i końca dnia roboczego. Frontend nie wylicza dostępności samodzielnie.
 - Pierwsza wersja używa jednego wspólnego zasobu warsztatu. Zgłoszenia `PENDING`,
-  `TIME_PROPOSED` i `CONFIRMED` blokują bieżący termin. `REJECTED` zwalnia termin,
-  `CANCELLED` zwalnia termin, a propozycja nowego terminu atomowo zwalnia poprzedni
-  i zajmuje nowy.
-- Samo odczytanie wolnego terminu przed zapisem nie zabezpiecza przed wyścigiem.
-  Zachowaj częściowy unikalny indeks bazy dla aktywnego terminu oraz blokadę rekordu
-  podczas decyzji. Sprawdzaj własność, aktualny status i dostępność w tej samej transakcji.
-- Waliduj zakaz rezerwowania przeszłości, dzień tygodnia, pełną godzinę, godziny pracy
-  i horyzont 30 dni również wtedy, gdy żądanie omija interfejs kalendarza.
+  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w bieżącym dniu. `REJECTED` i
+  `CANCELLED` zwalniają miejsce, a propozycja nowego dnia atomowo zwalnia poprzedni
+  dzień i zajmuje nowy.
+- Samo odczytanie wolnego dnia przed zapisem nie zabezpiecza przed wyścigiem.
+  Używaj transakcyjnej blokady dnia oraz ponownego zliczenia aktywnych zgłoszeń
+  przed zapisem. Podczas decyzji blokuj aktualizowany rekord. Sprawdzaj własność,
+  aktualny status i dostępność w tej samej transakcji.
+- Waliduj zakaz rezerwowania przeszłości, dzień tygodnia i horyzont 30 dni również
+  wtedy, gdy żądanie omija interfejs kalendarza. Wybrany dzień zapisuj wewnętrznie
+  jako 08:00 w strefie warsztatu, bez umawiania klienta na konkretną godzinę.
 - Konflikt dostępności zwracaj jako HTTP 409 z komunikatem umożliwiającym ponowny
-  wybór terminu. Nie zgłaszaj sukcesu po nieudanym zapisie lub konflikcie.
+  wybór dnia. Nie zgłaszaj sukcesu po nieudanym zapisie lub konflikcie.
 
 ## Zgłoszenia wizyt
 
@@ -127,9 +129,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   z aktualnym statusem `TIME_PROPOSED` i odwołać własne aktywne zgłoszenie. Gość
   nie ma publicznego endpointu odczytu statusu.
 - MECHANIC i ADMIN pobierają kolejkę zgłoszeń i wykonują operacje decyzji. Propozycja
-  terminu musi wskazywać wolny termin zwrócony przez te same reguły dostępności.
+  nowego dnia musi wskazywać wolny dzień zwrócony przez te same reguły dostępności.
   Personel może zatwierdzić propozycję gościa dopiero po kontakcie poza aplikacją.
-- Przechowuj pierwotny termin, bieżący termin, kopie danych kontaktowych i pojazdu,
+- Przechowuj pierwotny dzień, bieżący dzień, kopie danych kontaktowych i pojazdu,
   opis, publiczny losowy numer referencyjny, czas utworzenia oraz dane decyzji.
 
 ## Baza i dokumenty napraw
@@ -149,7 +151,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Sprawdzanie zmian
 
-- Testuj reguły statusów, granice terminów, własność pojazdu i dostęp do dokumentów.
+- Testuj reguły statusów, granice dni rezerwacji, własność pojazdu i dostęp do dokumentów.
   Dla przyjmowania zgłoszeń dodaj test konfliktu równoczesnych prób rezerwacji.
 - Testy integracyjne korzystają z odizolowanego PostgreSQL przez Testcontainers
   i `PostgresTestConfiguration`. Nie używaj roboczego wolumenu użytkownika do testów.

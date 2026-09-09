@@ -7,7 +7,7 @@ import { VehicleForm } from '../../vehicles/components/VehicleForm'
 import type { Vehicle, VehicleInput } from '../../vehicles/types'
 import '../../vehicles/vehicles.css'
 import * as appointmentsApi from '../api/appointmentsApi'
-import { formatAppointmentDateTime } from '../dateTime'
+import { formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
 
@@ -26,7 +26,7 @@ export function ClientAppointmentForm() {
   const [vehicleError, setVehicleError] = useState<string | null>(null)
   const [vehicleFieldErrors, setVehicleFieldErrors] = useState<Record<string, string>>({})
   const [selectedVehicleId, setSelectedVehicleId] = useState('')
-  const [selectedStartAt, setSelectedStartAt] = useState('')
+  const [selectedVisitDate, setSelectedVisitDate] = useState('')
   const [problemDescription, setProblemDescription] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -89,10 +89,10 @@ export function ClientAppointmentForm() {
     try {
       await appointmentsApi.createClientAppointment({
         vehicleId: Number(selectedVehicleId),
-        slotStartAt: selectedStartAt,
+        visitDate: selectedVisitDate,
         problemDescription: problemDescription.trim(),
       })
-      setSelectedStartAt('')
+      setSelectedVisitDate('')
       setProblemDescription('')
       setNotice('Zgłoszenie zostało wysłane i oczekuje na decyzję warsztatu.')
       availability.refresh()
@@ -100,8 +100,8 @@ export function ClientAppointmentForm() {
       setError(errorMessage(cause))
       if (cause instanceof ApiError) {
         setFieldErrors(cause.fieldErrors)
-        if (cause.status === 409 && cause.fieldErrors.slotStartAt) {
-          setSelectedStartAt('')
+        if (cause.status === 409 && cause.fieldErrors.visitDate) {
+          setSelectedVisitDate('')
           availability.refresh()
         }
       }
@@ -117,7 +117,7 @@ export function ClientAppointmentForm() {
       <div className="section-heading">
         <p className="eyebrow">Nowe zgłoszenie</p>
         <h2 id="client-booking-heading">Umów wizytę</h2>
-        <p className="muted">Wybierz pojazd i wolny termin, a następnie opisz usterkę.</p>
+        <p className="muted">Wybierz pojazd i dzień przyjęcia samochodu, a następnie opisz usterkę.</p>
       </div>
 
       {notice && (
@@ -182,16 +182,16 @@ export function ClientAppointmentForm() {
           <div className="appointment-step">
             <p className="step-label">2. Termin</p>
             <AvailabilityCalendar availability={availability.availability} isLoading={availability.isLoading}
-              error={availability.error} selectedStartAt={selectedStartAt}
-              onSelect={(slot) => {
-                setSelectedStartAt(slot.startAt)
+              error={availability.error} selectedVisitDate={selectedVisitDate}
+              onSelect={(day) => {
+                setSelectedVisitDate(day.date)
                 setError(null)
-                setFieldErrors((current) => ({ ...current, slotStartAt: '' }))
+                setFieldErrors((current) => ({ ...current, visitDate: '' }))
               }}
-              onRetry={availability.refresh} fieldError={fieldErrors.slotStartAt} />
-            {selectedStartAt && (
-              <p className="selected-slot" role="status">
-                Wybrany termin: <strong>{formatAppointmentDateTime(selectedStartAt, availability.availability?.timeZone)}</strong>
+              onRetry={availability.refresh} fieldError={fieldErrors.visitDate} />
+            {selectedVisitDate && (
+              <p className="selected-day" role="status">
+                Wybrany dzień: <strong>{formatAppointmentDay(selectedVisitDate, availability.availability?.timeZone)}</strong>
               </p>
             )}
           </div>
@@ -215,7 +215,7 @@ export function ClientAppointmentForm() {
             )}
           </div>
           <button type="submit" className="button appointment-submit"
-            disabled={!selectedVehicleId || !selectedStartAt || problemDescription.trim().length < 10}>
+            disabled={!selectedVehicleId || !selectedVisitDate || problemDescription.trim().length < 10}>
             {isSaving ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
           </button>
         </fieldset>

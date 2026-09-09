@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
-import { formatAppointmentDateTime } from '../dateTime'
+import { formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
 import type { Appointment } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
@@ -38,7 +38,7 @@ export function StaffAppointmentsSection() {
   const [revision, setRevision] = useState(0)
   const [activeAction, setActiveAction] = useState<ActiveAction | null>(null)
   const [message, setMessage] = useState('')
-  const [selectedStartAt, setSelectedStartAt] = useState('')
+  const [selectedVisitDate, setSelectedVisitDate] = useState('')
   const [isSaving, setIsSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -77,7 +77,7 @@ export function StaffAppointmentsSection() {
   function resetAction() {
     setActiveAction(null)
     setMessage('')
-    setSelectedStartAt('')
+    setSelectedVisitDate('')
     setActionError(null)
     setFieldErrors({})
   }
@@ -119,19 +119,19 @@ export function StaffAppointmentsSection() {
     try {
       const updated = activeAction.type === 'reject'
         ? await appointmentsApi.rejectAppointment(appointmentId, message.trim())
-        : await appointmentsApi.proposeAppointmentTime(appointmentId, selectedStartAt, message.trim())
+        : await appointmentsApi.proposeAppointmentTime(appointmentId, selectedVisitDate, message.trim())
       replaceAppointment(updated)
       resetAction()
       setNotice(activeAction.type === 'reject'
         ? 'Zgłoszenie zostało odrzucone.'
-        : 'Nowy termin został zapisany i czeka na potwierdzenie.')
+        : 'Nowy dzień został zapisany i czeka na potwierdzenie.')
       availability.refresh()
     } catch (cause) {
       setActionError(errorMessage(cause))
       if (cause instanceof ApiError) {
         setFieldErrors(cause.fieldErrors)
-        if (cause.status === 409 && cause.fieldErrors.slotStartAt) {
-          setSelectedStartAt('')
+        if (cause.status === 409 && cause.fieldErrors.visitDate) {
+          setSelectedVisitDate('')
           availability.refresh()
         }
       }
@@ -145,7 +145,7 @@ export function StaffAppointmentsSection() {
       <div className="section-heading">
         <p className="eyebrow">Panel personelu</p>
         <h2 id="staff-appointments-heading">Zgłoszenia wizyt</h2>
-        <p className="muted">Przyjmij lub odrzuć zgłoszenie albo zaproponuj klientowi inny termin.</p>
+        <p className="muted">Przyjmij lub odrzuć zgłoszenie albo zaproponuj klientowi inny dzień.</p>
       </div>
       {notice && <p className="message success" role="status">{notice}</p>}
       {actionError && <p className="message error" role="alert">{actionError}</p>}
@@ -180,7 +180,7 @@ export function StaffAppointmentsSection() {
                     </button>
                     <button type="button" className="button secondary" disabled={isSaving}
                       onClick={() => beginAction(appointment.id, 'propose')}>
-                      Zaproponuj inny termin
+                      Zaproponuj inny dzień
                     </button>
                     <button type="button" className="button danger" disabled={isSaving}
                       onClick={() => beginAction(appointment.id, 'reject')}>
@@ -202,7 +202,7 @@ export function StaffAppointmentsSection() {
                     )}
                     <button type="button" className="button secondary" disabled={isSaving}
                       onClick={() => beginAction(appointment.id, 'propose')}>
-                      Zaproponuj kolejny termin
+                      Zaproponuj kolejny dzień
                     </button>
                     <button type="button" className="button danger" disabled={isSaving}
                       onClick={() => beginAction(appointment.id, 'reject')}>
@@ -214,21 +214,21 @@ export function StaffAppointmentsSection() {
                 {action && (
                   <form className="staff-decision-form" onSubmit={(event) => void submitDecision(event, appointment.id)}>
                     <fieldset disabled={isSaving}>
-                      <h4>{action === 'reject' ? 'Odrzucenie zgłoszenia' : 'Propozycja nowego terminu'}</h4>
+                      <h4>{action === 'reject' ? 'Odrzucenie zgłoszenia' : 'Propozycja nowego dnia'}</h4>
                       {action === 'propose' && (
                         <>
                           <AvailabilityCalendar availability={availability.availability}
                             isLoading={availability.isLoading} error={availability.error}
-                            selectedStartAt={selectedStartAt}
-                            onSelect={(slot) => {
-                              setSelectedStartAt(slot.startAt)
+                            selectedVisitDate={selectedVisitDate}
+                            onSelect={(day) => {
+                              setSelectedVisitDate(day.date)
                               setActionError(null)
-                              setFieldErrors((current) => ({ ...current, slotStartAt: '' }))
+                              setFieldErrors((current) => ({ ...current, visitDate: '' }))
                             }}
-                            onRetry={availability.refresh} fieldError={fieldErrors.slotStartAt} />
-                          {selectedStartAt && (
-                            <p className="selected-slot">
-                              Nowy termin: <strong>{formatAppointmentDateTime(selectedStartAt, availability.availability?.timeZone)}</strong>
+                            onRetry={availability.refresh} fieldError={fieldErrors.visitDate} />
+                          {selectedVisitDate && (
+                            <p className="selected-day">
+                              Nowy dzień: <strong>{formatAppointmentDay(selectedVisitDate, availability.availability?.timeZone)}</strong>
                             </p>
                           )}
                         </>
@@ -254,7 +254,7 @@ export function StaffAppointmentsSection() {
                       <div className="actions">
                         <button type="button" className="button secondary" onClick={resetAction}>Anuluj</button>
                         <button type="submit" className={action === 'reject' ? 'button danger' : 'button'}
-                          disabled={action === 'propose' && !selectedStartAt}>
+                          disabled={action === 'propose' && !selectedVisitDate}>
                           {isSaving ? 'Zapisywanie…' : action === 'reject' ? 'Odrzuć zgłoszenie' : 'Wyślij propozycję'}
                         </button>
                       </div>

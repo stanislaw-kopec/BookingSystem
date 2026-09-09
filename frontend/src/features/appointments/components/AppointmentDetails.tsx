@@ -1,4 +1,4 @@
-import { formatAppointmentDateTime } from '../dateTime'
+import { formatAppointmentDate } from '../dateTime'
 import type { Appointment } from '../types'
 import { AppointmentStatusBadge } from './AppointmentStatusBadge'
 
@@ -23,13 +23,13 @@ export function AppointmentDetails({ appointment, showContact = false }: Props) 
 
       <dl className="appointment-facts">
         <div>
-          <dt>{timeChanged ? 'Pierwotnie wybrany termin' : 'Termin'}</dt>
-          <dd>{formatAppointmentDateTime(appointment.requestedStartAt)}</dd>
+          <dt>{timeChanged ? 'Pierwotnie wybrany dzień' : 'Dzień przyjęcia auta'}</dt>
+          <dd>{formatAppointmentDate(appointment.requestedStartAt)}</dd>
         </div>
         {timeChanged && (
           <div className="proposed-time">
-            <dt>{appointment.status === 'TIME_PROPOSED' ? 'Nowy termin do potwierdzenia' : 'Aktualny termin'}</dt>
-            <dd>{formatAppointmentDateTime(appointment.currentStartAt)}</dd>
+            <dt>{appointment.status === 'TIME_PROPOSED' ? 'Nowy dzień do potwierdzenia' : 'Aktualny dzień'}</dt>
+            <dd>{formatAppointmentDate(appointment.currentStartAt)}</dd>
           </div>
         )}
         <div>

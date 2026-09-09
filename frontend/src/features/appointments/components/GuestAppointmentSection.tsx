@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { FormEvent, HTMLInputAutoCompleteAttribute } from 'react'
 import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
-import { formatAppointmentDateTime } from '../dateTime'
+import { formatAppointmentDate, formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
 import type { Appointment, GuestAppointmentInput } from '../types'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
@@ -37,7 +37,7 @@ const initialForm: GuestAppointmentInput = {
   vehicleProductionYear: currentYear,
   vehicleRegistrationNumber: '',
   vehicleVin: '',
-  slotStartAt: '',
+  visitDate: '',
   problemDescription: '',
 }
 
@@ -116,8 +116,8 @@ export function GuestAppointmentSection() {
       setError(errorMessage(cause))
       if (cause instanceof ApiError) {
         setFieldErrors(cause.fieldErrors)
-        if (cause.status === 409 && cause.fieldErrors.slotStartAt) {
-          setForm((current) => ({ ...current, slotStartAt: '' }))
+        if (cause.status === 409 && cause.fieldErrors.visitDate) {
+          setForm((current) => ({ ...current, visitDate: '' }))
           availability.refresh()
         }
       }
@@ -141,11 +141,11 @@ export function GuestAppointmentSection() {
           <p className="eyebrow">Zgłoszenie przyjęte</p>
           <h2 id="guest-success-heading">Dziękujemy za kontakt</h2>
           <p className="message success" role="status">
-            Zgłoszenie zostało wysłane i oczekuje na decyzję warsztatu. Wybrany termin nie jest jeszcze potwierdzony.
+            Zgłoszenie zostało wysłane i oczekuje na decyzję warsztatu. Wybrany dzień nie jest jeszcze potwierdzony.
           </p>
           <dl className="appointment-facts">
             <div><dt>Numer zgłoszenia</dt><dd>{created.reference}</dd></div>
-            <div><dt>Wybrany termin</dt><dd>{formatAppointmentDateTime(created.requestedStartAt)}</dd></div>
+            <div><dt>Wybrany dzień</dt><dd>{formatAppointmentDate(created.requestedStartAt)}</dd></div>
           </dl>
           <p>Warsztat skontaktuje się z Tobą telefonicznie lub mailowo.</p>
           <button type="button" className="button secondary" onClick={startAnother}>Wyślij kolejne zgłoszenie</button>
@@ -223,15 +223,15 @@ export function GuestAppointmentSection() {
           <div className="appointment-step">
             <p className="step-label">3. Termin</p>
             <AvailabilityCalendar availability={availability.availability} isLoading={availability.isLoading}
-              error={availability.error} selectedStartAt={form.slotStartAt}
-              onSelect={(slot) => {
-                update('slotStartAt', slot.startAt)
+              error={availability.error} selectedVisitDate={form.visitDate}
+              onSelect={(day) => {
+                update('visitDate', day.date)
                 setError(null)
               }} onRetry={availability.refresh}
-              fieldError={fieldErrors.slotStartAt} />
-            {form.slotStartAt && (
-              <p className="selected-slot" role="status">
-                Wybrany termin: <strong>{formatAppointmentDateTime(form.slotStartAt, availability.availability?.timeZone)}</strong>
+              fieldError={fieldErrors.visitDate} />
+            {form.visitDate && (
+              <p className="selected-day" role="status">
+                Wybrany dzień: <strong>{formatAppointmentDay(form.visitDate, availability.availability?.timeZone)}</strong>
               </p>
             )}
           </div>
@@ -253,7 +253,7 @@ export function GuestAppointmentSection() {
           </div>
 
           <button type="submit" className="button appointment-submit"
-            disabled={!form.slotStartAt || form.problemDescription.trim().length < 10}>
+            disabled={!form.visitDate || form.problemDescription.trim().length < 10}>
             {isSaving ? 'Wysyłanie…' : 'Wyślij zgłoszenie'}
           </button>
         </fieldset>

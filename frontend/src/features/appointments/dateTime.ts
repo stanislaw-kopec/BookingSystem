@@ -1,5 +1,4 @@
 const dateFormatterCache = new Map<string, Intl.DateTimeFormat>()
-const timeFormatterCache = new Map<string, Intl.DateTimeFormat>()
 
 function dateFormatter(timeZone: string) {
   let formatter = dateFormatterCache.get(timeZone)
@@ -15,29 +14,12 @@ function dateFormatter(timeZone: string) {
   return formatter
 }
 
-function timeFormatter(timeZone: string) {
-  let formatter = timeFormatterCache.get(timeZone)
-  if (!formatter) {
-    formatter = new Intl.DateTimeFormat('pl-PL', {
-      timeZone,
-      hour: '2-digit',
-      minute: '2-digit',
-    })
-    timeFormatterCache.set(timeZone, formatter)
-  }
-  return formatter
-}
-
 export function formatAppointmentDate(value: string, timeZone = 'Europe/Warsaw') {
   return dateFormatter(timeZone).format(new Date(value))
 }
 
-export function formatAppointmentTime(value: string, timeZone = 'Europe/Warsaw') {
-  return timeFormatter(timeZone).format(new Date(value))
-}
-
-export function formatAppointmentDateTime(value: string, timeZone = 'Europe/Warsaw') {
-  return `${formatAppointmentDate(value, timeZone)}, ${formatAppointmentTime(value, timeZone)}`
+export function formatAppointmentDay(dateKey: string, timeZone = 'Europe/Warsaw') {
+  return formatAppointmentDate(`${dateKey}T00:00:00Z`, timeZone)
 }
 
 export function appointmentDateKey(value: string, timeZone: string) {

@@ -2,8 +2,8 @@ import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
 import type {
   Appointment,
   AppointmentAvailability,
+  AppointmentDay,
   AppointmentRequesterType,
-  AppointmentSlot,
   AppointmentStatus,
   ClientAppointmentInput,
   GuestAppointmentInput,
@@ -29,25 +29,30 @@ function isRequesterType(value: unknown): value is AppointmentRequesterType {
   return value === 'CLIENT' || value === 'GUEST'
 }
 
-function isSlot(value: unknown): value is AppointmentSlot {
+function isDay(value: unknown): value is AppointmentDay {
   return isRecord(value)
+    && typeof value.date === 'string'
     && isDateTime(value.startAt)
     && isDateTime(value.endAt)
+    && typeof value.capacity === 'number'
+    && Number.isSafeInteger(value.capacity)
+    && typeof value.remainingCapacity === 'number'
+    && Number.isSafeInteger(value.remainingCapacity)
     && typeof value.available === 'boolean'
 }
 
 function isAvailability(value: unknown): value is AppointmentAvailability {
   return isRecord(value)
     && typeof value.timeZone === 'string'
-    && typeof value.slotDurationMinutes === 'number'
-    && Number.isSafeInteger(value.slotDurationMinutes)
-    && Array.isArray(value.slots)
-    && value.slots.every(isSlot)
+    && typeof value.dailyCapacity === 'number'
+    && Number.isSafeInteger(value.dailyCapacity)
+    && Array.isArray(value.days)
+    && value.days.every(isDay)
 }
 
 function availabilityFrom(value: unknown): AppointmentAvailability {
   if (isAvailability(value)) return value
-  throw new ApiError(502, 'Serwer zwrócił nieprawidłową listę terminów.')
+  throw new ApiError(502, 'Serwer zwrócił nieprawidłową listę dni wizyt.')
 }
 
 function isAppointment(value: unknown): value is Appointment {
@@ -144,13 +149,13 @@ export async function rejectAppointment(appointmentId: number, message: string):
 
 export async function proposeAppointmentTime(
   appointmentId: number,
-  slotStartAt: string,
+  visitDate: string,
   message: string,
 ): Promise<Appointment> {
   return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/propose-time`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ slotStartAt, message }),
+    body: JSON.stringify({ visitDate, message }),
   }))
 }
 

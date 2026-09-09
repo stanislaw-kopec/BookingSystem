@@ -2,14 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
-import { appointmentDateKey, formatAppointmentTime, mondayKey } from '../dateTime'
+import { appointmentDateKey, mondayKey } from '../dateTime'
 import type { Appointment } from '../types'
 import { AppointmentStatusBadge } from './AppointmentStatusBadge'
 import '../appointments.css'
 
 const scheduleTimeZone = 'Europe/Warsaw'
-const workHours = [8, 9, 10, 11, 12, 13, 14, 15]
 const activeStatuses = new Set<Appointment['status']>(['PENDING', 'TIME_PROPOSED', 'CONFIRMED'])
+const defaultDailyCapacity = 4
 
 const statusPriority = {
   PENDING: 0,
@@ -31,7 +31,7 @@ function addDays(dateKey: string, days: number) {
 
 function scheduleDayLabel(dateKey: string) {
   return new Intl.DateTimeFormat('pl-PL', {
-    weekday: 'short',
+    weekday: 'long',
     day: '2-digit',
     month: '2-digit',
     timeZone: 'UTC',
@@ -49,19 +49,11 @@ function scheduleWeekLabel(firstDayKey: string) {
   return `${formatter.format(new Date(`${firstDayKey}T00:00:00Z`))} - ${formatter.format(new Date(`${lastDayKey}T00:00:00Z`))}`
 }
 
-function scheduleTimeKey(value: string) {
-  return formatAppointmentTime(value, scheduleTimeZone)
-}
-
-function slotKey(dayKey: string, hour: number) {
-  return `${dayKey}|${String(hour).padStart(2, '0')}:00`
-}
-
 function sortAppointments(appointments: Appointment[]) {
   return [...appointments].sort((first, second) => {
-    const byTime = first.currentStartAt.localeCompare(second.currentStartAt)
+    const byDate = first.currentStartAt.localeCompare(second.currentStartAt)
     const byStatus = statusPriority[first.status] - statusPriority[second.status]
-    return byTime || byStatus || first.createdAt.localeCompare(second.createdAt)
+    return byDate || byStatus || first.createdAt.localeCompare(second.createdAt)
   })
 }
 
@@ -71,6 +63,7 @@ function shortReference(reference: string) {
 
 export function StaffScheduleSection() {
   const [appointments, setAppointments] = useState<Appointment[] | null>(null)
+  const [dailyCapacity, setDailyCapacity] = useState(defaultDailyCapacity)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
@@ -80,28 +73,31 @@ export function StaffScheduleSection() {
     [0, 1, 2, 3, 4].map((offset) => addDays(selectedWeekStart, offset)),
   [selectedWeekStart])
 
-  const appointmentsBySlot = useMemo(() => {
+  const appointmentsByDay = useMemo(() => {
     const grouped = new Map<string, Appointment[]>()
     for (const appointment of appointments ?? []) {
       if (!activeStatuses.has(appointment.status)) continue
       const dayKey = appointmentDateKey(appointment.currentStartAt, scheduleTimeZone)
       if (!weekDayKeys.includes(dayKey)) continue
-      const key = `${dayKey}|${scheduleTimeKey(appointment.currentStartAt)}`
-      grouped.set(key, sortAppointments([...(grouped.get(key) ?? []), appointment]))
+      grouped.set(dayKey, sortAppointments([...(grouped.get(dayKey) ?? []), appointment]))
     }
     return grouped
   }, [appointments, weekDayKeys])
 
   const visibleAppointments = useMemo(() =>
-    sortAppointments([...appointmentsBySlot.values()].flat()),
-  [appointmentsBySlot])
+    sortAppointments([...appointmentsByDay.values()].flat()),
+  [appointmentsByDay])
 
   useEffect(() => {
     const controller = new AbortController()
-    appointmentsApi.getStaffAppointments(controller.signal)
-      .then((result) => {
+    Promise.all([
+      appointmentsApi.getStaffAppointments(controller.signal),
+      appointmentsApi.getAvailability(controller.signal),
+    ])
+      .then(([staffAppointments, availability]) => {
         if (!controller.signal.aborted) {
-          setAppointments(sortAppointments(result))
+          setAppointments(sortAppointments(staffAppointments))
+          setDailyCapacity(availability.dailyCapacity)
           setError(null)
         }
       })
@@ -126,7 +122,7 @@ export function StaffScheduleSection() {
         <div>
           <p className="eyebrow">Panel warsztatu</p>
           <h2 id="staff-schedule-heading">Grafik</h2>
-          <p className="muted">Tygodniowy widok aktywnych zgłoszeń w godzinach pracy warsztatu.</p>
+          <p className="muted">Tygodniowy widok dni przyjęć samochodów i aktywnych zgłoszeń.</p>
         </div>
         <Link className="button secondary" to="/staff/appointments">Przejdź do listy zgłoszeń</Link>
       </div>
@@ -159,54 +155,50 @@ export function StaffScheduleSection() {
             <AppointmentStatusBadge status="TIME_PROPOSED" />
             <AppointmentStatusBadge status="CONFIRMED" />
           </div>
-          <div className="staff-schedule-scroll">
-            <table className="staff-schedule-grid">
-              <thead>
-                <tr>
-                  <th scope="col">Godzina</th>
-                  {weekDayKeys.map((dayKey) => (
-                    <th scope="col" key={dayKey}>{scheduleDayLabel(dayKey)}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {workHours.map((hour) => (
-                  <tr key={hour}>
-                    <th scope="row">{String(hour).padStart(2, '0')}:00</th>
-                    {weekDayKeys.map((dayKey) => {
-                      const slotAppointments = appointmentsBySlot.get(slotKey(dayKey, hour)) ?? []
-                      return (
-                        <td className={slotAppointments.length ? 'occupied-slot' : 'free-slot'} key={dayKey}>
-                          {slotAppointments.length === 0 ? (
-                            <span>Wolne</span>
-                          ) : (
-                            slotAppointments.map((appointment) => (
-                              <article className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
-                                key={appointment.id}>
-                                <div className="staff-schedule-card-header">
-                                  <strong>{appointment.vehicleMake} {appointment.vehicleModel}</strong>
-                                  <span>{shortReference(appointment.reference)}</span>
-                                </div>
-                                <AppointmentStatusBadge status={appointment.status} />
-                                <p>{appointment.firstName} {appointment.lastName}</p>
-                                <p className="muted">{appointment.vehicleRegistrationNumber}</p>
-                                <p className="staff-schedule-problem">{appointment.problemDescription}</p>
-                              </article>
-                            ))
-                          )}
-                        </td>
-                      )
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="staff-schedule-days">
+            {weekDayKeys.map((dayKey) => {
+              const dayAppointments = appointmentsByDay.get(dayKey) ?? []
+              const remainingCapacity = Math.max(dailyCapacity - dayAppointments.length, 0)
+              return (
+                <section className="staff-schedule-day" key={dayKey}>
+                  <header className="staff-schedule-day-header">
+                    <div>
+                      <h3>{scheduleDayLabel(dayKey)}</h3>
+                      <p className="muted">{dayAppointments.length} z {dailyCapacity} miejsc zajęte</p>
+                    </div>
+                    <span className={remainingCapacity > 0 ? 'daily-capacity open' : 'daily-capacity full'}>
+                      {remainingCapacity > 0 ? `${remainingCapacity} wolne` : 'Brak miejsc'}
+                    </span>
+                  </header>
+
+                  {dayAppointments.length === 0 ? (
+                    <p className="free-day">Brak aktywnych zgłoszeń na ten dzień.</p>
+                  ) : (
+                    <div className="staff-schedule-card-list">
+                      {dayAppointments.map((appointment) => (
+                        <article className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
+                          key={appointment.id}>
+                          <div className="staff-schedule-card-header">
+                            <strong>{appointment.vehicleMake} {appointment.vehicleModel}</strong>
+                            <span>{shortReference(appointment.reference)}</span>
+                          </div>
+                          <AppointmentStatusBadge status={appointment.status} />
+                          <p>{appointment.firstName} {appointment.lastName}</p>
+                          <p className="muted">{appointment.vehicleRegistrationNumber}</p>
+                          <p className="staff-schedule-problem">{appointment.problemDescription}</p>
+                        </article>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              )
+            })}
           </div>
           {visibleAppointments.length === 0 && (
             <p className="empty-state">W wybranym tygodniu nie ma aktywnych zgłoszeń w grafiku.</p>
           )}
           <p className="muted staff-schedule-note">
-            Grafik pokazuje aktualne terminy zgłoszeń. Odrzucone i odwołane zgłoszenia są dostępne na liście zgłoszeń.
+            Grafik pokazuje dni przyjęcia auta. Odrzucone i odwołane zgłoszenia są dostępne na liście zgłoszeń.
           </p>
         </>
       )}

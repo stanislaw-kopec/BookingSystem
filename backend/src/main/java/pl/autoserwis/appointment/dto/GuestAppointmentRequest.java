@@ -2,7 +2,7 @@ package pl.autoserwis.appointment.dto;
 
 import jakarta.validation.constraints.*;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 public record GuestAppointmentRequest(
     @NotBlank(message = "Podaj imię.")
@@ -42,8 +42,8 @@ public record GuestAppointmentRequest(
         message = "VIN musi mieć 17 znaków i nie może zawierać liter I, O ani Q.")
     String vehicleVin,
 
-    @NotNull(message = "Wybierz termin wizyty.")
-    OffsetDateTime slotStartAt,
+    @NotNull(message = "Wybierz dzień wizyty.")
+    LocalDate visitDate,
 
     @NotBlank(message = "Opisz problem z pojazdem.")
     @Size(min = 10, max = 2000, message = "Opis problemu musi mieć od 10 do 2000 znaków.")

@@ -12,7 +12,6 @@ import pl.autoserwis.appointment.dto.GuestAppointmentRequest;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +19,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,60 +37,74 @@ class AppointmentConcurrencyIntegrationTest {
     }
 
     @Test
-    void allowsOnlyOneOfTwoConcurrentRequestsForTheSameSlot() throws Exception {
-        GuestAppointmentRequest request = request(workingSlot());
-        CountDownLatch ready = new CountDownLatch(2);
+    void allowsOnlyDailyCapacityForConcurrentRequestsOnTheSameDay() throws Exception {
+        LocalDate visitDate = workingDate();
+        CountDownLatch ready = new CountDownLatch(AppointmentSchedule.DAILY_CAPACITY + 1);
         CountDownLatch start = new CountDownLatch(1);
-        ExecutorService executor = Executors.newFixedThreadPool(2);
+        ExecutorService executor = Executors.newFixedThreadPool(AppointmentSchedule.DAILY_CAPACITY + 1);
 
         try {
-            Callable<AttemptResult> attempt = () -> {
-                ready.countDown();
-                if (!start.await(5, TimeUnit.SECONDS)) {
-                    return AttemptResult.failure(new IllegalStateException("Nie uruchomiono próby na czas."));
-                }
-                try {
-                    appointmentService.createForGuest(request);
-                    return AttemptResult.success();
-                } catch (RuntimeException exception) {
-                    return AttemptResult.failure(exception);
-                }
-            };
+            List<Future<AttemptResult>> attempts = IntStream.rangeClosed(1, AppointmentSchedule.DAILY_CAPACITY + 1)
+                .mapToObj(index -> executor.submit(attempt(visitDate, index, ready, start)))
+                .toList();
 
-            Future<AttemptResult> first = executor.submit(attempt);
-            Future<AttemptResult> second = executor.submit(attempt);
             assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
             start.countDown();
 
-            List<AttemptResult> results = List.of(
-                first.get(15, TimeUnit.SECONDS),
-                second.get(15, TimeUnit.SECONDS));
+            List<AttemptResult> results = attempts.stream()
+                .map(future -> result(future))
+                .toList();
 
-            assertThat(results).filteredOn(AttemptResult::succeeded).hasSize(1);
+            assertThat(results).filteredOn(AttemptResult::succeeded)
+                .hasSize(AppointmentSchedule.DAILY_CAPACITY);
             assertThat(results).filteredOn(result -> !result.succeeded())
                 .singleElement()
                 .extracting(AttemptResult::failure)
                 .isInstanceOf(AppointmentConflictException.class);
-            assertThat(appointments.count()).isEqualTo(1);
+            assertThat(appointments.count()).isEqualTo(AppointmentSchedule.DAILY_CAPACITY);
         } finally {
             executor.shutdownNow();
         }
     }
 
-    private GuestAppointmentRequest request(OffsetDateTime startAt) {
-        return new GuestAppointmentRequest(
-            "Anna", "Nowak", "+48 500 600 700", "",
-            "Toyota", "Yaris", 2020, "KR123", "",
-            startAt, "Silnik nierówno pracuje po uruchomieniu.");
+    private Callable<AttemptResult> attempt(LocalDate visitDate, int index,
+            CountDownLatch ready, CountDownLatch start) {
+        return () -> {
+            ready.countDown();
+            if (!start.await(5, TimeUnit.SECONDS)) {
+                return AttemptResult.failure(new IllegalStateException("Nie uruchomiono próby na czas."));
+            }
+            try {
+                appointmentService.createForGuest(request(visitDate, index));
+                return AttemptResult.success();
+            } catch (RuntimeException exception) {
+                return AttemptResult.failure(exception);
+            }
+        };
     }
 
-    private OffsetDateTime workingSlot() {
+    private AttemptResult result(Future<AttemptResult> future) {
+        try {
+            return future.get(15, TimeUnit.SECONDS);
+        } catch (Exception exception) {
+            return AttemptResult.failure(exception);
+        }
+    }
+
+    private GuestAppointmentRequest request(LocalDate visitDate, int index) {
+        return new GuestAppointmentRequest(
+            "Anna", "Nowak", "+48 500 600 700", "",
+            "Toyota", "Yaris", 2020, "KR" + (100 + index), "",
+            visitDate, "Silnik nierówno pracuje po uruchomieniu.");
+    }
+
+    private LocalDate workingDate() {
         LocalDate date = LocalDate.now(AppointmentSchedule.TIME_ZONE).plusDays(1);
         while (date.getDayOfWeek() == DayOfWeek.SATURDAY
                 || date.getDayOfWeek() == DayOfWeek.SUNDAY) {
             date = date.plusDays(1);
         }
-        return date.atTime(8, 0).atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
+        return date;
     }
 
     private record AttemptResult(boolean succeeded, Throwable failure) {

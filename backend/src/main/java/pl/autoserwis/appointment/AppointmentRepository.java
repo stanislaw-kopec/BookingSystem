@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -23,10 +24,14 @@ public interface AppointmentRepository extends JpaRepository<AppointmentRequest,
           and appointment.currentStartAt >= :rangeStart
           and appointment.currentStartAt < :rangeEnd
         """)
-    List<Instant> findOccupiedStarts(
+    List<Instant> findBlockingStarts(
         @Param("statuses") Collection<AppointmentStatus> statuses,
         @Param("rangeStart") Instant rangeStart,
         @Param("rangeEnd") Instant rangeEnd);
+
+    @Query(value = "select 1 from pg_advisory_xact_lock(hashtext(cast(:visitDate as text)))",
+        nativeQuery = true)
+    Integer lockAppointmentDay(@Param("visitDate") LocalDate visitDate);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select appointment from AppointmentRequest appointment where appointment.id = :id")

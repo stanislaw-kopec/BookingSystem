@@ -16,10 +16,10 @@ PENDING ───────────────> CONFIRMED
 ```
 
 - `PENDING` oznacza zgłoszenie oczekujące na decyzję warsztatu.
-- `CONFIRMED` oznacza potwierdzony termin.
-- `REJECTED` kończy zgłoszenie i zwalnia termin.
-- `CANCELLED` oznacza wizytę odwołaną przez klienta i zwalnia termin.
-- `TIME_PROPOSED` oznacza, że personel wskazał inny termin. Klient z kontem
+- `CONFIRMED` oznacza potwierdzony dzień przyjęcia auta.
+- `REJECTED` kończy zgłoszenie i zwalnia miejsce w danym dniu.
+- `CANCELLED` oznacza wizytę odwołaną przez klienta i zwalnia miejsce w danym dniu.
+- `TIME_PROPOSED` oznacza, że personel wskazał inny dzień. Klient z kontem
   potwierdza go w swoim panelu. Dla gościa personel zapisuje potwierdzenie po
   kontakcie telefonicznym lub mailowym.
 
@@ -28,7 +28,7 @@ chroni danych przed ręcznie przygotowanym żądaniem HTTP.
 
 ## 2. Klient z kontem i gość
 
-Zalogowany klient wysyła `vehicleId`, termin i opis. Nie wysyła `clientId`, danych
+Zalogowany klient wysyła `vehicleId`, `visitDate` i opis. Nie wysyła `clientId`, danych
 właściciela ani statusu. [AppointmentService.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentService.java)
 pobiera użytkownika z sesji, sprawdza własność pojazdu i wymaga uzupełnionego profilu.
 
@@ -47,37 +47,38 @@ Kopia zachowuje stan z chwili zgłoszenia. Jeżeli klient później zmieni numer
 e-mail lub numer rejestracyjny, stare zgłoszenie nadal pokazuje dane, na podstawie
 których warsztat podejmował decyzję.
 
-## 4. Dostępność terminów
+## 4. Dostępność dni
 
 [AppointmentSchedule.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentSchedule.java)
 jest jednym miejscem z zasadami pierwszej wersji:
 
 - strefa `Europe/Warsaw`,
 - poniedziałek–piątek,
-- godziny 08:00–16:00,
-- jednogodzinne okna,
+- dzienna pojemność 4 aktywnych zgłoszeń,
+- techniczny początek dnia roboczego 08:00,
 - 30-dniowy horyzont.
 
-API zwraca zarówno początek, jak i koniec okna z przesunięciem strefy czasowej.
-Frontend tylko prezentuje odpowiedź. Nie uznaje terminu za wolny na podstawie
-własnego zegara ani lokalnej tablicy.
+API zwraca datę, dzienną pojemność, liczbę wolnych miejsc oraz techniczny początek
+i koniec dnia roboczego z przesunięciem strefy czasowej. Frontend tylko prezentuje
+odpowiedź. Nie uznaje dnia za wolny na podstawie własnego zegara ani lokalnej tablicy.
 
-## 5. Ochrona przed zajęciem jednego terminu dwa razy
+## 5. Ochrona przed przekroczeniem dziennego limitu
 
 Odczyt kalendarza i zapis zgłoszenia są dwiema osobnymi operacjami. Dwie osoby mogą
-zobaczyć ten sam wolny termin, zanim pierwsza z nich naciśnie „Wyślij zgłoszenie”.
+zobaczyć ostatnie wolne miejsce w danym dniu, zanim pierwsza z nich naciśnie
+„Wyślij zgłoszenie”.
 
-Częściowy unikalny indeks w PostgreSQL pozwala istnieć tylko jednemu zgłoszeniu
-z danym `current_start_at` i aktywnym statusem `PENDING`, `TIME_PROPOSED` albo
-`CONFIRMED`. Dzięki temu baza rozstrzyga także równoczesne zapisy. Przegrane żądanie
+Backend zakłada transakcyjną blokadę na wybrany dzień i ponownie liczy aktywne
+zgłoszenia ze statusami `PENDING`, `TIME_PROPOSED` albo `CONFIRMED`. Dzięki temu
+równoczesne zapisy nie powinny przekroczyć limitu 4 aut dziennie. Przegrane żądanie
 otrzymuje HTTP 409, a frontend odświeża kalendarz bez usuwania opisu usterki.
 
-Odrzucenie zmienia status na `REJECTED`, więc indeks przestaje blokować termin.
-Propozycja personelu zmienia bieżący termin w jednej transakcji: poprzedni zostaje
+Odrzucenie zmienia status na `REJECTED`, więc miejsce wraca do dostępnej pojemności.
+Propozycja personelu zmienia bieżący dzień w jednej transakcji: poprzedni zostaje
 zwolniony, a nowy zajęty.
 
 Odwołanie przez klienta zmienia status na `CANCELLED`. Taki status także nie blokuje
-terminu, więc okno może wrócić do kalendarza.
+miejsca, więc dzień może wrócić do kalendarza jako dostępny.
 
 ## 6. Endpointy i uprawnienia
 
@@ -92,7 +93,7 @@ POST /api/appointments/{id}/cancel                          odwołanie wizyty CL
 GET  /api/staff/appointments                                kolejka personelu
 POST /api/staff/appointments/{id}/accept                    przyjęcie
 POST /api/staff/appointments/{id}/reject                    odrzucenie
-POST /api/staff/appointments/{id}/propose-time              propozycja terminu
+POST /api/staff/appointments/{id}/propose-time              propozycja dnia
 POST /api/staff/appointments/{id}/confirm-proposed          potwierdzenie gościa
 ```
 
@@ -111,7 +112,7 @@ przez link w komunikacie sukcesu lub pozycję „Moje wizyty” w menu konta.
 
 `StaffSchedulePage` pod `/staff/schedule` składa zakładkę „Grafik” dla MECHANIC/ADMIN.
 Używa tej samej listy zgłoszeń personelu co kolejka, ale prezentuje aktywne zgłoszenia
-w tygodniowej siatce poniedziałek-piątek. `StaffAppointmentsPage` pod
+w tygodniowym widoku dni od poniedziałku do piątku. `StaffAppointmentsPage` pod
 `/staff/appointments` pozostaje miejscem podejmowania decyzji o zgłoszeniach.
 
 ```text
@@ -136,10 +137,10 @@ appointments/
 [appointmentsApi.ts](../frontend/src/features/appointments/api/appointmentsApi.ts)
 oddziela komunikację HTTP od komponentów i sprawdza odpowiedzi również podczas
 działania aplikacji. `useAppointmentAvailability` odpowiada za pobranie i odświeżenie
-kalendarza dostępnych terminów. Te same terminy wykorzystują formularz klienta,
-formularz gościa oraz proponowanie nowej godziny przez personel. Grafik personelu
-korzysta z `GET /api/staff/appointments`, bo pokazuje zapisane zgłoszenia, a nie
-wyliczoną dostępność.
+kalendarza dostępnych dni. Te same dni wykorzystują formularz klienta,
+formularz gościa oraz proponowanie nowego dnia przez personel. Grafik personelu
+korzysta z `GET /api/staff/appointments`, bo pokazuje zapisane zgłoszenia, oraz
+z publicznej dostępności, żeby pokazać bazową pojemność dnia.
 
 `ClientAppointmentForm` pobiera własne pojazdy. Jeśli klient doda samochód wewnątrz
 formularza, komponent używa istniejącego `POST /api/vehicles`, dopisuje odpowiedź do
@@ -147,7 +148,7 @@ listy i od razu wybiera nowy pojazd.
 
 ## 8. Co pozostaje na później
 
-Ta wersja nie wysyła e-maili ani SMS-ów, nie obsługuje świąt, wielu stanowisk
-i różnych długości napraw. Termin jest obecnie wspólnym jednogodzinnym oknem
-warsztatu. Te reguły można później rozbudować bez zmiany znaczenia istniejących
-zgłoszeń i statusów.
+Ta wersja nie wysyła e-maili ani SMS-ów, nie obsługuje świąt, wielu stanowisk,
+indywidualnych limitów na konkretne dni ani przypisywania mechanika. Dzień wizyty
+oznacza dzień przyjęcia auta do warsztatu, a nie czas trwania naprawy. Te reguły
+można później rozbudować bez zmiany znaczenia istniejących zgłoszeń i statusów.

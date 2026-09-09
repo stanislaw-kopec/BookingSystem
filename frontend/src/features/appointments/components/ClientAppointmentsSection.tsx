@@ -69,7 +69,7 @@ export function ClientAppointmentsSection() {
       const updated = await appointmentsApi.confirmProposedTime(appointmentId)
       setAppointments((current) => sortAppointments((current ?? []).map((appointment) =>
         appointment.id === updated.id ? updated : appointment)))
-      setNotice('Nowy termin wizyty został potwierdzony.')
+      setNotice('Nowy dzień wizyty został potwierdzony.')
     } catch (cause) {
       setActionError(errorMessage(cause))
     } finally {
@@ -99,7 +99,7 @@ export function ClientAppointmentsSection() {
         <div className="section-heading">
           <p className="eyebrow">Konto klienta</p>
           <h2 id="client-appointments-heading">Moje wizyty</h2>
-          <p className="muted">Tutaj sprawdzisz decyzję warsztatu i potwierdzisz zaproponowany termin.</p>
+          <p className="muted">Tutaj sprawdzisz decyzję warsztatu i potwierdzisz zaproponowany dzień.</p>
           <Link className="button" to="/appointments">Umów wizytę</Link>
         </div>
         {notice && <p className="message success" role="status">{notice}</p>}
@@ -123,11 +123,11 @@ export function ClientAppointmentsSection() {
                   <div className="appointment-card-actions actions">
                     {appointment.status === 'TIME_PROPOSED' && (
                       <>
-                        <p>Sprawdź nowy termin wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
+                        <p>Sprawdź nowy dzień wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
                         <button type="button" className="button"
                           disabled={confirmingId !== null || cancellingId !== null}
                           onClick={() => void confirmProposedTime(appointment.id)}>
-                          {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy termin'}
+                          {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy dzień'}
                         </button>
                       </>
                     )}

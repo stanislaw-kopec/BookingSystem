@@ -4,6 +4,6 @@ import java.util.List;
 
 public record AppointmentAvailabilityResponse(
     String timeZone,
-    int slotDurationMinutes,
-    List<AppointmentSlotResponse> slots
+    int dailyCapacity,
+    List<AppointmentDayResponse> days
 ) {}

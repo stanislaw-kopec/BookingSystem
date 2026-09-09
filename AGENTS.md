@@ -32,9 +32,9 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem na osobnej podstronie `/profile`. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Po zalogowaniu klient otwiera profil z menu konta w prawym górnym rogu. Zapisany profil domyślnie pokazuje podsumowanie; formularz pojawia się po wybraniu edycji. |
 | R04 | Pozycja „Moje pojazdy” w menu konta prowadzi do `/vehicles`. Klient może dodać pojazd z marką, modelem, rokiem produkcji, numerem rejestracyjnym i opcjonalnym VIN oraz przeglądać wyłącznie własne pojazdy. Wybranie pojazdu otwiera osobną podstronę `/vehicles/:vehicleId` ze szczegółami i historią napraw. |
 | R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
-| R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych terminów od poniedziałku do piątku. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera termin i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, termin oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. |
-| R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny termin. Zalogowany klient widzi własne zgłoszenia, potwierdza zaproponowany termin i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Główne menu zawiera publiczny link „Umów wizytę”, a prywatne linki klienta, w tym „Moje wizyty”, znajdują się w menu konta w prawym górnym rogu. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
-| R08 | Mechanik i administrator mają graficzną zakładkę `/staff/schedule` („Grafik”) z tygodniowym widokiem aktywnych zgłoszeń na kalendarzu pracy warsztatu. Panel `/staff/appointments` służy do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego terminu. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
+| R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych dni przyjęcia auta od poniedziałku do piątku. Pierwsza wersja przyjmuje bazowo 4 aktywne zgłoszenia na dzień. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera dzień przyjęcia auta i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, dzień przyjęcia auta oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. Interfejs informuje, że auto można zostawić rano albo po wcześniejszym uzgodnieniu dzień wcześniej. |
+| R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny dzień. Zalogowany klient widzi własne zgłoszenia, potwierdza zaproponowany dzień i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Główne menu zawiera publiczny link „Umów wizytę”, a prywatne linki klienta, w tym „Moje wizyty”, znajdują się w menu konta w prawym górnym rogu. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
+| R08 | Mechanik i administrator mają graficzną zakładkę `/staff/schedule` („Grafik”) z tygodniowym widokiem aktywnych zgłoszeń pogrupowanych według dni przyjęcia auta. Panel `/staff/appointments` służy do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego dnia. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
 
 ## Reguły biznesowe i granice dostępu
@@ -43,7 +43,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Personel może też przejść z `PENDING` do `TIME_PROPOSED`; zalogowany klient
   potwierdza propozycję, a w przypadku gościa personel potwierdza ją po kontakcie.
   Klient może odwołać własne aktywne zgłoszenie ze statusu `PENDING`,
-  `TIME_PROPOSED` albo `CONFIRMED`; status `CANCELLED` zwalnia termin. Wysłanie
+  `TIME_PROPOSED` albo `CONFIRMED`; status `CANCELLED` zwalnia miejsce. Wysłanie
   formularza nie jest automatycznym potwierdzeniem wizyty.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
   Personel korzysta z danych w zakresie przyznanych uprawnień.
@@ -61,15 +61,16 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   lub pojazdu nie zmieniła danych, na podstawie których warsztat podjął decyzję.
 - Zgłoszenie gościa przechowuje kopię danych kontaktowych i pojazdu. Nie tworzy
   rekordu w `app_users`, `client_profiles` ani `vehicles`.
-- Kalendarz pokazuje dostępność, ale backend ponownie sprawdza termin przy wysłaniu
-  zgłoszenia i proponowaniu nowej godziny. Nie dopuszczaj do więcej niż jednego
-  aktywnego zgłoszenia w tym samym oknie, także przy równoczesnych żądaniach.
+- Kalendarz pokazuje dostępność, ale backend ponownie sprawdza dzień przyjęcia auta
+  przy wysłaniu zgłoszenia i proponowaniu nowego dnia. Nie dopuszczaj do przekroczenia
+  dziennego limitu aktywnych zgłoszeń, także przy równoczesnych żądaniach.
 - Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, dni od poniedziałku
-  do piątku, godzin 08:00–16:00, jednogodzinnych terminów i horyzontu 30 dni.
-  Warsztat ma w tym modelu jeden wspólny zasób. Statusy `PENDING`, `TIME_PROPOSED`
-  i `CONFIRMED` blokują bieżący termin; `REJECTED` i `CANCELLED` go zwalniają.
-  Zmiana terminu zwalnia poprzedni i zajmuje nowy atomowo. Baza zabezpiecza
-  równoległe próby zajęcia.
+  do piątku, dziennego limitu 4 aktywnych zgłoszeń i horyzontu 30 dni.
+  Wewnętrznie wybrany dzień jest zapisywany jako początek dnia roboczego 08:00,
+  ale interfejs nie umawia klienta na konkretną godzinę. Statusy `PENDING`,
+  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu; `REJECTED` i
+  `CANCELLED` je zwalniają. Zmiana dnia zwalnia poprzedni i zajmuje nowy atomowo.
+  Backend zabezpiecza równoległe próby zajęcia miejsc.
 - Historia napraw opisuje wykonane prace udokumentowane fakturą. Sam opis usterki
   lub przyjęcie rezerwacji nie stanowi wpisu potwierdzającego wykonanie naprawy.
 - Katalog ma dwa poziomy: kategoria → usługa. Nie dodawaj kolejnych poziomów
@@ -82,12 +83,13 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 Nie zapisuj poniższych decyzji jako uzgodnionych, dopóki nie wynikają z rozmowy.
 Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 
-- Rzeczywiste godziny pracy, święta i dni zamknięcia. Obecne godziny i strefa są
-  ustawieniem pierwszej wersji, dopóki użytkownik nie poda danych warsztatu.
-- Wiele stanowisk, różne długości usług, przypisywanie mechanika oraz odpowiedź,
-  czy termin oznacza przyjęcie samochodu, czy czas całej naprawy.
+- Rzeczywiste godziny pracy, święta, dni zamknięcia i docelowa liczba miejsc na dzień.
+  Obecna strefa, dni robocze i limit 4 aut dziennie są ustawieniem pierwszej wersji,
+  dopóki użytkownik nie poda danych warsztatu.
+- Wiele stanowisk, różne długości usług i przypisywanie mechanika pozostają dalszym
+  etapem planowania pracy warsztatu po przyjęciu auta.
 - Automatyczne wygasanie blokady zgłoszenia oczekującego, przekładanie
-  potwierdzonych wizyt oraz odrzucenie propozycji terminu przez klienta.
+  potwierdzonych wizyt oraz odrzucenie propozycji dnia przez klienta.
 - Powiadomienia e-mail/SMS i zabezpieczenie publicznego formularza przed spamem.
 - Podział pozostałych uprawnień administratora, pracownika i mechanika: zarządzanie
   harmonogramem, konta oraz faktury. Edycję katalogu usług i podgląd grafiku już
@@ -120,7 +122,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   dodawać własne pojazdy oraz otwierać ich szczegóły. Widok historii napraw jest gotowy,
   ale pozostaje pusty do czasu wdrożenia faktur. Działają publiczna dostępność,
   zgłoszenia wizyt klienta i gościa, panel własnych zgłoszeń, grafik MECHANIC/ADMIN
-  oraz decyzje personelu z proponowaniem nowego terminu. Zlecenia napraw i faktury
+  oraz decyzje personelu z proponowaniem nowego dnia. Zlecenia napraw i faktury
   pozostają do zbudowania.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.

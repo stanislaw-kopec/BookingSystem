@@ -2,7 +2,7 @@ import type { AppointmentStatus } from '../types'
 
 const labels: Record<AppointmentStatus, string> = {
   PENDING: 'Oczekujące',
-  TIME_PROPOSED: 'Zaproponowano nowy termin',
+  TIME_PROPOSED: 'Zaproponowano nowy dzień',
   CONFIRMED: 'Potwierdzone',
   CANCELLED: 'Odwołane',
   REJECTED: 'Odrzucone',
