@@ -211,7 +211,10 @@ dostępność podczas zapisu, a indeks PostgreSQL chroni także równoczesne ż�
 | `REJECTED` | Zgłoszenie zostało odrzucone, a termin zwolniony |
 
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
-Mechanika i Wulkanizacja, łącznie sześć usług. Ich późniejsza edycja odbywa się
+Mechanika i Wulkanizacja, łącznie sześć usług. Migracja V8 rozszerza ofertę
+o 15 propozycji usług w istniejących kategoriach,
+pomijając nazwy już obecne i zachowując ich opisy. Kategorie usunięte lub przemianowane
+nie są odtwarzane. Dalsza edycja odbywa się
 w panelu; restart nie przywraca poprzedniej oferty. Nie zmieniaj zastosowanych
 migracji — nowe zmiany schematu zapisuj w kolejnych plikach migracji.
 
@@ -343,7 +346,13 @@ opisuje model bazy, prywatne API, walidację oraz dwie podstrony Reacta.
 [Przewodnik po umawianiu wizyty](docs/appointment-booking-walkthrough.md)
 wyjaśnia statusy, dostępność, ochronę terminu przed równoczesnym zapisem oraz
 różnicę między formularzem klienta i gościa.
-Opis warsztatu zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
+Warsztat nazywa się **Mietek Customs**. Logo z kaczką znajduje się w
+`frontend/src/assets/branding/mietek-customs-logo.png`. Opis importu grafiki i podziału
+plików znajdziesz w [przewodniku po logo w Reacie](docs/workshop-branding.md).
+Historia warsztatu to fikcyjny tekst w trzech akapitach przygotowany do prezentacji projektu.
+Strona główna pokazuje kolejno opis warsztatu, nasze usługi oraz lokalizację z mapą
+Google i linkiem do wyznaczania trasy. Mapa wskazuje demonstracyjny punkt we Wrocławiu.
+Opis warsztatu i współrzędne mapy zmienisz w `frontend/src/features/workshop/workshopInfo.ts`;
 kolory w zmiennych na początku `frontend/src/index.css`.
 
 Testy backendu wymagają Docker Desktop i uruchamiają własną, tymczasową bazę

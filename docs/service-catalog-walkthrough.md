@@ -25,11 +25,14 @@ App
         ├── CatalogManager           tylko MECHANIC / ADMIN
         │   ├── CategoryForm
         │   └── ServiceForm
+        ├── WorkshopLocation         lokalizacja z mapą Google
         └── AuthDialog               po otwarciu logowania
 ```
 
 `HomePage` jest miejscem składania strony. Opis warsztatu występuje przed
 ofertą, bo `<WorkshopOverview />` stoi przed `<ServicesSection />`.
+Na końcu strony `<WorkshopLocation />` pokazuje lokalizację z mapą Google.
+Opis i współrzędne przykładowego punktu we Wrocławiu są w `workshopInfo.ts`.
 Link `href="#services"` przewija do sekcji mającej `id="services"`.
 Do samego przewijania nadal wystarcza HTML. React Router został później dodany
 do obsługi osobnych podstron, takich jak `/profile`.
@@ -229,7 +232,7 @@ jeszcze nie implementowaliśmy.
 
 ## 9. Gdzie później zmieniać wygląd i treści?
 
-- [workshopInfo.ts](../frontend/src/features/workshop/workshopInfo.ts) — opis warsztatu, historia i adres. Obecnie prawdziwe dane czekają na uzupełnienie.
+- [workshopInfo.ts](../frontend/src/features/workshop/workshopInfo.ts) — opis warsztatu, fikcyjna historia w trzech akapitach oraz demonstracyjna lokalizacja. Każdy element tablicy `history` wyświetla się jako osobny akapit.
 - [index.css](../frontend/src/index.css) — wspólne kolory, czcionki, przyciski i pola.
 - [App.css](../frontend/src/App.css) — układ strony, nagłówek i okno logowania.
 - [services.css](../frontend/src/features/services/services.css) — karty oraz panel katalogu.

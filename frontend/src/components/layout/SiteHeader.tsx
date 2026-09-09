@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { MouseEvent } from 'react'
 import type { CurrentUser } from '../../features/auth/types'
+import { WorkshopLogo } from '../../features/workshop/components/WorkshopLogo'
+import { workshopInfo } from '../../features/workshop/workshopInfo'
 
 interface Props {
   user: CurrentUser | null
@@ -19,7 +21,9 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
 
   return (
     <header className="site-header">
-      <Link className="brand" to="/">Auto Serwis</Link>
+      <Link className="brand" to="/" aria-label={`${workshopInfo.name} — strona główna`}>
+        <WorkshopLogo className="brand-logo" />
+      </Link>
       <nav aria-label="Menu główne">
         <a href="/#about">O warsztacie</a>
         <a href="/#services">Usługi</a>

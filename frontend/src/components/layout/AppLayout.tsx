@@ -4,6 +4,7 @@ import { errorMessage } from '../../api/apiClient'
 import { AuthDialog } from '../../features/auth/components/AuthDialog'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { SiteHeader } from './SiteHeader'
+import { workshopInfo } from '../../features/workshop/workshopInfo'
 
 export function AppLayout() {
   const auth = useAuth()
@@ -36,7 +37,7 @@ export function AppLayout() {
         </div>
       )}
       <Outlet />
-      <footer className="site-footer">Auto Serwis · Oferta warsztatu samochodowego</footer>
+      <footer className="site-footer">{workshopInfo.name} · Oferta warsztatu samochodowego</footer>
       {isLoginOpen && !auth.user && <AuthDialog onClose={() => setIsLoginOpen(false)} />}
     </div>
   )

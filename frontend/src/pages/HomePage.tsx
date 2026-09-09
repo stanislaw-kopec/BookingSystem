@@ -3,6 +3,7 @@ import { CatalogManager } from '../features/services/components/CatalogManager'
 import { ServicesSection } from '../features/services/components/ServicesSection'
 import { useServiceCatalog } from '../features/services/hooks/useServiceCatalog'
 import { WorkshopOverview } from '../features/workshop/components/WorkshopOverview'
+import { WorkshopLocation } from '../features/workshop/components/WorkshopLocation'
 
 export function HomePage() {
   const auth = useAuth()
@@ -18,6 +19,7 @@ export function HomePage() {
         <CatalogManager key={auth.user.username} categories={catalog.categories}
           isRefreshing={catalog.isLoading} onChanged={catalog.reload} />
       )}
+      <WorkshopLocation />
     </main>
   )
 }

@@ -21,9 +21,18 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 
 ## Widoki wymagane przez użytkownika
 
+- Nazwa warsztatu to „Mietek Customs”. Logo zawiera napis i gumową kaczkę w
+  czapeczce w stylu hot roda. Grafikę przechowuj w `src/assets/branding`, importuj
+  przez `WorkshopLogo` i używaj w nagłówku oraz sekcji o warsztacie. Nazwa w React
+  pochodzi z `workshopInfo.name`; tytuł i opis dokumentu są w `index.html`.
+
 - R01–R02: publiczna strona z informacjami o warsztacie i usługami; menu u góry oraz
   jeden przycisk „Logowanie / Rejestracja” po prawej. Jeden punkt wejścia może prowadzić
   do widoku przełączającego formularze logowania i rejestracji.
+- Strona główna pokazuje kolejno `WorkshopOverview`, `ServicesSection` i
+  `WorkshopLocation` z mapą Google. Lokalizacja jest ostatnią sekcją, także gdy
+  personel widzi panel edycji oferty. Mapa używa demonstracyjnego punktu we Wrocławiu,
+  wyraźnie opisanego jako przykładowy; współrzędne i opis są w `workshopInfo.ts`.
 - R03: link „Mój profil” w menu konta oraz osobna podstrona `/profile` są dostępne tylko dla CLIENT.
   Formularz edytuje wymagane dane kontaktowe i adres, a przełącznik firmy odsłania
   wymagane pola rozliczeniowe. Zapisane dane pokazuj najpierw w trybie podglądu,
@@ -52,7 +61,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   pokazuje błędy przy polach i po sukcesie automatycznie loguje klienta.
 - Na tym etapie stosuj prosty CSS. Kolory są w zmiennych `src/index.css`,
   a opis i dane warsztatu w `features/workshop/workshopInfo.ts`.
-  Rzeczywistego adresu i historii nie podano; zachowaj uczciwe teksty tymczasowe.
+  Historia jest fikcyjnym tekstem demonstracyjnym w trzech akapitach, napisanym na
+  prośbę użytkownika. Rzeczywistego adresu nie podano; zachowaj oznaczenie lokalizacji przykładowej.
 
 ## Rezerwacje, formularze i prywatność
 
