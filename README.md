@@ -189,8 +189,9 @@ Zalogowany klient wybiera jeden ze swoich pojazdów. Może też rozwinąć formu
 dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utworzenie
 zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
 dane kontaktowe. Osobna podstrona `/my-appointments` („Moje wizyty”) pokazuje
-własne zgłoszenia i ich statusy, pozwala potwierdzić zaproponowany dzień oraz
-odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”, a lista
+własne zgłoszenia i ich statusy. Listę można filtrować po statusie, sortować po
+dacie przyjęcia auta oraz przeglądać stronami. Panel pozwala potwierdzić
+zaproponowany dzień oraz odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”, a lista
 własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inny dzień, klient może go potwierdzić w panelu.
 Po zakończeniu naprawy klient widzi status „Czeka na odbiór”, opis wykonanych prac

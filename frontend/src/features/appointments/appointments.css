@@ -48,6 +48,19 @@
 .calendar-legend { margin-top: 8px; font-size: 0.82rem; }
 .selected-day { margin-top: 14px; padding: 10px 12px; border-left: 3px solid var(--primary); background: #edf5ff; }
 .appointment-submit { margin-top: 24px; }
+.appointment-list-controls {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.appointment-list-controls .compact-field { max-width: 240px; margin: 0; }
+.appointment-list-summary { margin: 0 0 8px auto; color: var(--muted); font-size: 0.9rem; }
 .appointment-list { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
 .appointment-card { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
 .appointment-card-content { padding: 22px; }
@@ -69,6 +82,14 @@
 .appointment-facts .proposed-time { padding: 10px; border-radius: 6px; background: #edf5ff; }
 .appointment-card-actions { padding: 16px 22px; border-top: 1px solid var(--border); background: var(--background); }
 .appointment-card-actions p { margin-bottom: 10px; }
+.appointment-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 22px;
+}
+.appointment-pagination span { color: var(--muted); font-weight: 700; }
 .danger-button { color: var(--danger); border-color: #e4a5a5; }
 .requester-type { padding: 6px 22px; color: var(--muted); font-size: 0.8rem; border-bottom: 1px solid var(--border); background: var(--background); }
 .staff-decision-form { margin: 0 22px 22px; }
@@ -169,6 +190,10 @@
   .wide-field { grid-column: auto; }
   .calendar-day { display: block; }
   .appointment-status { align-self: flex-start; }
+  .appointment-list-controls { align-items: stretch; flex-direction: column; }
+  .appointment-list-controls .compact-field { max-width: none; }
+  .appointment-list-summary { margin: 0; }
+  .appointment-pagination { align-items: stretch; flex-direction: column; }
   .appointment-card-actions.actions { align-items: stretch; flex-direction: column; }
   .appointment-card-actions.actions .button { width: 100%; }
   .staff-schedule-heading, .staff-schedule-toolbar { align-items: stretch; flex-direction: column; }

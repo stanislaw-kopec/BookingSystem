@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
-import type { Appointment } from '../types'
+import type { Appointment, AppointmentStatus } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
 import '../appointments.css'
+
+const pageSize = 5
 
 const statusPriority = {
   TIME_PROPOSED: 0,
@@ -16,6 +18,30 @@ const statusPriority = {
   CANCELLED: 5,
   REJECTED: 6,
 } as const
+
+const statusLabels: Record<AppointmentStatus, string> = {
+  PENDING: 'Oczekuje na decyzję',
+  TIME_PROPOSED: 'Zaproponowano inny dzień',
+  CONFIRMED: 'Potwierdzona',
+  READY_FOR_PICKUP: 'Czeka na odbiór',
+  COMPLETED: 'Zakończona',
+  CANCELLED: 'Odwołana',
+  REJECTED: 'Odrzucona',
+}
+
+const statusFilterOptions: Array<{ value: AppointmentStatus | 'ALL', label: string }> = [
+  { value: 'ALL', label: 'Wszystkie statusy' },
+  { value: 'PENDING', label: statusLabels.PENDING },
+  { value: 'TIME_PROPOSED', label: statusLabels.TIME_PROPOSED },
+  { value: 'CONFIRMED', label: statusLabels.CONFIRMED },
+  { value: 'READY_FOR_PICKUP', label: statusLabels.READY_FOR_PICKUP },
+  { value: 'COMPLETED', label: statusLabels.COMPLETED },
+  { value: 'CANCELLED', label: statusLabels.CANCELLED },
+  { value: 'REJECTED', label: statusLabels.REJECTED },
+]
+
+type StatusFilter = AppointmentStatus | 'ALL'
+type DateSortDirection = 'DESC' | 'ASC'
 
 const cancellableStatuses = new Set<Appointment['status']>([
   'PENDING',
@@ -30,6 +56,15 @@ function sortAppointments(appointments: Appointment[]) {
   })
 }
 
+function sortAppointmentsByDate(appointments: Appointment[], direction: DateSortDirection) {
+  return [...appointments].sort((first, second) => {
+    const byDate = direction === 'DESC'
+      ? second.currentStartAt.localeCompare(first.currentStartAt)
+      : first.currentStartAt.localeCompare(second.currentStartAt)
+    return byDate || statusPriority[first.status] - statusPriority[second.status]
+  })
+}
+
 export function ClientAppointmentsSection() {
   const [appointments, setAppointments] = useState<Appointment[] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -38,6 +73,9 @@ export function ClientAppointmentsSection() {
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const [cancellingId, setCancellingId] = useState<number | null>(null)
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
+  const [dateSortDirection, setDateSortDirection] = useState<DateSortDirection>('DESC')
+  const [currentPage, setCurrentPage] = useState(1)
   const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
@@ -59,10 +97,34 @@ export function ClientAppointmentsSection() {
     return () => controller.abort()
   }, [revision])
 
+  const visibleAppointments = useMemo(() => {
+    if (appointments === null) return []
+    const filtered = statusFilter === 'ALL'
+      ? appointments
+      : appointments.filter((appointment) => appointment.status === statusFilter)
+    return sortAppointmentsByDate(filtered, dateSortDirection)
+  }, [appointments, dateSortDirection, statusFilter])
+
+  const totalPages = Math.max(1, Math.ceil(visibleAppointments.length / pageSize))
+  const safeCurrentPage = Math.min(currentPage, totalPages)
+  const firstVisibleIndex = (safeCurrentPage - 1) * pageSize
+  const pagedAppointments = visibleAppointments.slice(firstVisibleIndex, firstVisibleIndex + pageSize)
+
+
   function retry() {
     setIsLoading(true)
     setError(null)
     setRevision((value) => value + 1)
+  }
+
+  function changeStatusFilter(value: StatusFilter) {
+    setStatusFilter(value)
+    setCurrentPage(1)
+  }
+
+  function changeDateSortDirection(value: DateSortDirection) {
+    setDateSortDirection(value)
+    setCurrentPage(1)
   }
 
   async function confirmProposedTime(appointmentId: number) {
@@ -141,43 +203,87 @@ export function ClientAppointmentsSection() {
           <p className="empty-state">Nie masz jeszcze żadnych zgłoszeń wizyt.</p>
         )}
         {appointments && appointments.length > 0 && (
-          <ul className="appointment-list">
-            {appointments.map((appointment) => (
-              <li className="appointment-card" key={appointment.id}>
-                <AppointmentDetails appointment={appointment} />
-                {(appointment.status === 'TIME_PROPOSED'
-                  || cancellableStatuses.has(appointment.status)
-                  || (appointment.status === 'COMPLETED' && appointment.vehicleId !== null)) && (
-                  <div className="appointment-card-actions actions">
-                    {appointment.status === 'COMPLETED' && appointment.vehicleId !== null && (
-                      <button type="button" className="button secondary"
-                        disabled={downloadingInvoiceId === appointment.id}
-                        onClick={() => void downloadInvoice(appointment)}>
-                        {downloadingInvoiceId === appointment.id ? 'Pobieranie…' : 'Pobierz fakturę'}
-                      </button>
-                    )}
-                    {appointment.status === 'TIME_PROPOSED' && (
-                      <>
-                        <p>Sprawdź nowy dzień wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
-                        <button type="button" className="button"
-                          disabled={confirmingId !== null || cancellingId !== null}
-                          onClick={() => void confirmProposedTime(appointment.id)}>
-                          {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy dzień'}
-                        </button>
-                      </>
-                    )}
-                    {cancellableStatuses.has(appointment.status) && (
-                      <button type="button" className="button secondary danger-button"
-                        disabled={confirmingId !== null || cancellingId !== null}
-                        onClick={() => void cancelAppointment(appointment.id)}>
-                        {cancellingId === appointment.id ? 'Odwoływanie…' : 'Odwołaj wizytę'}
-                      </button>
-                    )}
-                  </div>
+          <>
+            <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie wizyt">
+              <label className="form-field compact-field">
+                <span>Status</span>
+                <select value={statusFilter} onChange={(event) => changeStatusFilter(event.target.value as StatusFilter)}>
+                  {statusFilterOptions.map((option) => (
+                    <option key={option.value} value={option.value}>{option.label}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="form-field compact-field">
+                <span>Sortowanie po dacie</span>
+                <select value={dateSortDirection} onChange={(event) => changeDateSortDirection(event.target.value as DateSortDirection)}>
+                  <option value="DESC">Od najnowszych</option>
+                  <option value="ASC">Od najstarszych</option>
+                </select>
+              </label>
+              <p className="appointment-list-summary">
+                Pokazuję {pagedAppointments.length === 0 ? 0 : firstVisibleIndex + 1}–{firstVisibleIndex + pagedAppointments.length}
+                {' '}z {visibleAppointments.length} zgłoszeń
+              </p>
+            </div>
+            {visibleAppointments.length === 0 ? (
+              <p className="empty-state">Brak zgłoszeń pasujących do wybranego statusu.</p>
+            ) : (
+              <>
+                <ul className="appointment-list">
+                  {pagedAppointments.map((appointment) => (
+                    <li className="appointment-card" key={appointment.id}>
+                      <AppointmentDetails appointment={appointment} />
+                      {(appointment.status === 'TIME_PROPOSED'
+                        || cancellableStatuses.has(appointment.status)
+                        || (appointment.status === 'COMPLETED' && appointment.vehicleId !== null)) && (
+                        <div className="appointment-card-actions actions">
+                          {appointment.status === 'COMPLETED' && appointment.vehicleId !== null && (
+                            <button type="button" className="button secondary"
+                              disabled={downloadingInvoiceId === appointment.id}
+                              onClick={() => void downloadInvoice(appointment)}>
+                              {downloadingInvoiceId === appointment.id ? 'Pobieranie…' : 'Pobierz fakturę'}
+                            </button>
+                          )}
+                          {appointment.status === 'TIME_PROPOSED' && (
+                            <>
+                              <p>Sprawdź nowy dzień wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>
+                              <button type="button" className="button"
+                                disabled={confirmingId !== null || cancellingId !== null}
+                                onClick={() => void confirmProposedTime(appointment.id)}>
+                                {confirmingId === appointment.id ? 'Potwierdzanie…' : 'Potwierdź nowy dzień'}
+                              </button>
+                            </>
+                          )}
+                          {cancellableStatuses.has(appointment.status) && (
+                            <button type="button" className="button secondary danger-button"
+                              disabled={confirmingId !== null || cancellingId !== null}
+                              onClick={() => void cancelAppointment(appointment.id)}>
+                              {cancellingId === appointment.id ? 'Odwoływanie…' : 'Odwołaj wizytę'}
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                {totalPages > 1 && (
+                  <nav className="appointment-pagination" aria-label="Strony wizyt">
+                    <button type="button" className="button secondary"
+                      disabled={safeCurrentPage === 1}
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>
+                      Poprzednia
+                    </button>
+                    <span>Strona {safeCurrentPage} z {totalPages}</span>
+                    <button type="button" className="button secondary"
+                      disabled={safeCurrentPage === totalPages}
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}>
+                      Następna
+                    </button>
+                  </nav>
                 )}
-              </li>
-            ))}
-          </ul>
+              </>
+            )}
+          </>
         )}
       </section>
     </section>
