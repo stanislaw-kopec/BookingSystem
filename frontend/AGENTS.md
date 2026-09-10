@@ -53,7 +53,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/schedule` jest chronioną zakładką MECHANIC/ADMIN z graficznym,
   tygodniowym grafikiem aktywnych zgłoszeń pogrupowanych według dni od poniedziałku do piątku. `/staff/appointments`
-  jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości oraz akcjami
+  jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości, backendową
+  paginacją, filtrowaniem po statusie, sortowaniem po dacie oraz akcjami
   potwierdzenia, odrzucenia i zaproponowania innego dnia. Propozycję gościa
   personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R10: w `/staff/appointments` przy zgłoszeniu `CONFIRMED` pokaż akcję „Praca zakończona”.

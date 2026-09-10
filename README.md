@@ -203,8 +203,9 @@ w „Moich wizytach” pojawia się przycisk pobrania faktury PDF.
 Mechanik i administrator mają w menu konta zakładkę
 `http://localhost:5173/staff/schedule` („Grafik”), która pokazuje aktywne zgłoszenia
 na tygodniowym kalendarzu pracy warsztatu. Szczegółowa kolejka zgłoszeń jest pod
-`http://localhost:5173/staff/appointments`. Panel pozwala przyjąć lub odrzucić
-zgłoszenie oraz wskazać inny wolny dzień. W przypadku gościa personel potwierdza
+`http://localhost:5173/staff/appointments`. Panel pozwala filtrować zgłoszenia po
+statusie, sortować je po dacie przyjęcia auta i przeglądać stronami. Pozwala też
+przyjąć lub odrzucić zgłoszenie oraz wskazać inny wolny dzień. W przypadku gościa personel potwierdza
 nowy dzień po uzgodnieniu go poza aplikacją.
 Po potwierdzeniu wizyty personel może wybrać „Praca zakończona”, wpisać wykonane
 prace i końcową kwotę brutto. Przy statusie „Czeka na odbiór” personel widzi przycisk
@@ -311,7 +312,8 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/appointments` | Zgłoszenie dla własnego pojazdu | CLIENT, CSRF |
 | `POST /api/appointments/{id}/confirm-proposed` | Potwierdzenie nowego dnia | Właściciel CLIENT, CSRF |
 | `POST /api/appointments/{id}/cancel` | Odwołanie aktywnej wizyty | Właściciel CLIENT, CSRF |
-| `GET /api/staff/appointments` | Kolejka wszystkich zgłoszeń | MECHANIC, ADMIN |
+| `GET /api/staff/appointments` | Strona zgłoszeń personelu; obsługuje `status`, `page`, `size`, `sortDirection` | MECHANIC, ADMIN |
+| `GET /api/staff/appointments/all` | Pełna lista zgłoszeń używana przez grafik personelu | MECHANIC, ADMIN |
 | `POST /api/staff/appointments/{id}/accept` | Potwierdzenie zgłoszonego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego dnia | MECHANIC, ADMIN, CSRF |

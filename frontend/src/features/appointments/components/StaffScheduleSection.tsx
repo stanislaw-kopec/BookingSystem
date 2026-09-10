@@ -93,7 +93,7 @@ export function StaffScheduleSection() {
   useEffect(() => {
     const controller = new AbortController()
     Promise.all([
-      appointmentsApi.getStaffAppointments(controller.signal),
+      appointmentsApi.getAllStaffAppointments(controller.signal),
       appointmentsApi.getAvailability(controller.signal),
     ])
       .then(([staffAppointments, availability]) => {

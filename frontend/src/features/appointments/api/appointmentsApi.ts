@@ -169,8 +169,24 @@ export async function cancelClientAppointment(appointmentId: number): Promise<Ap
   }))
 }
 
-export async function getStaffAppointments(signal?: AbortSignal): Promise<Appointment[]> {
-  return appointmentsFrom(await apiRequest('/api/staff/appointments', { signal }))
+export async function getStaffAppointments(
+  page: number,
+  size: number,
+  sortDirection: 'ASC' | 'DESC',
+  status: AppointmentStatus | 'ALL',
+  signal?: AbortSignal,
+): Promise<AppointmentPage> {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    sortDirection,
+  })
+  if (status !== 'ALL') params.set('status', status)
+  return appointmentPageFrom(await apiRequest(`/api/staff/appointments?${params}`, { signal }))
+}
+
+export async function getAllStaffAppointments(signal?: AbortSignal): Promise<Appointment[]> {
+  return appointmentsFrom(await apiRequest('/api/staff/appointments/all', { signal }))
 }
 
 export async function acceptAppointment(appointmentId: number): Promise<Appointment> {

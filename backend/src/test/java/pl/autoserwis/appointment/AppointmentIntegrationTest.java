@@ -533,7 +533,46 @@ class AppointmentIntegrationTest {
 
         mockMvc.perform(get("/api/staff/appointments")
                 .with(user(staff.getUsername()).roles(role)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray());
+    }
+
+    @Test
+    void staffAppointmentsSupportBackendPaginationFilteringAndDateSorting() throws Exception {
+        AppUser staff = createUser("staff-paged-mechanic", UserRole.MECHANIC);
+        createGuestAppointment(workingDate(1), "Pierwsze zgłoszenie do kolejki personelu.");
+        createGuestAppointment(workingDate(2), "Drugie zgłoszenie do kolejki personelu.");
+        createGuestAppointment(workingDate(3), "Trzecie zgłoszenie do kolejki personelu.");
+        AppointmentRequest confirmed = appointments.findAll().get(1);
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/accept", confirmed.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
             .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/staff/appointments")
+                .param("page", "0")
+                .param("size", "2")
+                .param("sortDirection", "ASC")
+                .with(user(staff.getUsername()).roles("MECHANIC")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(2))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(2))
+            .andExpect(jsonPath("$.totalElements").value(3))
+            .andExpect(jsonPath("$.totalPages").value(2))
+            .andExpect(jsonPath("$.content[0].currentStartAt").value(apiTime(workingDate(1))))
+            .andExpect(jsonPath("$.content[1].currentStartAt").value(apiTime(workingDate(2))));
+
+        mockMvc.perform(get("/api/staff/appointments")
+                .param("status", "CONFIRMED")
+                .param("page", "0")
+                .param("size", "5")
+                .with(user(staff.getUsername()).roles("MECHANIC")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.content[0].status").value("CONFIRMED"))
+            .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     private void createClientAppointment(AppUser client, Vehicle vehicle, LocalDate visitDate)

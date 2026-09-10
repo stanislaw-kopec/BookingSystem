@@ -76,6 +76,25 @@ public class AppointmentService {
             .map(this::response)
             .toList();
     }
+    public AppointmentPageResponse getStaffAppointments(AppointmentStatus status,
+            int page, int size, String direction) {
+        int pageNumber = Math.max(page, 0);
+        int pageSize = normalizedPageSize(size);
+        Sort.Direction sortDirection = "ASC".equalsIgnoreCase(direction)
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+        PageRequest pageable = PageRequest.of(pageNumber, pageSize,
+            Sort.by(sortDirection, "currentStartAt").and(Sort.by(Sort.Direction.ASC, "id")));
+        Page<AppointmentRequest> result = status == null
+            ? appointments.findAll(pageable)
+            : appointments.findByStatus(status, pageable);
+        return new AppointmentPageResponse(
+            result.getContent().stream().map(this::response).toList(),
+            result.getNumber(),
+            result.getSize(),
+            result.getTotalElements(),
+            result.getTotalPages());
+    }
     @Transactional
     public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {
         AppUser client = user(username);

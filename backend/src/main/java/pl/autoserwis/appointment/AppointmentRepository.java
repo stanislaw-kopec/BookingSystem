@@ -19,6 +19,8 @@ public interface AppointmentRepository extends JpaRepository<AppointmentRequest,
 
     Page<AppointmentRequest> findByClient_IdAndStatus(Long clientId, AppointmentStatus status, Pageable pageable);
 
+    Page<AppointmentRequest> findByStatus(AppointmentStatus status, Pageable pageable);
+
     List<AppointmentRequest> findAllByOrderByCreatedAtDesc();
 
     boolean existsByReference(UUID reference);

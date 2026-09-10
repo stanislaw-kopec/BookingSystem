@@ -2,6 +2,7 @@ package pl.autoserwis.appointment;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import pl.autoserwis.appointment.dto.AppointmentPageResponse;
 import pl.autoserwis.appointment.dto.AppointmentResponse;
 import pl.autoserwis.appointment.dto.CompleteRepairRequest;
 import pl.autoserwis.appointment.dto.ProposeAppointmentTimeRequest;
@@ -15,7 +16,15 @@ public class StaffAppointmentController {
         this.appointmentService = appointmentService;
     }
     @GetMapping
-    public List<AppointmentResponse> getAppointments() {
+    public AppointmentPageResponse getAppointments(
+            @RequestParam(required = false) AppointmentStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return appointmentService.getStaffAppointments(status, page, size, sortDirection);
+    }
+    @GetMapping("/all")
+    public List<AppointmentResponse> getAllAppointments() {
         return appointmentService.getStaffAppointments();
     }
     @PostMapping("/{appointmentId}/accept")

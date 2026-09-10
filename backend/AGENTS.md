@@ -35,6 +35,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Lista własnych zgłoszeń klienta używa paginacji backendowej. `GET /api/appointments`
   przyjmuje `status`, `page`, `size` i `sortDirection`, ogranicza wynik do właściciela
   wynikającego z sesji i sortuje po dacie przyjęcia auta.
+- Lista zgłoszeń personelu również używa paginacji backendowej. `GET /api/staff/appointments`
+  przyjmuje `status`, `page`, `size` i `sortDirection`, a grafik korzysta z osobnego
+  odczytu wszystkich zgłoszeń potrzebnych do widoku tygodniowego.
 - Personel może zakończyć wyłącznie zgłoszenie ze statusem `CONFIRMED`. Zakończenie
   zapisuje opis wykonanych prac, kwotę brutto do zapłaty, czas zamknięcia i użytkownika
   personelu, a status przechodzi na `READY_FOR_PICKUP`. Płatność odbywa się poza systemem.
