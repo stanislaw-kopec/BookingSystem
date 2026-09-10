@@ -39,6 +39,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R10 | Mechanik i administrator mogą zakończyć potwierdzone zgłoszenie w panelu `/staff/appointments`, wpisując opis wykonanych prac oraz końcową kwotę brutto do zapłaty przy odbiorze auta. Zakończenie naprawy ustawia status `READY_FOR_PICKUP` („Czeka na odbiór”). Płatność odbywa się na miejscu poza systemem. Pierwsza wersja zapisuje jedną kwotę brutto, bez pozycji faktury, netto, VAT i płatności online. |
 | R11 | Mechanik i administrator mogą oznaczyć zgłoszenie ze statusem `READY_FOR_PICKUP` jako odebrane przez klienta. Akcja „Samochód został odebrany” ustawia status `COMPLETED` („Zakończone”). Zakończone zgłoszenia powiązane z pojazdem klienta są pierwszą wersją historii napraw widoczną na `/vehicles/:vehicleId`. |
 | R12 | Klient może pobrać prostą fakturę PDF z historii napraw własnego pojazdu przy zakończonym zgłoszeniu `COMPLETED`. Faktura zawiera logo Mietek Customs, numer, datę wystawienia i sprzedaży, dane warsztatu, dane nabywcy imienne albo firmowe z profilu, pojazd, opis wykonanych prac, kwotę netto, VAT 23% wyliczony z zapisanej kwoty brutto, kwotę brutto i informację o płatności przy odbiorze. To pierwsza wersja dokumentu, bez osobnej tabeli faktur, korekt, numeracji księgowej i deklaracji zgodności prawno-księgowej. |
+| R13 | Profil Springa `local` przygotowuje dane pokazowe do prezentacji aplikacji: klientów indywidualnych i firmowych, ich profile, pojazdy oraz zgłoszenia w różnych statusach, w tym naprawy gotowe do odbioru i zakończone z możliwością pobrania faktury PDF. Seed działa idempotentnie: tworzy brakujące rekordy demonstracyjne, ale nie nadpisuje istniejących kont, haseł, profili, pojazdów ani zgłoszeń. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -129,11 +130,11 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   Frontend korzysta z proxy Vite. Szczegóły uruchomienia zawiera `README.md`.
 - Działają katalog kategorii i usług w PostgreSQL, publiczna strona oraz panel
   edycji dla MECHANIC/ADMIN. Logowanie korzysta z sesji, haseł BCrypt i CSRF.
-  Profil `local` tworzy konta demonstracyjne opisane w README. Klient może utworzyć
+  Profil `local` tworzy konta i dane demonstracyjne opisane w README. Klient może utworzyć
   konto z unikalnym loginem i e-mailem, a po rejestracji zostaje automatycznie
   zalogowany z rolą CLIENT. Klient może utworzyć i aktualizować własny profil,
-  dodawać własne pojazdy oraz otwierać ich szczegóły. Widok historii napraw jest gotowy,
-  ale pozostaje pusty do czasu wdrożenia faktur. Działają publiczna dostępność,
+  dodawać własne pojazdy oraz otwierać ich szczegóły. Widok historii napraw pokazuje
+  zakończone naprawy i pozwala pobrać prostą fakturę PDF. Działają publiczna dostępność,
   zgłoszenia wizyt klienta i gościa, panel własnych zgłoszeń, grafik MECHANIC/ADMIN
   oraz decyzje personelu z proponowaniem nowego dnia. Zlecenia napraw i faktury
   pozostają do zbudowania.
@@ -143,9 +144,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 ## Kolejność rozwoju i jakość
 
 - Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
-  zgłoszenia wizyt z kalendarzem i decyzją personelu oraz zakończenie naprawy
-  statusem `READY_FOR_PICKUP`. Kolejne etapy obejmują zlecenia napraw, faktury
-  z danymi historii napraw i dalsze reguły harmonogramu.
+  zgłoszenia wizyt z kalendarzem i decyzją personelu, zakończenie naprawy,
+  odbiór auta, historia napraw, prosta faktura PDF oraz lokalne dane pokazowe.
+  Kolejne etapy obejmują pełniejsze zlecenia napraw i dalsze reguły harmonogramu.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

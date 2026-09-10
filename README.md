@@ -244,11 +244,26 @@ Compose włącza profil Springa `local`. Przy uruchomieniu powstają brakujące 
 | `mechanic` | `mechanic-local-2026` | Odczyt i edycja |
 | `admin` | `admin-local-2026` | Odczyt i edycja |
 | `client` | `client-local-2026` | Odczyt |
+| `anna.demo` | `client-local-2026` | Klient z profilem, pojazdami, wizytami i fakturami |
+| `firma.demo` | `client-local-2026` | Klient firmowy z profilem, pojazdem i fakturą na firmę |
 
 Skorzystaj z jednego przycisku „Logowanie / Rejestracja” w nagłówku.
 Można przełączać się między formularzami. Rejestracja wymaga unikalnego loginu
 i e-maila oraz hasła wpisanego dwukrotnie. Po utworzeniu konta klient jest
 automatycznie logowany. Może następnie uzupełnić profil i dodać własne pojazdy.
+
+Oprócz samych kont profil `local` przygotowuje dane pokazowe do prezentacji:
+
+- `anna.demo` ma uzupełniony profil osoby prywatnej, dwa pojazdy oraz zgłoszenia
+  w kilku statusach: oczekujące, z zaproponowanym innym dniem, gotowe do odbioru
+  i zakończone.
+- `firma.demo` ma uzupełnione dane firmowe, pojazd dostawczy, potwierdzoną wizytę
+  oraz zakończoną naprawę, dla której faktura PDF używa danych firmy.
+- Konto `mechanic` pozwala pokazać grafik, kolejkę zgłoszeń, proponowanie innego
+  dnia, zakończenie naprawy oraz oznaczenie odbioru auta.
+
+Seeder tworzy tylko brakujące rekordy demonstracyjne. Jeśli zmienisz profil, pojazd
+albo wizytę ręcznie, kolejne uruchomienie aplikacji nie nadpisze tych danych.
 
 To konta wyłącznie do lokalnej nauki. Hasła są zapisywane w bazie jako skróty BCrypt.
 Wartości dla nowych kont można ustawić zmiennymi `DEV_ADMIN_PASSWORD`,

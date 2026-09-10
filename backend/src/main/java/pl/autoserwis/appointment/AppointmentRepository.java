@@ -9,9 +9,13 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 public interface AppointmentRepository extends JpaRepository<AppointmentRequest, Long> {
     List<AppointmentRequest> findByClient_IdOrderByCreatedAtDesc(Long clientId);
+
     List<AppointmentRequest> findAllByOrderByCreatedAtDesc();
+
+    boolean existsByReference(UUID reference);
     List<AppointmentRequest> findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(
         Long vehicleId, Long clientId, AppointmentStatus status);
 

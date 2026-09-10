@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R12. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R13. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -52,8 +52,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   nie wprowadzaj kaskadowego usuwania usług.
 - Sesje obsługuje Spring Security. Zachowaj CSRF dla operacji zmieniających dane,
   BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta.
-- `local` tworzy brakujące konta demonstracyjne; nie zmienia haseł istniejących kont.
-  Nie stosuj demonstracyjnej bazy ani jej kont we wdrożeniu produkcyjnym.
+- `local` tworzy brakujące konta i dane demonstracyjne; nie zmienia haseł, profili,
+  pojazdów ani zgłoszeń, które już istnieją. Nie stosuj demonstracyjnej bazy ani jej
+  kont we wdrożeniu produkcyjnym.
 
 ## Rejestracja klienta
 
