@@ -60,7 +60,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   zgłoszenia i historią napraw pojazdu. Propozycję gościa
   personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R10: w `/staff/appointments` przy zgłoszeniu `CONFIRMED` pokaż akcję „Praca zakończona”.
-  Formularz wymaga opisu wykonanych prac i kwoty brutto do zapłaty przy odbiorze.
+  Formularz wymaga opisu wykonanych prac oraz pozycji robocizny lub części z ilością i ceną brutto.
   Po zapisie zgłoszenie ma status `READY_FOR_PICKUP`, a klient widzi opis prac i kwotę
   w swoich wizytach. Nie dodawaj jeszcze płatności online ani rozbicia netto/VAT.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie

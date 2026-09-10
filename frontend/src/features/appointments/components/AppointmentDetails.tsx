@@ -52,6 +52,21 @@ export function AppointmentDetails({ appointment, showContact = false }: Props) 
               <dt>Wykonane prace</dt>
               <dd className="appointment-description">{appointment.repairDescription}</dd>
             </div>
+            {appointment.repairItems.length > 0 && (
+              <div>
+                <dt>Pozycje naprawy</dt>
+                <dd>
+                  <ul className="repair-items-summary">
+                    {appointment.repairItems.map((item) => (
+                      <li key={item.id ?? `${item.type}-${item.name}`}>
+                        <span>{item.type === 'LABOR' ? 'Robocizna' : 'Część'}: {item.name}</span>
+                        <strong>{formatMoney(item.totalGrossAmount)}</strong>
+                      </li>
+                    ))}
+                  </ul>
+                </dd>
+              </div>
+            )}
             <div>
               <dt>Do zapłaty przy odbiorze</dt>
               <dd>{formattedTotal} brutto</dd>
@@ -83,4 +98,9 @@ export function AppointmentDetails({ appointment, showContact = false }: Props) 
       </dl>
     </div>
   )
+}
+
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(value)
 }

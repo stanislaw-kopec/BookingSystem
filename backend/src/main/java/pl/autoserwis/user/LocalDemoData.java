@@ -10,6 +10,8 @@ import pl.autoserwis.appointment.AppointmentRepository;
 import pl.autoserwis.appointment.AppointmentRequest;
 import pl.autoserwis.appointment.AppointmentRequesterType;
 import pl.autoserwis.appointment.AppointmentSchedule;
+import pl.autoserwis.appointment.RepairItemDraft;
+import pl.autoserwis.appointment.RepairItemType;
 import pl.autoserwis.profile.ClientProfile;
 import pl.autoserwis.profile.ClientProfileRepository;
 import pl.autoserwis.vehicle.Vehicle;
@@ -138,7 +140,7 @@ public class LocalDemoData implements ApplicationRunner {
         AppointmentRequest appointment = createBase(client, vehicle, date, problem, reference, createdAt);
         if (appointment != null) {
             appointment.accept(staff, createdAt.plus(1, ChronoUnit.HOURS));
-            appointment.completeRepair(staff, repair, amount, createdAt.plus(7, ChronoUnit.HOURS));
+            appointment.completeRepair(staff, repair, demoItems(repair, amount), createdAt.plus(7, ChronoUnit.HOURS));
             appointments.save(appointment);
         }
     }
@@ -148,10 +150,19 @@ public class LocalDemoData implements ApplicationRunner {
         AppointmentRequest appointment = createBase(client, vehicle, date, problem, reference, createdAt);
         if (appointment != null) {
             appointment.accept(staff, createdAt.plus(1, ChronoUnit.HOURS));
-            appointment.completeRepair(staff, repair, amount, createdAt.plus(6, ChronoUnit.HOURS));
+            appointment.completeRepair(staff, repair, demoItems(repair, amount), createdAt.plus(6, ChronoUnit.HOURS));
             appointment.markPickedUp(staff, createdAt.plus(8, ChronoUnit.HOURS));
             appointments.save(appointment);
         }
+    }
+
+    private java.util.List<RepairItemDraft> demoItems(String repair, BigDecimal amount) {
+        BigDecimal labor = amount.multiply(new BigDecimal("0.45")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal parts = amount.subtract(labor).setScale(2, java.math.RoundingMode.HALF_UP);
+        return java.util.List.of(
+            new RepairItemDraft(RepairItemType.LABOR, "Robocizna - " + repair.substring(0, Math.min(repair.length(), 80)), BigDecimal.ONE, labor),
+            new RepairItemDraft(RepairItemType.PART, "Części i materiały użyte do naprawy", BigDecimal.ONE, parts)
+        );
     }
 
     private AppointmentRequest createBase(AppUser client, Vehicle vehicle, LocalDate date,

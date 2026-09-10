@@ -42,7 +42,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   powiązanego z tym zgłoszeniem. Zgłoszenie gościa bez trwałego pojazdu w kartotece
   zwraca pustą historię napraw.
 - Personel może zakończyć wyłącznie zgłoszenie ze statusem `CONFIRMED`. Zakończenie
-  zapisuje opis wykonanych prac, kwotę brutto do zapłaty, czas zamknięcia i użytkownika
+  zapisuje opis wykonanych prac, pozycje robocizny i części, wyliczoną kwotę brutto do zapłaty, czas zamknięcia i użytkownika
   personelu, a status przechodzi na `READY_FOR_PICKUP`. Płatność odbywa się poza systemem.
 - Sprawdzaj własność pojazdu i zasobu na backendzie. Tożsamość klienta przy zapisie
   ma wynikać z uwierzytelnienia; dane przesłane przez przeglądarkę nie nadają uprawnień.
@@ -148,7 +148,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   nowego dnia musi wskazywać wolny dzień zwrócony przez te same reguły dostępności.
   Personel może zatwierdzić propozycję gościa dopiero po kontakcie poza aplikacją.
 - MECHANIC i ADMIN mogą zakończyć naprawę dla statusu `CONFIRMED`. Formularz
-  zakończenia wymaga opisu wykonanych prac i kwoty brutto większej od zera.
+  zakończenia wymaga opisu wykonanych prac oraz co najmniej jednej pozycji robocizny lub części z dodatnią ilością i ceną brutto.
 - Przechowuj pierwotny dzień, bieżący dzień, kopie danych kontaktowych i pojazdu,
   opis, publiczny losowy numer referencyjny, czas utworzenia, dane decyzji oraz
   dane zakończenia naprawy.
@@ -161,9 +161,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `numeric` w PostgreSQL; ustal skalę, walutę i zaokrąglenia z modelem rozliczeń.
 - Faktura musi mieć powiązanie pozwalające pokazać udokumentowane naprawy właściwego
   pojazdu i klienta. Nie generuj historii wykonanych napraw ze zgłoszeń oczekujących.
-- Obecny zapis zakończenia naprawy przechowuje jedną kwotę brutto i opis prac.
-  Prosty PDF faktury wylicza netto i VAT 23% z tej kwoty brutto. Nie dodawaj jeszcze
-  osobnych pozycji faktury, korekt ani płatności online bez osobnego wymagania.
+- Zapis zakończenia naprawy przechowuje opis prac oraz pozycje robocizny i części.
+  Backend wylicza sumę brutto z pozycji, a prosty PDF faktury wyszczególnia te pozycje oraz pokazuje wartości netto i brutto.
+  Nie dodawaj jeszcze korekt, płatności online ani pełnej integracji księgowej bez osobnego wymagania.
 - Zachowuj dane i pozycje wystawionego dokumentu z momentu jego wystawienia.
   Późniejsza zmiana profilu klienta lub oferty usług nie może zmieniać historii faktury.
 - Sposób wystawiania, statusy, korekty, numeracja i eksport dokumentów pozostają

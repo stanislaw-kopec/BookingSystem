@@ -21,6 +21,7 @@ import pl.autoserwis.user.UserRole;
 import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
 
+import java.math.BigDecimal;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -376,6 +377,9 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.status").value("READY_FOR_PICKUP"))
             .andExpect(jsonPath("$.repairDescription").value("Wymieniono tarcze i klocki hamulcowe."))
             .andExpect(jsonPath("$.totalGrossAmount").value(850.00))
+            .andExpect(jsonPath("$.repairItems.length()").value(2))
+            .andExpect(jsonPath("$.repairItems[0].type").value("LABOR"))
+            .andExpect(jsonPath("$.repairItems[1].type").value("PART"))
             .andExpect(jsonPath("$.repairCompletedAt").exists())
             .andExpect(jsonPath("$.repairCompletedBy").value(staff.getUsername()));
 
@@ -400,6 +404,8 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$[0].appointmentReference").exists())
             .andExpect(jsonPath("$[0].repairDescription").value("Wymieniono tarcze i klocki hamulcowe."))
             .andExpect(jsonPath("$[0].totalGrossAmount").value(850.00))
+            .andExpect(jsonPath("$[0].repairItems.length()").value(2))
+            .andExpect(jsonPath("$[0].repairItems[0].name").value("Robocizna testowa"))
             .andExpect(jsonPath("$[0].vehiclePickedUpBy").value(staff.getUsername()));
 
         byte[] invoice = mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
@@ -449,7 +455,7 @@ class AppointmentIntegrationTest {
                 .content(repairJson("Za krótko", "0.00")))
             .andExpect(status().isBadRequest())
             .andExpect(jsonPath("$.fieldErrors.repairDescription").exists())
-            .andExpect(jsonPath("$.fieldErrors.totalGrossAmount").exists());
+            .andExpect(jsonPath("$.fieldErrors['repairItems[0].unitGrossAmount']").exists());
     }
 
     @Test
@@ -613,7 +619,8 @@ class AppointmentIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].appointmentId").value(completed.getId()))
-            .andExpect(jsonPath("$[0].repairDescription").value("Wymieniono olej i komplet filtrów."));
+            .andExpect(jsonPath("$[0].repairDescription").value("Wymieniono olej i komplet filtrów."))
+            .andExpect(jsonPath("$[0].repairItems.length()").value(2));
     }
 
     private void createClientAppointment(AppUser client, Vehicle vehicle, LocalDate visitDate)
@@ -739,11 +746,28 @@ class AppointmentIntegrationTest {
     }
 
     private String repairJson(String repairDescription, String totalGrossAmount) {
+        BigDecimal total = new BigDecimal(totalGrossAmount);
+        BigDecimal labor = total.multiply(new BigDecimal("0.40")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal parts = total.subtract(labor).setScale(2, java.math.RoundingMode.HALF_UP);
         return """
             {
               "repairDescription": "%s",
-              "totalGrossAmount": %s
+              "repairItems": [
+                {
+                  "type": "LABOR",
+                  "name": "Robocizna testowa",
+                  "quantity": 1,
+                  "unitGrossAmount": %s
+                },
+                {
+                  "type": "PART",
+                  "name": "Części testowe",
+                  "quantity": 1,
+                  "unitGrossAmount": %s
+                }
+              ]
             }
-            """.formatted(repairDescription, totalGrossAmount);
+            """.formatted(repairDescription, labor, parts);
     }
+
 }

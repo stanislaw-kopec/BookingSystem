@@ -2,6 +2,8 @@ export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'REA
 
 export type AppointmentRequesterType = 'CLIENT' | 'GUEST'
 
+export type RepairItemType = 'LABOR' | 'PART'
+
 export interface AppointmentDay {
   date: string
   startAt: string
@@ -37,6 +39,15 @@ export interface GuestAppointmentInput {
   problemDescription: string
 }
 
+export interface RepairItem {
+  id: number | null
+  type: RepairItemType
+  name: string
+  quantity: number
+  unitGrossAmount: number
+  totalGrossAmount: number
+}
+
 export interface Appointment {
   id: number
   reference: string
@@ -62,6 +73,7 @@ export interface Appointment {
   clientConfirmedAt: string | null
   repairDescription: string
   totalGrossAmount: number | null
+  repairItems: RepairItem[]
   repairCompletedAt: string | null
   repairCompletedBy: string | null
   vehiclePickedUpAt: string | null
@@ -76,7 +88,14 @@ export interface AppointmentPage {
   totalPages: number
 }
 
+export interface RepairItemInput {
+  type: RepairItemType
+  name: string
+  quantity: number
+  unitGrossAmount: number
+}
+
 export interface CompleteRepairInput {
   repairDescription: string
-  totalGrossAmount: number
+  repairItems: RepairItemInput[]
 }

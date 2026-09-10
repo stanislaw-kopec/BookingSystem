@@ -6,6 +6,9 @@ import type {
   AppointmentPage,
   AppointmentRequesterType,
   AppointmentStatus,
+  RepairItem,
+  RepairItemInput,
+  RepairItemType,
   ClientAppointmentInput,
   GuestAppointmentInput,
 } from '../types'
@@ -31,6 +34,20 @@ function isAppointmentStatus(value: unknown): value is AppointmentStatus {
 
 function isRequesterType(value: unknown): value is AppointmentRequesterType {
   return value === 'CLIENT' || value === 'GUEST'
+}
+
+function isRepairItemType(value: unknown): value is RepairItemType {
+  return value === 'LABOR' || value === 'PART'
+}
+
+function isRepairItem(value: unknown): value is RepairItem {
+  return isRecord(value)
+    && (value.id === null || (typeof value.id === 'number' && Number.isSafeInteger(value.id)))
+    && isRepairItemType(value.type)
+    && typeof value.name === 'string'
+    && typeof value.quantity === 'number'
+    && typeof value.unitGrossAmount === 'number'
+    && typeof value.totalGrossAmount === 'number'
 }
 
 function isDay(value: unknown): value is AppointmentDay {
@@ -87,6 +104,8 @@ function isAppointment(value: unknown): value is Appointment {
     && (value.clientConfirmedAt === null || isDateTime(value.clientConfirmedAt))
     && typeof value.repairDescription === 'string'
     && (value.totalGrossAmount === null || typeof value.totalGrossAmount === 'number')
+    && Array.isArray(value.repairItems)
+    && value.repairItems.every(isRepairItem)
     && (value.repairCompletedAt === null || isDateTime(value.repairCompletedAt))
     && isNullableString(value.repairCompletedBy)
     && (value.vehiclePickedUpAt === null || isDateTime(value.vehiclePickedUpAt))
@@ -130,6 +149,8 @@ function isRepairHistoryEntry(value: unknown): value is RepairHistoryEntry {
     && isDateTime(value.visitDate)
     && typeof value.repairDescription === 'string'
     && typeof value.totalGrossAmount === 'number'
+    && Array.isArray(value.repairItems)
+    && value.repairItems.every(isRepairItem)
     && isDateTime(value.repairCompletedAt)
     && typeof value.repairCompletedBy === 'string'
     && isDateTime(value.vehiclePickedUpAt)
@@ -255,12 +276,12 @@ export async function confirmGuestProposedTime(appointmentId: number): Promise<A
 export async function completeRepair(
   appointmentId: number,
   repairDescription: string,
-  totalGrossAmount: number,
+  repairItems: RepairItemInput[],
 ): Promise<Appointment> {
   return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/complete-repair`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ repairDescription, totalGrossAmount }),
+    body: JSON.stringify({ repairDescription, repairItems }),
   }))
 }
 

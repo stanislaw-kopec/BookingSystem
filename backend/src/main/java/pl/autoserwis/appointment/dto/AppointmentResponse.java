@@ -3,6 +3,7 @@ import pl.autoserwis.appointment.AppointmentRequesterType;
 import pl.autoserwis.appointment.AppointmentStatus;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 public record AppointmentResponse(
     Long id,
@@ -29,6 +30,7 @@ public record AppointmentResponse(
     OffsetDateTime clientConfirmedAt,
     String repairDescription,
     BigDecimal totalGrossAmount,
+    List<RepairItemResponse> repairItems,
     OffsetDateTime repairCompletedAt,
     String repairCompletedBy,
     OffsetDateTime vehiclePickedUpAt,

@@ -7,6 +7,8 @@ import pl.autoserwis.user.AppUser;
 import pl.autoserwis.vehicle.Vehicle;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 @Entity
 @Table(name = "appointment_requests")
@@ -81,6 +83,9 @@ public class AppointmentRequest {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_picked_up_by_id")
     private AppUser vehiclePickedUpBy;
+    @OneToMany(mappedBy = "appointment", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("itemOrder ASC")
+    private List<AppointmentRepairItem> repairItems = new ArrayList<>();
     public AppointmentRequest(UUID reference, AppointmentRequesterType requesterType,
             AppUser client, Vehicle vehicle, String firstName, String lastName,
             String phoneNumber, String contactEmail, String vehicleMake, String vehicleModel,
@@ -134,10 +139,17 @@ public class AppointmentRequest {
         recordStaffAction(staff, actionAt, staffMessage);
     }
     public void completeRepair(AppUser staff, String repairDescription,
-            BigDecimal totalGrossAmount, Instant actionAt) {
+            List<RepairItemDraft> items, Instant actionAt) {
         status = AppointmentStatus.READY_FOR_PICKUP;
         this.repairDescription = repairDescription;
-        this.totalGrossAmount = totalGrossAmount;
+        repairItems.clear();
+        BigDecimal calculatedTotal = BigDecimal.ZERO;
+        for (int index = 0; index < items.size(); index++) {
+            AppointmentRepairItem item = new AppointmentRepairItem(this, index + 1, items.get(index));
+            repairItems.add(item);
+            calculatedTotal = calculatedTotal.add(item.getTotalGrossAmount());
+        }
+        totalGrossAmount = calculatedTotal;
         repairCompletedAt = actionAt;
         repairCompletedBy = staff;
         updatedAt = actionAt;

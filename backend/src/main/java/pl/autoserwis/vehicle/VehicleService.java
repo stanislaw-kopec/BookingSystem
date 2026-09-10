@@ -6,6 +6,7 @@ import pl.autoserwis.appointment.AppointmentRepository;
 import pl.autoserwis.appointment.AppointmentRequest;
 import pl.autoserwis.appointment.AppointmentSchedule;
 import pl.autoserwis.appointment.AppointmentStatus;
+import pl.autoserwis.appointment.dto.RepairItemResponse;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.invoice.InvoiceFile;
 import pl.autoserwis.invoice.InvoicePdfGenerator;
@@ -128,9 +129,16 @@ public class VehicleService {
     private RepairHistoryEntryResponse repairHistoryEntry(AppointmentRequest appointment) {
         return new RepairHistoryEntryResponse(appointment.getId(), appointment.getReference(),
             offset(appointment.getCurrentStartAt()), appointment.getRepairDescription(),
-            appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
+            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
             appointment.getRepairCompletedBy().getUsername(), offset(appointment.getVehiclePickedUpAt()),
             appointment.getVehiclePickedUpBy().getUsername());
+    }
+
+    private List<RepairItemResponse> repairItems(AppointmentRequest appointment) {
+        return appointment.getRepairItems().stream()
+            .map(item -> new RepairItemResponse(item.getId(), item.getType(), item.getName(),
+                item.getQuantity(), item.getUnitGrossAmount(), item.getTotalGrossAmount()))
+            .toList();
     }
 
     private OffsetDateTime offset(Instant value) {

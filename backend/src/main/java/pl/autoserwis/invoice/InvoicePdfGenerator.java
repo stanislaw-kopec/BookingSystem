@@ -7,7 +7,9 @@ import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import pl.autoserwis.appointment.AppointmentRepairItem;
 import pl.autoserwis.appointment.AppointmentRequest;
+import pl.autoserwis.appointment.RepairItemType;
 import pl.autoserwis.appointment.AppointmentSchedule;
 import pl.autoserwis.profile.ClientProfile;
 import pl.autoserwis.vehicle.Vehicle;
@@ -122,35 +124,61 @@ public class InvoicePdfGenerator {
     }
 
     private void addItems(Document document, AppointmentRequest appointment) throws DocumentException {
-        BigDecimal gross = appointment.getTotalGrossAmount().setScale(2, RoundingMode.HALF_UP);
-        BigDecimal net = gross.divide(BigDecimal.ONE.add(VAT_RATE), 2, RoundingMode.HALF_UP);
-        BigDecimal vat = gross.subtract(net).setScale(2, RoundingMode.HALF_UP);
+        Paragraph description = new Paragraph("Opis wykonanych prac: " + appointment.getRepairDescription(), NORMAL_FONT);
+        description.setSpacingAfter(10);
+        document.add(description);
 
-        PdfPTable table = new PdfPTable(new float[] { 0.7f, 4.2f, 1.1f, 1.3f, 1.3f, 1.3f });
+        PdfPTable table = new PdfPTable(new float[] { 0.5f, 0.9f, 2.4f, 0.7f, 1.1f, 1.1f, 1.1f });
         table.setWidthPercentage(100);
         table.addCell(headerCell("Lp."));
-        table.addCell(headerCell("Opis usługi"));
-        table.addCell(headerCell("VAT"));
-        table.addCell(headerCell("Netto"));
-        table.addCell(headerCell("Kwota VAT"));
-        table.addCell(headerCell("Brutto"));
-        table.addCell(bodyCell("1"));
-        table.addCell(bodyCell(appointment.getRepairDescription()));
-        table.addCell(bodyCell("23%"));
-        table.addCell(bodyCell(money(net)));
-        table.addCell(bodyCell(money(vat)));
-        table.addCell(bodyCell(money(gross)));
+        table.addCell(headerCell("Typ"));
+        table.addCell(headerCell("Pozycja"));
+        table.addCell(headerCell("Ilość"));
+        table.addCell(headerCell("Cena netto"));
+        table.addCell(headerCell("Wartość netto"));
+        table.addCell(headerCell("Wartość brutto"));
+
+        List<AppointmentRepairItem> items = appointment.getRepairItems();
+        if (items.isEmpty()) {
+            BigDecimal gross = appointment.getTotalGrossAmount();
+            table.addCell(bodyCell("1"));
+            table.addCell(bodyCell("Usługa"));
+            table.addCell(bodyCell(appointment.getRepairDescription()));
+            table.addCell(bodyCell("1,00"));
+            table.addCell(bodyCell(money(netFromGross(gross))));
+            table.addCell(bodyCell(money(netFromGross(gross))));
+            table.addCell(bodyCell(money(gross)));
+        } else {
+            for (AppointmentRepairItem item : items) {
+                table.addCell(bodyCell(String.valueOf(item.getItemOrder())));
+                table.addCell(bodyCell(itemTypeLabel(item.getType())));
+                table.addCell(bodyCell(item.getName()));
+                table.addCell(bodyCell(decimal(item.getQuantity())));
+                table.addCell(bodyCell(money(netFromGross(item.getUnitGrossAmount()))));
+                table.addCell(bodyCell(money(netFromGross(item.getTotalGrossAmount()))));
+                table.addCell(bodyCell(money(item.getTotalGrossAmount())));
+            }
+        }
         document.add(table);
         document.add(space());
     }
 
     private void addPaymentSummary(Document document, AppointmentRequest appointment) throws DocumentException {
         BigDecimal gross = appointment.getTotalGrossAmount().setScale(2, RoundingMode.HALF_UP);
-        Paragraph summary = new Paragraph();
-        summary.setAlignment(Element.ALIGN_RIGHT);
-        summary.add(new Chunk("Razem brutto: ", HEADING_FONT));
-        summary.add(new Chunk(money(gross), TITLE_FONT));
+        BigDecimal net = netFromGross(gross);
+        BigDecimal vat = gross.subtract(net).setScale(2, RoundingMode.HALF_UP);
+
+        PdfPTable summary = new PdfPTable(new float[] { 2, 1 });
+        summary.setWidthPercentage(45);
+        summary.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        summary.addCell(summaryLabelCell("Razem netto"));
+        summary.addCell(summaryValueCell(money(net)));
+        summary.addCell(summaryLabelCell("VAT 23%"));
+        summary.addCell(summaryValueCell(money(vat)));
+        summary.addCell(summaryLabelCell("Razem brutto"));
+        summary.addCell(summaryValueCell(money(gross), TITLE_FONT));
         document.add(summary);
+
         Paragraph payment = new Paragraph("Sposób płatności: płatność na miejscu przy odbiorze auta. Status: zapłacono przy odbiorze.", NORMAL_FONT);
         payment.setSpacingBefore(12);
         document.add(payment);
@@ -181,6 +209,22 @@ public class InvoicePdfGenerator {
 
     private PdfPCell bodyCell(String value) {
         return borderedCell(new Phrase(value, NORMAL_FONT));
+    }
+
+    private PdfPCell summaryLabelCell(String value) {
+        PdfPCell cell = borderedCell(new Phrase(value, HEADING_FONT));
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        return cell;
+    }
+
+    private PdfPCell summaryValueCell(String value) {
+        return summaryValueCell(value, HEADING_FONT);
+    }
+
+    private PdfPCell summaryValueCell(String value, Font font) {
+        PdfPCell cell = borderedCell(new Phrase(value, font));
+        cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
+        return cell;
     }
 
     private PdfPCell cell() {
@@ -235,6 +279,18 @@ public class InvoicePdfGenerator {
 
     private String date(java.time.Instant value) {
         return value.atZone(AppointmentSchedule.TIME_ZONE).toLocalDate().format(DATE_FORMAT);
+    }
+
+    private BigDecimal netFromGross(BigDecimal gross) {
+        return gross.divide(BigDecimal.ONE.add(VAT_RATE), 2, RoundingMode.HALF_UP);
+    }
+
+    private String itemTypeLabel(RepairItemType type) {
+        return type == RepairItemType.PART ? "Część" : "Robocizna";
+    }
+
+    private String decimal(BigDecimal value) {
+        return value.setScale(2, RoundingMode.HALF_UP).toPlainString().replace('.', ',');
     }
 
     private String money(BigDecimal value) {

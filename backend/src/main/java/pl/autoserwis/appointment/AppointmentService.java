@@ -19,6 +19,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.Year;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -233,7 +234,7 @@ public class AppointmentService {
             "Naprawę można zakończyć tylko dla potwierdzonej wizyty.");
         appointment.completeRepair(user(staffUsername),
             normalizedRepairDescription(request.repairDescription()),
-            normalizedMoney(request.totalGrossAmount()),
+            normalizedRepairItems(request.repairItems()),
             Instant.now());
         return response(appointments.save(appointment));
     }
@@ -304,8 +305,41 @@ public class AppointmentService {
         }
         return normalized;
     }
-    private BigDecimal normalizedMoney(BigDecimal value) {
-        return value.setScale(2, RoundingMode.UNNECESSARY);
+    private List<RepairItemDraft> normalizedRepairItems(List<RepairItemRequest> items) {
+        if (items == null || items.isEmpty()) {
+            throw new AppointmentValidationException(Map.of("repairItems",
+                "Dodaj co najmniej jedną pozycję naprawy."));
+        }
+        List<RepairItemDraft> normalized = new ArrayList<>();
+        Map<String, String> errors = new LinkedHashMap<>();
+        for (int index = 0; index < items.size(); index++) {
+            RepairItemRequest item = items.get(index);
+            String prefix = "repairItems[" + index + "].";
+            if (item == null) {
+                errors.put("repairItems[" + index + "]", "Uzupełnij pozycję naprawy.");
+                continue;
+            }
+            String name = item.name() == null ? "" : item.name().strip();
+            if (name.isBlank()) errors.put(prefix + "name", "Podaj nazwę pozycji.");
+            if (item.type() == null) errors.put(prefix + "type", "Wybierz typ pozycji.");
+            BigDecimal quantity = normalizedDecimal(item.quantity(), prefix + "quantity", errors, "Ilość musi mieć maksymalnie 2 miejsca po przecinku.");
+            BigDecimal unitGrossAmount = normalizedDecimal(item.unitGrossAmount(), prefix + "unitGrossAmount", errors, "Cena brutto musi mieć maksymalnie 2 miejsca po przecinku.");
+            if (item.type() != null && !name.isBlank() && quantity != null && unitGrossAmount != null) {
+                normalized.add(new RepairItemDraft(item.type(), name, quantity, unitGrossAmount));
+            }
+        }
+        if (!errors.isEmpty()) throw new AppointmentValidationException(errors);
+        return normalized;
+    }
+
+    private BigDecimal normalizedDecimal(BigDecimal value, String field, Map<String, String> errors, String message) {
+        if (value == null) return null;
+        try {
+            return value.setScale(2, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException exception) {
+            errors.put(field, message);
+            return null;
+        }
     }
     private int normalizedPageSize(int size) {
         if (size < 1) return DEFAULT_PAGE_SIZE;
@@ -354,7 +388,7 @@ public class AppointmentService {
             offset(appointment.getCreatedAt()), offset(appointment.getStaffActionAt()),
             appointment.getStaffActionBy() == null ? null : appointment.getStaffActionBy().getUsername(),
             offset(appointment.getClientConfirmedAt()), text(appointment.getRepairDescription()),
-            appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
+            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
             appointment.getRepairCompletedBy() == null ? null : appointment.getRepairCompletedBy().getUsername(),
             offset(appointment.getVehiclePickedUpAt()),
             appointment.getVehiclePickedUpBy() == null ? null : appointment.getVehiclePickedUpBy().getUsername());
@@ -365,10 +399,17 @@ public class AppointmentService {
     private RepairHistoryEntryResponse repairHistoryEntry(AppointmentRequest appointment) {
         return new RepairHistoryEntryResponse(appointment.getId(), appointment.getReference(),
             offset(appointment.getCurrentStartAt()), appointment.getRepairDescription(),
-            appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
+            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
             appointment.getRepairCompletedBy().getUsername(), offset(appointment.getVehiclePickedUpAt()),
             appointment.getVehiclePickedUpBy().getUsername());
     }
+    private List<RepairItemResponse> repairItems(AppointmentRequest appointment) {
+        return appointment.getRepairItems().stream()
+            .map(item -> new RepairItemResponse(item.getId(), item.getType(), item.getName(),
+                item.getQuantity(), item.getUnitGrossAmount(), item.getTotalGrossAmount()))
+            .toList();
+    }
+
     private String text(String value) {
         return value == null ? "" : value;
     }

@@ -209,3 +209,65 @@
   .staff-schedule-days { grid-template-columns: 1fr; }
   .staff-decision-form { margin: 0 12px 12px; }
 }
+
+.repair-items-field {
+  gap: 0.75rem;
+}
+
+.field-label {
+  font-weight: 700;
+  color: var(--text);
+}
+
+.repair-items-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.repair-item-row {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr 1fr auto;
+  gap: 0.75rem;
+  align-items: end;
+  padding: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 0.9rem;
+  background: var(--background);
+}
+
+.repair-item-row label {
+  display: grid;
+  gap: 0.35rem;
+  font-weight: 700;
+}
+
+.repair-item-row span {
+  color: var(--text);
+}
+
+.repair-items-total {
+  margin: 0;
+}
+
+.repair-items-summary {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.repair-items-summary li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.7rem;
+  background: var(--background);
+}
+
+@media (max-width: 800px) {
+  .repair-item-row {
+    grid-template-columns: 1fr;
+  }
+}

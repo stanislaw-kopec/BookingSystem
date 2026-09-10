@@ -4,7 +4,7 @@ import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import { formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
-import type { Appointment, AppointmentPage, AppointmentStatus } from '../types'
+import type { Appointment, AppointmentPage, AppointmentStatus, RepairItemInput, RepairItemType } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
 import { AvailabilityCalendar } from './AvailabilityCalendar'
 import '../appointments.css'
@@ -13,12 +13,23 @@ type StaffAction = 'reject' | 'propose' | 'complete'
 type StatusFilter = AppointmentStatus | 'ALL'
 type DateSortDirection = 'DESC' | 'ASC'
 
+interface RepairItemForm {
+  type: RepairItemType
+  name: string
+  quantity: string
+  unitGrossAmount: string
+}
+
 interface ActiveAction {
   appointmentId: number
   type: StaffAction
 }
 
 const pageSize = 5
+
+function emptyRepairItem(): RepairItemForm {
+  return { type: 'LABOR', name: '', quantity: '1', unitGrossAmount: '' }
+}
 
 const statusLabels: Record<AppointmentStatus, string> = {
   PENDING: 'Oczekuje na decyzję',
@@ -50,7 +61,7 @@ export function StaffAppointmentsSection() {
   const [message, setMessage] = useState('')
   const [selectedVisitDate, setSelectedVisitDate] = useState('')
   const [repairDescription, setRepairDescription] = useState('')
-  const [totalGrossAmount, setTotalGrossAmount] = useState('')
+  const [repairItems, setRepairItems] = useState<RepairItemForm[]>([emptyRepairItem()])
   const [isSaving, setIsSaving] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
@@ -117,7 +128,7 @@ export function StaffAppointmentsSection() {
     setMessage('')
     setSelectedVisitDate('')
     setRepairDescription('')
-    setTotalGrossAmount('')
+    setRepairItems([emptyRepairItem()])
     setActionError(null)
     setFieldErrors({})
   }
@@ -150,6 +161,47 @@ export function StaffAppointmentsSection() {
     }
   }
 
+  const repairItemsTotal = repairItems.reduce((sum, item) => {
+    const quantity = Number(item.quantity.replace(',', '.'))
+    const unitGrossAmount = Number(item.unitGrossAmount.replace(',', '.'))
+    return Number.isFinite(quantity) && Number.isFinite(unitGrossAmount)
+      ? sum + (quantity * unitGrossAmount)
+      : sum
+  }, 0)
+
+  const canSubmitRepair = repairDescription.trim().length > 0
+    && repairItems.length > 0
+    && repairItems.every((item) => item.name.trim() && item.quantity && item.unitGrossAmount)
+
+  function changeRepairItem(index: number, value: Partial<RepairItemForm>) {
+    setRepairItems((current) => current.map((item, itemIndex) => (
+      itemIndex === index ? { ...item, ...value } : item
+    )))
+    setActionError(null)
+    setFieldErrors({})
+  }
+
+  function addRepairItem() {
+    setRepairItems((current) => [...current, emptyRepairItem()])
+    setActionError(null)
+    setFieldErrors({})
+  }
+
+  function removeRepairItem(index: number) {
+    setRepairItems((current) => current.filter((_, itemIndex) => itemIndex !== index))
+    setActionError(null)
+    setFieldErrors({})
+  }
+
+  function repairItemInput(item: RepairItemForm): RepairItemInput {
+    return {
+      type: item.type,
+      name: item.name.trim(),
+      quantity: Number(item.quantity.replace(',', '.')),
+      unitGrossAmount: Number(item.unitGrossAmount.replace(',', '.')),
+    }
+  }
+
   async function submitDecision(event: FormEvent<HTMLFormElement>, appointmentId: number) {
     event.preventDefault()
     if (!activeAction || activeAction.appointmentId !== appointmentId) return
@@ -165,13 +217,13 @@ export function StaffAppointmentsSection() {
           : appointmentsApi.completeRepair(
             appointmentId,
             repairDescription.trim(),
-            Number(totalGrossAmount.replace(',', '.')),
+            repairItems.map(repairItemInput),
           ))
       const successMessage = activeAction.type === 'reject'
         ? 'Zgłoszenie zostało odrzucone.'
         : activeAction.type === 'propose'
           ? 'Nowy dzień został zapisany i czeka na potwierdzenie.'
-          : 'Naprawa została zakończona. Auto czeka na odbiór i płatność na miejscu.'
+          : 'Naprawa została zakończona. Pozycje naprawy trafią do historii i faktury.'
       resetAction()
       refreshCurrentPage()
       setNotice(successMessage)
@@ -340,7 +392,7 @@ export function StaffAppointmentsSection() {
                             {action === 'complete' ? (
                               <div className="repair-completion-form">
                                 <p className="muted">
-                                  Opisz, co zostało zrobione, i podaj końcową kwotę brutto do zapłaty przy odbiorze auta.
+                                  Opisz, co zostało zrobione, i dodaj pozycje naprawy. Suma brutto zostanie policzona z pozycji przez backend.
                                 </p>
                                 <div className="appointment-form-grid">
                                   <div className="form-field wide-field">
@@ -360,22 +412,39 @@ export function StaffAppointmentsSection() {
                                       </small>
                                     )}
                                   </div>
-                                  <div className="form-field">
-                                    <label htmlFor={`repair-total-${appointment.id}`}>Kwota brutto do zapłaty</label>
-                                    <input id={`repair-total-${appointment.id}`} type="number" min="0.01" step="0.01"
-                                      value={totalGrossAmount}
-                                      aria-invalid={Boolean(fieldErrors.totalGrossAmount)}
-                                      aria-describedby={fieldErrors.totalGrossAmount ? `repair-total-${appointment.id}-error` : undefined}
-                                      onChange={(event) => {
-                                        setTotalGrossAmount(event.target.value)
-                                        setActionError(null)
-                                        setFieldErrors((current) => ({ ...current, totalGrossAmount: '' }))
-                                      }} />
-                                    {fieldErrors.totalGrossAmount && (
-                                      <small id={`repair-total-${appointment.id}-error`} className="field-error">
-                                        {fieldErrors.totalGrossAmount}
-                                      </small>
-                                    )}
+                                  <div className="form-field wide-field repair-items-field">
+                                    <span className="field-label">Pozycje naprawy</span>
+                                    <div className="repair-items-list">
+                                      {repairItems.map((item, index) => (
+                                        <div className="repair-item-row" key={index}>
+                                          <label>
+                                            <span>Typ</span>
+                                            <select value={item.type} onChange={(event) => changeRepairItem(index, { type: event.target.value as RepairItemType })}>
+                                              <option value="LABOR">Robocizna</option>
+                                              <option value="PART">Część</option>
+                                            </select>
+                                          </label>
+                                          <label>
+                                            <span>Nazwa</span>
+                                            <input value={item.name} maxLength={160} onChange={(event) => changeRepairItem(index, { name: event.target.value })} />
+                                          </label>
+                                          <label>
+                                            <span>Ilość</span>
+                                            <input type="number" min="0.01" step="0.01" value={item.quantity} onChange={(event) => changeRepairItem(index, { quantity: event.target.value })} />
+                                          </label>
+                                          <label>
+                                            <span>Cena brutto</span>
+                                            <input type="number" min="0.01" step="0.01" value={item.unitGrossAmount} onChange={(event) => changeRepairItem(index, { unitGrossAmount: event.target.value })} />
+                                          </label>
+                                          {repairItems.length > 1 && (
+                                            <button type="button" className="button secondary" onClick={() => removeRepairItem(index)}>Usuń</button>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                    {fieldErrors.repairItems && <small className="field-error">{fieldErrors.repairItems}</small>}
+                                    <button type="button" className="button secondary" onClick={addRepairItem}>Dodaj pozycję</button>
+                                    <p className="repair-items-total">Podgląd sumy: <strong>{formatMoney(repairItemsTotal)}</strong> brutto</p>
                                   </div>
                                 </div>
                               </div>
@@ -403,7 +472,7 @@ export function StaffAppointmentsSection() {
                               <button type="button" className="button secondary" onClick={resetAction}>Anuluj</button>
                               <button type="submit" className={action === 'reject' ? 'button danger' : 'button'}
                                 disabled={(action === 'propose' && !selectedVisitDate)
-                                  || (action === 'complete' && (!repairDescription.trim() || !totalGrossAmount))}>
+                                  || (action === 'complete' && !canSubmitRepair)}>
                                 {isSaving
                                   ? 'Zapisywanie…'
                                   : action === 'reject'
@@ -447,4 +516,9 @@ export function StaffAppointmentsSection() {
       )}
     </section>
   )
+}
+
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(value)
 }

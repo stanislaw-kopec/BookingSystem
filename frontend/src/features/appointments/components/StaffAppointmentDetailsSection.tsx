@@ -95,6 +95,16 @@ export function StaffAppointmentDetailsSection({ appointmentId }: { appointmentI
                       <strong>{formatMoney(entry.totalGrossAmount)}</strong>
                     </div>
                     <p>{entry.repairDescription}</p>
+                    {entry.repairItems.length > 0 && (
+                      <ul className="repair-items-summary">
+                        {entry.repairItems.map((item) => (
+                          <li key={item.id ?? `${item.type}-${item.name}`}>
+                            <span>{item.type === 'LABOR' ? 'Robocizna' : 'Część'}: {item.name}</span>
+                            <strong>{formatMoney(item.totalGrossAmount)}</strong>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <dl>
                       <div><dt>Numer zgłoszenia</dt><dd>{entry.appointmentReference}</dd></div>
                       <div><dt>Pracę zamknął</dt><dd>{entry.repairCompletedBy}</dd></div>

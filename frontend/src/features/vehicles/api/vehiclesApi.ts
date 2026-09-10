@@ -1,5 +1,5 @@
 import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
-import type { RepairHistoryEntry, Vehicle, VehicleInput } from '../types'
+import type { RepairHistoryEntry, RepairItem, RepairItemType, Vehicle, VehicleInput } from '../types'
 
 function isVehicle(value: unknown): value is Vehicle {
   return isRecord(value)
@@ -22,6 +22,20 @@ function isDateTime(value: unknown): value is string {
   return typeof value === 'string' && Number.isFinite(Date.parse(value))
 }
 
+function isRepairItemType(value: unknown): value is RepairItemType {
+  return value === 'LABOR' || value === 'PART'
+}
+
+function isRepairItem(value: unknown): value is RepairItem {
+  return isRecord(value)
+    && (value.id === null || (typeof value.id === 'number' && Number.isSafeInteger(value.id)))
+    && isRepairItemType(value.type)
+    && typeof value.name === 'string'
+    && typeof value.quantity === 'number'
+    && typeof value.unitGrossAmount === 'number'
+    && typeof value.totalGrossAmount === 'number'
+}
+
 function isRepairHistoryEntry(value: unknown): value is RepairHistoryEntry {
   return isRecord(value)
     && typeof value.appointmentId === 'number'
@@ -30,6 +44,8 @@ function isRepairHistoryEntry(value: unknown): value is RepairHistoryEntry {
     && isDateTime(value.visitDate)
     && typeof value.repairDescription === 'string'
     && typeof value.totalGrossAmount === 'number'
+    && Array.isArray(value.repairItems)
+    && value.repairItems.every(isRepairItem)
     && isDateTime(value.repairCompletedAt)
     && typeof value.repairCompletedBy === 'string'
     && isDateTime(value.vehiclePickedUpAt)
