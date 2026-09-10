@@ -38,6 +38,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Lista zgłoszeń personelu również używa paginacji backendowej. `GET /api/staff/appointments`
   przyjmuje `status`, `page`, `size` i `sortDirection`, a grafik korzysta z osobnego
   odczytu wszystkich zgłoszeń potrzebnych do widoku tygodniowego.
+- Personel może pobrać szczegóły pojedynczego zgłoszenia oraz historię napraw pojazdu
+  powiązanego z tym zgłoszeniem. Zgłoszenie gościa bez trwałego pojazdu w kartotece
+  zwraca pustą historię napraw.
 - Personel może zakończyć wyłącznie zgłoszenie ze statusem `CONFIRMED`. Zakończenie
   zapisuje opis wykonanych prac, kwotę brutto do zapłaty, czas zamknięcia i użytkownika
   personelu, a status przechodzi na `READY_FOR_PICKUP`. Płatność odbywa się poza systemem.

@@ -178,8 +178,9 @@ export function StaffScheduleSection() {
                   ) : (
                     <div className="staff-schedule-card-list">
                       {dayAppointments.map((appointment) => (
-                        <article className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
-                          key={appointment.id}>
+                        <Link className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
+                          to={`/staff/appointments/${appointment.id}`} key={appointment.id}
+                          aria-label={`Otwórz zgłoszenie ${appointment.vehicleMake} ${appointment.vehicleModel}, ${appointment.vehicleRegistrationNumber}`}>
                           <div className="staff-schedule-card-header">
                             <strong>{appointment.vehicleMake} {appointment.vehicleModel}</strong>
                             <span>{shortReference(appointment.reference)}</span>
@@ -188,7 +189,7 @@ export function StaffScheduleSection() {
                           <p>{appointment.firstName} {appointment.lastName}</p>
                           <p className="muted">{appointment.vehicleRegistrationNumber}</p>
                           <p className="staff-schedule-problem">{appointment.problemDescription}</p>
-                        </article>
+                        </Link>
                       ))}
                     </div>
                   )}

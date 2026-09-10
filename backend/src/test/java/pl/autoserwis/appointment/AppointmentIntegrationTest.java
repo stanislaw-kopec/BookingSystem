@@ -575,6 +575,47 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.totalElements").value(1));
     }
 
+    @Test
+    void staffCanOpenAppointmentDetailsWithVehicleRepairHistory() throws Exception {
+        AppUser client = createClient("staff-details-client", true);
+        AppUser staff = createUser("staff-details-mechanic", UserRole.MECHANIC);
+        Vehicle vehicle = createVehicle(client, "Honda", "Accord", "STAFF1", null);
+        createClientAppointment(client, vehicle, workingDate(1), "Pierwsza naprawa do historii pojazdu.");
+        AppointmentRequest completed = appointments.findAll().getFirst();
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/accept", completed.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", completed.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(repairJson("Wymieniono olej i komplet filtrów.", "520.00")))
+            .andExpect(status().isOk());
+        mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", completed.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk());
+
+        createClientAppointment(client, vehicle, workingDate(3), "Kolejne zgłoszenie do szczegółów mechanika.");
+        AppointmentRequest current = appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).getFirst();
+
+        mockMvc.perform(get("/api/staff/appointments/{id}", current.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(current.getId()))
+            .andExpect(jsonPath("$.vehicleRegistrationNumber").value("STAFF1"))
+            .andExpect(jsonPath("$.problemDescription").value("Kolejne zgłoszenie do szczegółów mechanika."));
+
+        mockMvc.perform(get("/api/staff/appointments/{id}/repair-history", current.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].appointmentId").value(completed.getId()))
+            .andExpect(jsonPath("$[0].repairDescription").value("Wymieniono olej i komplet filtrów."));
+    }
+
     private void createClientAppointment(AppUser client, Vehicle vehicle, LocalDate visitDate)
             throws Exception {
         createClientAppointment(client, vehicle, visitDate, "Silnik wydaje niepokojący dźwięk.");

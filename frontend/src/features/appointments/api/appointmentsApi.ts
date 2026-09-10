@@ -9,6 +9,7 @@ import type {
   ClientAppointmentInput,
   GuestAppointmentInput,
 } from '../types'
+import type { RepairHistoryEntry } from '../../vehicles/types'
 
 function isNullableString(value: unknown): value is string | null {
   return value === null || typeof value === 'string'
@@ -121,6 +122,25 @@ function appointmentPageFrom(value: unknown): AppointmentPage {
   throw new ApiError(502, 'Serwer zwrócił nieprawidłową stronę zgłoszeń.')
 }
 
+function isRepairHistoryEntry(value: unknown): value is RepairHistoryEntry {
+  return isRecord(value)
+    && typeof value.appointmentId === 'number'
+    && Number.isSafeInteger(value.appointmentId)
+    && typeof value.appointmentReference === 'string'
+    && isDateTime(value.visitDate)
+    && typeof value.repairDescription === 'string'
+    && typeof value.totalGrossAmount === 'number'
+    && isDateTime(value.repairCompletedAt)
+    && typeof value.repairCompletedBy === 'string'
+    && isDateTime(value.vehiclePickedUpAt)
+    && typeof value.vehiclePickedUpBy === 'string'
+}
+
+function repairHistoryFrom(value: unknown): RepairHistoryEntry[] {
+  if (Array.isArray(value) && value.every(isRepairHistoryEntry)) return value
+  throw new ApiError(502, 'Serwer zwrócił nieprawidłową historię napraw.')
+}
+
 export async function getAvailability(signal?: AbortSignal): Promise<AppointmentAvailability> {
   return availabilityFrom(await apiRequest('/api/appointments/availability', { signal }))
 }
@@ -187,6 +207,17 @@ export async function getStaffAppointments(
 
 export async function getAllStaffAppointments(signal?: AbortSignal): Promise<Appointment[]> {
   return appointmentsFrom(await apiRequest('/api/staff/appointments/all', { signal }))
+}
+
+export async function getStaffAppointment(appointmentId: number, signal?: AbortSignal): Promise<Appointment> {
+  return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}`, { signal }))
+}
+
+export async function getStaffAppointmentRepairHistory(
+  appointmentId: number,
+  signal?: AbortSignal,
+): Promise<RepairHistoryEntry[]> {
+  return repairHistoryFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/repair-history`, { signal }))
 }
 
 export async function acceptAppointment(appointmentId: number): Promise<Appointment> {

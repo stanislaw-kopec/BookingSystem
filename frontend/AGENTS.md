@@ -55,7 +55,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   tygodniowym grafikiem aktywnych zgłoszeń pogrupowanych według dni od poniedziałku do piątku. `/staff/appointments`
   jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości, backendową
   paginacją, filtrowaniem po statusie, sortowaniem po dacie oraz akcjami
-  potwierdzenia, odrzucenia i zaproponowania innego dnia. Propozycję gościa
+  potwierdzenia, odrzucenia i zaproponowania innego dnia. Kliknięcie zgłoszenia
+  w grafiku prowadzi do `/staff/appointments/:appointmentId` z pełnymi szczegółami
+  zgłoszenia i historią napraw pojazdu. Propozycję gościa
   personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
 - R10: w `/staff/appointments` przy zgłoszeniu `CONFIRMED` pokaż akcję „Praca zakończona”.
   Formularz wymaga opisu wykonanych prac i kwoty brutto do zapłaty przy odbiorze.

@@ -7,6 +7,7 @@ import pl.autoserwis.appointment.dto.AppointmentResponse;
 import pl.autoserwis.appointment.dto.CompleteRepairRequest;
 import pl.autoserwis.appointment.dto.ProposeAppointmentTimeRequest;
 import pl.autoserwis.appointment.dto.StaffMessageRequest;
+import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
 import java.util.List;
 @RestController
 @RequestMapping("/api/staff/appointments")
@@ -26,6 +27,14 @@ public class StaffAppointmentController {
     @GetMapping("/all")
     public List<AppointmentResponse> getAllAppointments() {
         return appointmentService.getStaffAppointments();
+    }
+    @GetMapping("/{appointmentId}")
+    public AppointmentResponse getAppointment(@PathVariable Long appointmentId) {
+        return appointmentService.getStaffAppointment(appointmentId);
+    }
+    @GetMapping("/{appointmentId}/repair-history")
+    public List<RepairHistoryEntryResponse> getRepairHistory(@PathVariable Long appointmentId) {
+        return appointmentService.getStaffAppointmentRepairHistory(appointmentId);
     }
     @PostMapping("/{appointmentId}/accept")
     public AppointmentResponse accept(Authentication authentication, @PathVariable Long appointmentId) {

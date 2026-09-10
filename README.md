@@ -207,6 +207,10 @@ na tygodniowym kalendarzu pracy warsztatu. Szczegółowa kolejka zgłoszeń jest
 statusie, sortować je po dacie przyjęcia auta i przeglądać stronami. Pozwala też
 przyjąć lub odrzucić zgłoszenie oraz wskazać inny wolny dzień. W przypadku gościa personel potwierdza
 nowy dzień po uzgodnieniu go poza aplikacją.
+Kliknięcie karty zgłoszenia w grafiku otwiera większą stronę szczegółów
+`/staff/appointments/{appointmentId}`. Personel widzi tam pełny opis zgłoszenia,
+dane kontaktowe i historię zakończonych napraw tego pojazdu, jeśli zgłoszenie jest
+powiązane z pojazdem klienta. Dla zgłoszenia gościa bez kartoteki pojazdu historia jest pusta.
 Po potwierdzeniu wizyty personel może wybrać „Praca zakończona”, wpisać wykonane
 prace i końcową kwotę brutto. Przy statusie „Czeka na odbiór” personel widzi przycisk
 „Samochód został odebrany”, który ustawia status „Zakończone”. System nie obsługuje
@@ -314,6 +318,8 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/appointments/{id}/cancel` | Odwołanie aktywnej wizyty | Właściciel CLIENT, CSRF |
 | `GET /api/staff/appointments` | Strona zgłoszeń personelu; obsługuje `status`, `page`, `size`, `sortDirection` | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/all` | Pełna lista zgłoszeń używana przez grafik personelu | MECHANIC, ADMIN |
+| `GET /api/staff/appointments/{id}` | Szczegóły pojedynczego zgłoszenia dla personelu | MECHANIC, ADMIN |
+| `GET /api/staff/appointments/{id}/repair-history` | Historia napraw pojazdu z danego zgłoszenia | MECHANIC, ADMIN |
 | `POST /api/staff/appointments/{id}/accept` | Potwierdzenie zgłoszonego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego dnia | MECHANIC, ADMIN, CSRF |

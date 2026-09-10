@@ -13,6 +13,7 @@ import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
+import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -94,6 +95,19 @@ public class AppointmentService {
             result.getSize(),
             result.getTotalElements(),
             result.getTotalPages());
+    }
+    public AppointmentResponse getStaffAppointment(Long appointmentId) {
+        return response(appointments.findById(appointmentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty.")));
+    }
+    public List<RepairHistoryEntryResponse> getStaffAppointmentRepairHistory(Long appointmentId) {
+        AppointmentRequest appointment = appointments.findById(appointmentId)
+            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+        if (appointment.getVehicle() == null) return List.of();
+        return appointments.findByVehicle_IdAndStatusOrderByVehiclePickedUpAtDesc(
+                appointment.getVehicle().getId(), AppointmentStatus.COMPLETED).stream()
+            .map(this::repairHistoryEntry)
+            .toList();
     }
     @Transactional
     public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {
@@ -347,6 +361,13 @@ public class AppointmentService {
     }
     private OffsetDateTime offset(Instant value) {
         return value == null ? null : value.atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
+    }
+    private RepairHistoryEntryResponse repairHistoryEntry(AppointmentRequest appointment) {
+        return new RepairHistoryEntryResponse(appointment.getId(), appointment.getReference(),
+            offset(appointment.getCurrentStartAt()), appointment.getRepairDescription(),
+            appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
+            appointment.getRepairCompletedBy().getUsername(), offset(appointment.getVehiclePickedUpAt()),
+            appointment.getVehiclePickedUpBy().getUsername());
     }
     private String text(String value) {
         return value == null ? "" : value;

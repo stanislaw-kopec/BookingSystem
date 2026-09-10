@@ -7,6 +7,7 @@ import { AppointmentsPage } from './pages/AppointmentsPage'
 import { HomePage } from './pages/HomePage'
 import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { StaffAppointmentDetailsPage } from './pages/StaffAppointmentDetailsPage'
 import { StaffAppointmentsPage } from './pages/StaffAppointmentsPage'
 import { StaffSchedulePage } from './pages/StaffSchedulePage'
 import { VehiclePage } from './pages/VehiclePage'
@@ -27,6 +28,7 @@ export default function App() {
             <Route path="vehicles/:vehicleId" element={<RequireClient><VehiclePage /></RequireClient>} />
             <Route path="staff/schedule" element={<RequireStaff><StaffSchedulePage /></RequireStaff>} />
             <Route path="staff/appointments" element={<RequireStaff><StaffAppointmentsPage /></RequireStaff>} />
+            <Route path="staff/appointments/:appointmentId" element={<RequireStaff><StaffAppointmentDetailsPage /></RequireStaff>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>
