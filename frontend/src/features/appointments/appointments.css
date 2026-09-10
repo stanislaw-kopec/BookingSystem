@@ -57,6 +57,7 @@
 .status-pending { color: #75530b; border-color: #dfbd66; background: #fff8df; }
 .status-time_proposed { color: #285584; border-color: #8fb6df; background: #edf6ff; }
 .status-confirmed { color: var(--success); border-color: #8bc4a3; background: #effaf3; }
+.status-completed { color: #166534; background: #dcfce7; }
 .status-ready_for_pickup { color: #7b3f00; border-color: #e1a85d; background: #fff4df; }
 .status-cancelled { color: #62545c; border-color: #c8bac2; background: #f7f2f5; }
 .status-rejected { color: var(--danger); border-color: #e4a5a5; background: #fff4f4; }

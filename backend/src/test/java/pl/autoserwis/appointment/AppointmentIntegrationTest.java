@@ -333,11 +333,39 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.repairCompletedAt").exists())
             .andExpect(jsonPath("$.repairCompletedBy").value(staff.getUsername()));
 
+        mockMvc.perform(get("/api/vehicles/{id}/repair-history", vehicle.getId())
+                .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(0));
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("COMPLETED"))
+            .andExpect(jsonPath("$.vehiclePickedUpAt").exists())
+            .andExpect(jsonPath("$.vehiclePickedUpBy").value(staff.getUsername()));
+
+        mockMvc.perform(get("/api/vehicles/{id}/repair-history", vehicle.getId())
+                .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].appointmentId").value(appointment.getId()))
+            .andExpect(jsonPath("$[0].appointmentReference").exists())
+            .andExpect(jsonPath("$[0].repairDescription").value("Wymieniono tarcze i klocki hamulcowe."))
+            .andExpect(jsonPath("$[0].totalGrossAmount").value(850.00))
+            .andExpect(jsonPath("$[0].vehiclePickedUpBy").value(staff.getUsername()));
+
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
                 .with(user(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Ponowny opis wykonanych prac.", "100.00")))
+            .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
             .andExpect(status().isConflict());
     }
 
@@ -392,6 +420,11 @@ class AppointmentIntegrationTest {
 
         mockMvc.perform(get("/api/staff/appointments")
                 .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", 999L)
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf()))
             .andExpect(status().isForbidden());
     }
 

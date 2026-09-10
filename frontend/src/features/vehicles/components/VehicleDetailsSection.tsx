@@ -2,19 +2,26 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as vehiclesApi from '../api/vehiclesApi'
-import type { Vehicle } from '../types'
+import type { RepairHistoryEntry, Vehicle } from '../types'
 import '../vehicles.css'
 
 export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
+  const [repairHistory, setRepairHistory] = useState<RepairHistoryEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
-    vehiclesApi.getVehicle(vehicleId, controller.signal)
-      .then((result) => {
-        if (!controller.signal.aborted) setVehicle(result)
+    Promise.all([
+      vehiclesApi.getVehicle(vehicleId, controller.signal),
+      vehiclesApi.getRepairHistory(vehicleId, controller.signal),
+    ])
+      .then(([vehicleResult, historyResult]) => {
+        if (!controller.signal.aborted) {
+          setVehicle(vehicleResult)
+          setRepairHistory(historyResult)
+        }
       })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setError(errorMessage(cause))
@@ -24,6 +31,7 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
 
   function retryLoading() {
     setError(null)
+    setRepairHistory(null)
     setRevision((value) => value + 1)
   }
 
@@ -56,14 +64,55 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
           <section className="repair-history" aria-labelledby="repair-history-heading">
             <div className="repair-history-heading">
               <h3 id="repair-history-heading">Historia napraw</h3>
-              <span className="count-badge">0 wpisów</span>
+              <span className="count-badge">{repairHistory?.length ?? 0} wpisów</span>
             </div>
-            <p className="empty-state">
-              Brak udokumentowanych napraw. Pojawią się tutaj po wystawieniu faktury za wykonane prace.
-            </p>
+            {repairHistory === null && <p role="status">Ładowanie historii napraw…</p>}
+            {repairHistory?.length === 0 && (
+              <p className="empty-state">
+                Brak zakończonych napraw. Wpis pojawi się tutaj po tym, jak warsztat oznaczy samochód jako odebrany.
+              </p>
+            )}
+            {repairHistory && repairHistory.length > 0 && (
+              <ul className="repair-history-list">
+                {repairHistory.map((entry) => (
+                  <li className="repair-history-card" key={entry.appointmentId}>
+                    <div className="repair-history-card-heading">
+                      <div>
+                        <p className="eyebrow">Naprawa zakończona</p>
+                        <h4>{formatDate(entry.visitDate)}</h4>
+                      </div>
+                      <strong>{formatMoney(entry.totalGrossAmount)}</strong>
+                    </div>
+                    <p>{entry.repairDescription}</p>
+                    <dl>
+                      <div><dt>Numer zgłoszenia</dt><dd>{entry.appointmentReference}</dd></div>
+                      <div><dt>Pracę zamknął</dt><dd>{entry.repairCompletedBy}</dd></div>
+                      <div><dt>Odbiór potwierdził</dt><dd>{entry.vehiclePickedUpBy}</dd></div>
+                    </dl>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </>
       )}
     </section>
   )
+}
+
+
+function formatDate(value: string) {
+  return new Intl.DateTimeFormat('pl-PL', {
+    timeZone: 'Europe/Warsaw',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date(value))
+}
+
+function formatMoney(value: number) {
+  return new Intl.NumberFormat('pl-PL', {
+    style: 'currency',
+    currency: 'PLN',
+  }).format(value)
 }

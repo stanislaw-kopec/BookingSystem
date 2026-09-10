@@ -1,5 +1,4 @@
 package pl.autoserwis.appointment;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,7 +10,6 @@ import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
@@ -22,18 +20,15 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-
 @Service
 @Transactional(readOnly = true)
 public class AppointmentService {
     private static final int MINIMUM_PROBLEM_DESCRIPTION_LENGTH = 10;
-
     private final AppointmentRepository appointments;
     private final AppointmentSchedule schedule;
     private final UserRepository users;
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
-
     public AppointmentService(AppointmentRepository appointments, AppointmentSchedule schedule,
             UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles) {
         this.appointments = appointments;
@@ -42,24 +37,20 @@ public class AppointmentService {
         this.profiles = profiles;
         this.vehicles = vehicles;
     }
-
     public AppointmentAvailabilityResponse getAvailability() {
         return schedule.availability();
     }
-
     public List<AppointmentResponse> getCurrentClientAppointments(String username) {
         AppUser client = user(username);
         return appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).stream()
             .map(this::response)
             .toList();
     }
-
     public List<AppointmentResponse> getStaffAppointments() {
         return appointments.findAllByOrderByCreatedAtDesc().stream()
             .map(this::response)
             .toList();
     }
-
     @Transactional
     public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {
         AppUser client = user(username);
@@ -70,7 +61,6 @@ public class AppointmentService {
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu."));
         Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String description = normalizedDescription(request.problemDescription());
-
         AppointmentRequest appointment = new AppointmentRequest(UUID.randomUUID(),
             AppointmentRequesterType.CLIENT, client, vehicle,
             profile.getFirstName(), profile.getLastName(), profile.getPhoneNumber(),
@@ -79,14 +69,12 @@ public class AppointmentService {
             startAt, description, Instant.now());
         return saveInAvailableDay(appointment);
     }
-
     @Transactional
     public AppointmentResponse createForGuest(GuestAppointmentRequest request) {
         validateGuest(request);
         Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String registrationNumber = normalizedRegistration(request.vehicleRegistrationNumber());
         String description = normalizedDescription(request.problemDescription());
-
         AppointmentRequest appointment = new AppointmentRequest(UUID.randomUUID(),
             AppointmentRequesterType.GUEST, null, null,
             request.firstName().strip(), request.lastName().strip(), optional(request.phoneNumber()),
@@ -95,7 +83,6 @@ public class AppointmentService {
             optionalUppercase(request.vehicleVin()), startAt, description, Instant.now());
         return saveInAvailableDay(appointment);
     }
-
     @Transactional
     public AppointmentResponse accept(String staffUsername, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
@@ -104,7 +91,6 @@ public class AppointmentService {
         appointment.accept(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
-
     @Transactional
     public AppointmentResponse reject(String staffUsername, Long appointmentId,
             StaffMessageRequest request) {
@@ -117,7 +103,6 @@ public class AppointmentService {
         appointment.reject(user(staffUsername), optional(request.message()), Instant.now());
         return response(appointments.save(appointment));
     }
-
     @Transactional
     public AppointmentResponse proposeTime(String staffUsername, Long appointmentId,
             ProposeAppointmentTimeRequest request) {
@@ -127,7 +112,6 @@ public class AppointmentService {
             throw new AppointmentConflictException(
                 "Nowy dzień można zaproponować tylko dla oczekującego zgłoszenia.");
         }
-
         Instant proposedStartAt = schedule.validateAndNormalize(request.visitDate());
         if (proposedStartAt.equals(appointment.getCurrentStartAt())) {
             throw new AppointmentValidationException(Map.of("visitDate",
@@ -137,7 +121,6 @@ public class AppointmentService {
         if (schedule.isFull(proposedStartAt)) {
             throw unavailableDay();
         }
-
         appointment.proposeTime(user(staffUsername), proposedStartAt,
             optional(request.message()), Instant.now());
         try {
@@ -146,7 +129,6 @@ public class AppointmentService {
             throw unavailableDay();
         }
     }
-
     @Transactional
     public AppointmentResponse confirmProposedTime(String username, Long appointmentId) {
         AppUser client = user(username);
@@ -158,7 +140,6 @@ public class AppointmentService {
         appointment.confirmProposedTime(Instant.now());
         return response(appointments.save(appointment));
     }
-
     @Transactional
     public AppointmentResponse cancelClientAppointment(String username, Long appointmentId) {
         AppUser client = user(username);
@@ -174,7 +155,6 @@ public class AppointmentService {
         appointment.cancel(Instant.now());
         return response(appointments.save(appointment));
     }
-
     @Transactional
     public AppointmentResponse confirmGuestProposedTime(String staffUsername, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
@@ -187,7 +167,6 @@ public class AppointmentService {
         appointment.confirmGuestProposedTime(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
-
     @Transactional
     public AppointmentResponse completeRepair(String staffUsername, Long appointmentId,
             CompleteRepairRequest request) {
@@ -200,7 +179,14 @@ public class AppointmentService {
             Instant.now());
         return response(appointments.save(appointment));
     }
-
+    @Transactional
+    public AppointmentResponse markPickedUp(String staffUsername, Long appointmentId) {
+        AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
+        requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
+            "Odbior samochodu mozna potwierdzic tylko dla auta oczekujacego na odbior.");
+        appointment.markPickedUp(user(staffUsername), Instant.now());
+        return response(appointments.save(appointment));
+    }
     private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {
         appointments.lockAppointmentDay(schedule.visitDate(appointment.getCurrentStartAt()));
         if (schedule.isFull(appointment.getCurrentStartAt())) {
@@ -212,19 +198,16 @@ public class AppointmentService {
             throw unavailableDay();
         }
     }
-
     private AppointmentRequest appointmentForStaffUpdate(Long appointmentId) {
         return appointments.findByIdForUpdate(appointmentId)
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
     }
-
     private void requireStatus(AppointmentRequest appointment, AppointmentStatus expected,
             String message) {
         if (appointment.getStatus() != expected) {
             throw new AppointmentConflictException(message);
         }
     }
-
     private void validateGuest(GuestAppointmentRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (blank(request.phoneNumber()) && blank(request.contactEmail())) {
@@ -247,7 +230,6 @@ public class AppointmentService {
             throw new AppointmentValidationException(errors);
         }
     }
-
     private String normalizedDescription(String value) {
         String normalized = value.strip();
         if (normalized.length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
@@ -256,7 +238,6 @@ public class AppointmentService {
         }
         return normalized;
     }
-
     private String normalizedRepairDescription(String value) {
         String normalized = value.strip();
         if (normalized.length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
@@ -265,49 +246,39 @@ public class AppointmentService {
         }
         return normalized;
     }
-
     private BigDecimal normalizedMoney(BigDecimal value) {
         return value.setScale(2, RoundingMode.UNNECESSARY);
     }
-
     private void validateNormalizedDescription(Map<String, String> errors, String value) {
         if (value != null && value.strip().length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
             errors.put("problemDescription", "Opis problemu musi mieć co najmniej 10 znaków.");
         }
     }
-
     private String normalizedRegistration(String value) {
         return value.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
     }
-
     private AppUser user(String username) {
         return users.findByUsernameIgnoreCase(username)
             .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika."));
     }
-
     private AppointmentConflictException unavailableDay() {
         return new AppointmentConflictException("visitDate",
             "Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.");
     }
-
     private boolean blank(String value) {
         return value == null || value.isBlank();
     }
-
     private String optional(String value) {
         return blank(value) ? null : value.strip();
     }
-
     private String optionalLowercase(String value) {
         String normalized = optional(value);
         return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
     }
-
     private String optionalUppercase(String value) {
         String normalized = optional(value);
         return normalized == null ? null : normalized.toUpperCase(Locale.ROOT);
     }
-
     private AppointmentResponse response(AppointmentRequest appointment) {
         return new AppointmentResponse(
             appointment.getId(), appointment.getReference(), appointment.getRequesterType(),
@@ -322,13 +293,13 @@ public class AppointmentService {
             appointment.getStaffActionBy() == null ? null : appointment.getStaffActionBy().getUsername(),
             offset(appointment.getClientConfirmedAt()), text(appointment.getRepairDescription()),
             appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
-            appointment.getRepairCompletedBy() == null ? null : appointment.getRepairCompletedBy().getUsername());
+            appointment.getRepairCompletedBy() == null ? null : appointment.getRepairCompletedBy().getUsername(),
+            offset(appointment.getVehiclePickedUpAt()),
+            appointment.getVehiclePickedUpBy() == null ? null : appointment.getVehiclePickedUpBy().getUsername());
     }
-
     private OffsetDateTime offset(Instant value) {
         return value == null ? null : value.atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
     }
-
     private String text(String value) {
         return value == null ? "" : value;
     }

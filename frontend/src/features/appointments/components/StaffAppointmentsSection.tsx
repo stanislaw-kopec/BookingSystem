@@ -21,8 +21,9 @@ const statusPriority = {
   TIME_PROPOSED: 1,
   CONFIRMED: 2,
   READY_FOR_PICKUP: 3,
-  CANCELLED: 4,
-  REJECTED: 5,
+  COMPLETED: 4,
+  CANCELLED: 5,
+  REJECTED: 6,
 } as const
 
 function sortAppointments(appointments: Appointment[]) {
@@ -158,7 +159,7 @@ export function StaffAppointmentsSection() {
       <div className="section-heading">
         <p className="eyebrow">Panel personelu</p>
         <h2 id="staff-appointments-heading">Zgłoszenia wizyt</h2>
-        <p className="muted">Obsłuż zgłoszenia, zaproponuj inny dzień albo zakończ wykonaną naprawę.</p>
+        <p className="muted">Obsłuż zgłoszenia, zaproponuj inny dzień, zakończ naprawę albo potwierdź odbiór auta.</p>
       </div>
       {notice && <p className="message success" role="status">{notice}</p>}
       {actionError && <p className="message error" role="alert">{actionError}</p>}
@@ -220,6 +221,18 @@ export function StaffAppointmentsSection() {
                     <button type="button" className="button danger" disabled={isSaving}
                       onClick={() => beginAction(appointment.id, 'reject')}>
                       Odrzuć
+                    </button>
+                  </div>
+                )}
+
+                {appointment.status === 'READY_FOR_PICKUP' && (
+                  <div className="appointment-card-actions actions">
+                    <button type="button" className="button" disabled={isSaving}
+                      onClick={() => void runSimpleAction(
+                        () => appointmentsApi.markVehiclePickedUp(appointment.id),
+                        'Samochód został odebrany. Zgłoszenie jest zakończone.',
+                      )}>
+                      Samochód został odebrany
                     </button>
                   </div>
                 )}

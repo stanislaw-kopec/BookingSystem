@@ -1,12 +1,9 @@
 package pl.autoserwis.appointment.dto;
-
 import pl.autoserwis.appointment.AppointmentRequesterType;
 import pl.autoserwis.appointment.AppointmentStatus;
-
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
-
 public record AppointmentResponse(
     Long id,
     UUID reference,
@@ -33,5 +30,7 @@ public record AppointmentResponse(
     String repairDescription,
     BigDecimal totalGrossAmount,
     OffsetDateTime repairCompletedAt,
-    String repairCompletedBy
+    String repairCompletedBy,
+    OffsetDateTime vehiclePickedUpAt,
+    String vehiclePickedUpBy
 ) {}

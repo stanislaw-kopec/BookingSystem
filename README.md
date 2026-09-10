@@ -173,9 +173,9 @@ Pojazd zawiera markę, model, rok produkcji, numer rejestracyjny i opcjonalny VI
 Numer rejestracyjny jest zapisywany wielkimi literami bez spacji.
 
 Kliknięcie pojazdu prowadzi do `http://localhost:5173/vehicles/{vehicleId}`.
-Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pozostaje pusta,
-dopóki nie powstanie moduł faktur — zgłoszenie usterki ani rezerwacja nie są dowodem
-wykonania naprawy. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pokazuje zakończone naprawy powiązane z tym pojazdem. Wpis pojawia się,
+gdy personel zakończy pracę, a potem oznaczy samochód jako odebrany przez klienta.
+Moduł faktur pozostaje dalszym etapem rozbudowy. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
 
 ## Umawianie wizyty
 
@@ -194,7 +194,8 @@ odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”,
 własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inny dzień, klient może go potwierdzić w panelu.
 Po zakończeniu naprawy klient widzi status „Czeka na odbiór”, opis wykonanych prac
-oraz kwotę brutto do zapłaty na miejscu.
+oraz kwotę brutto do zapłaty na miejscu. Gdy auto zostanie odebrane, status zmienia się
+na „Zakończone”, a wpis trafia do historii napraw pojazdu.
 
 Mechanik i administrator mają w menu konta zakładkę
 `http://localhost:5173/staff/schedule` („Grafik”), która pokazuje aktywne zgłoszenia
@@ -203,16 +204,16 @@ na tygodniowym kalendarzu pracy warsztatu. Szczegółowa kolejka zgłoszeń jest
 zgłoszenie oraz wskazać inny wolny dzień. W przypadku gościa personel potwierdza
 nowy dzień po uzgodnieniu go poza aplikacją.
 Po potwierdzeniu wizyty personel może wybrać „Praca zakończona”, wpisać wykonane
-prace i końcową kwotę brutto. System nie obsługuje płatności online; płatność odbywa
-się przy odbiorze auta poza aplikacją.
+prace i końcową kwotę brutto. Przy statusie „Czeka na odbiór” personel widzi przycisk
+„Samochód został odebrany”, który ustawia status „Zakończone”. System nie obsługuje
+płatności online; płatność odbywa się przy odbiorze auta poza aplikacją.
 
 Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, dni od poniedziałku do
 piątku oraz horyzontu 30 dni. Warsztat przyjmuje bazowo 4 aktywne zgłoszenia na
 jeden dzień. `PENDING`, `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu;
 odrzucenie albo odwołanie je zwalnia. Backend ponownie sprawdza dostępność podczas
 zapisu i blokuje wybrany dzień w transakcji, żeby równoczesne żądania nie przekroczyły limitu.
-Status `READY_FOR_PICKUP` oznacza, że naprawa jest zakończona i nie zajmuje już
-miejsca w kalendarzu przyjęć.
+Statusy `READY_FOR_PICKUP` i `COMPLETED` nie zajmują już miejsca w kalendarzu przyjęć.
 
 | Status | Znaczenie |
 | --- | --- |
@@ -220,6 +221,8 @@ miejsca w kalendarzu przyjęć.
 | `TIME_PROPOSED` | Personel zaproponował inny dzień |
 | `CONFIRMED` | Dzień został potwierdzony |
 | `READY_FOR_PICKUP` | Naprawa zakończona, auto czeka na odbiór i płatność na miejscu |
+| `COMPLETED` | Samochód odebrany przez klienta, zgłoszenie trafia do historii napraw pojazdu |
+| `CANCELLED` | Klient odwołał wizytę, a miejsce zostało zwolnione |
 | `REJECTED` | Zgłoszenie zostało odrzucone, a miejsce zwolnione |
 
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
@@ -280,6 +283,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `PUT /api/profile/me` | Utworzenie albo aktualizacja własnego profilu | CLIENT, CSRF |
 | `GET /api/vehicles` | Lista własnych pojazdów | CLIENT |
 | `GET /api/vehicles/{vehicleId}` | Szczegóły własnego pojazdu | CLIENT |
+| `GET /api/vehicles/{vehicleId}/repair-history` | Historia zakończonych napraw własnego pojazdu | CLIENT |
 | `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
 | `GET /api/appointments/availability` | Kalendarz dni na 30 dni | Publiczny |
 | `POST /api/appointments/guest` | Wysłanie zgłoszenia bez konta | Publiczny, CSRF |
@@ -293,6 +297,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/confirm-proposed` | Potwierdzenie dnia gościa po kontakcie | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/complete-repair` | Zakończenie naprawy i ustawienie odbioru auta | MECHANIC, ADMIN, CSRF |
+| `POST /api/staff/appointments/{id}/mark-picked-up` | Potwierdzenie odbioru samochodu i zakończenie zgłoszenia | MECHANIC, ADMIN, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek

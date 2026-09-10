@@ -62,6 +62,12 @@ export function AppointmentDetails({ appointment, showContact = false }: Props) 
                 <dd>{formatAppointmentDate(appointment.repairCompletedAt)}</dd>
               </div>
             )}
+            {appointment.vehiclePickedUpAt && (
+              <div>
+                <dt>Samochód odebrano</dt>
+                <dd>{formatAppointmentDate(appointment.vehiclePickedUpAt)}</dd>
+              </div>
+            )}
           </>
         )}
         {showContact && (

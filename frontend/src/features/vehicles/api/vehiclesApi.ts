@@ -1,5 +1,5 @@
 import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
-import type { Vehicle, VehicleInput } from '../types'
+import type { RepairHistoryEntry, Vehicle, VehicleInput } from '../types'
 
 function isVehicle(value: unknown): value is Vehicle {
   return isRecord(value)
@@ -18,6 +18,29 @@ function vehicleFrom(value: unknown): Vehicle {
   throw new ApiError(502, 'Serwer zwrócił nieprawidłowe dane pojazdu.')
 }
 
+function isDateTime(value: unknown): value is string {
+  return typeof value === 'string' && Number.isFinite(Date.parse(value))
+}
+
+function isRepairHistoryEntry(value: unknown): value is RepairHistoryEntry {
+  return isRecord(value)
+    && typeof value.appointmentId === 'number'
+    && Number.isSafeInteger(value.appointmentId)
+    && typeof value.appointmentReference === 'string'
+    && isDateTime(value.visitDate)
+    && typeof value.repairDescription === 'string'
+    && typeof value.totalGrossAmount === 'number'
+    && isDateTime(value.repairCompletedAt)
+    && typeof value.repairCompletedBy === 'string'
+    && isDateTime(value.vehiclePickedUpAt)
+    && typeof value.vehiclePickedUpBy === 'string'
+}
+
+function repairHistoryFrom(value: unknown): RepairHistoryEntry[] {
+  if (Array.isArray(value) && value.every(isRepairHistoryEntry)) return value
+  throw new ApiError(502, 'Serwer zwrócił nieprawidłową historię napraw.')
+}
+
 export async function getVehicles(signal?: AbortSignal): Promise<Vehicle[]> {
   const payload = await apiRequest('/api/vehicles', { signal })
   if (Array.isArray(payload) && payload.every(isVehicle)) return payload
@@ -26,6 +49,10 @@ export async function getVehicles(signal?: AbortSignal): Promise<Vehicle[]> {
 
 export async function getVehicle(vehicleId: number, signal?: AbortSignal): Promise<Vehicle> {
   return vehicleFrom(await apiRequest(`/api/vehicles/${vehicleId}`, { signal }))
+}
+
+export async function getRepairHistory(vehicleId: number, signal?: AbortSignal): Promise<RepairHistoryEntry[]> {
+  return repairHistoryFrom(await apiRequest(`/api/vehicles/${vehicleId}/repair-history`, { signal }))
 }
 
 export async function createVehicle(input: VehicleInput): Promise<Vehicle> {

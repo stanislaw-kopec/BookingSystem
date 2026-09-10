@@ -31,12 +31,13 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R02 | Na górze strony znajduje się menu z publiczną pozycją „Umów wizytę”, prowadzącą do `/appointments`. Po prawej stronie jest jeden wspólny przycisk „Logowanie / Rejestracja”, prowadzący do obu możliwości. Nie dodawaj dwóch osobnych przycisków w nagłówku. |
 | R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem na osobnej podstronie `/profile`. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Po zalogowaniu klient otwiera profil z menu konta w prawym górnym rogu. Zapisany profil domyślnie pokazuje podsumowanie; formularz pojawia się po wybraniu edycji. |
 | R04 | Pozycja „Moje pojazdy” w menu konta prowadzi do `/vehicles`. Klient może dodać pojazd z marką, modelem, rokiem produkcji, numerem rejestracyjnym i opcjonalnym VIN oraz przeglądać wyłącznie własne pojazdy. Wybranie pojazdu otwiera osobną podstronę `/vehicles/:vehicleId` ze szczegółami i historią napraw. |
-| R05 | Historia napraw pojazdu powstaje na podstawie faktur wystawianych przez uprawnionego mechanika/pracownika i pozostaje powiązana z danym pojazdem. |
+| R05 | Historia napraw pojazdu w pierwszej wersji powstaje na podstawie zakończonych zgłoszeń `COMPLETED`, a docelowo może zostać rozbudowana o faktury wystawiane przez uprawniony personel. |
 | R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych dni przyjęcia auta od poniedziałku do piątku. Pierwsza wersja przyjmuje bazowo 4 aktywne zgłoszenia na dzień. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera dzień przyjęcia auta i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, dzień przyjęcia auta oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. Interfejs informuje, że auto można zostawić rano albo po wcześniejszym uzgodnieniu dzień wcześniej. |
 | R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny dzień. Zalogowany klient widzi własne zgłoszenia, potwierdza zaproponowany dzień i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Główne menu zawiera publiczny link „Umów wizytę”, a prywatne linki klienta, w tym „Moje wizyty”, znajdują się w menu konta w prawym górnym rogu. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
 | R08 | Mechanik i administrator mają graficzną zakładkę `/staff/schedule` („Grafik”) z tygodniowym widokiem aktywnych zgłoszeń pogrupowanych według dni przyjęcia auta. Panel `/staff/appointments` służy do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego dnia. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
 | R10 | Mechanik i administrator mogą zakończyć potwierdzone zgłoszenie w panelu `/staff/appointments`, wpisując opis wykonanych prac oraz końcową kwotę brutto do zapłaty przy odbiorze auta. Zakończenie naprawy ustawia status `READY_FOR_PICKUP` („Czeka na odbiór”). Płatność odbywa się na miejscu poza systemem. Pierwsza wersja zapisuje jedną kwotę brutto, bez pozycji faktury, netto, VAT i płatności online. |
+| R11 | Mechanik i administrator mogą oznaczyć zgłoszenie ze statusem `READY_FOR_PICKUP` jako odebrane przez klienta. Akcja „Samochód został odebrany” ustawia status `COMPLETED` („Zakończone”). Zakończone zgłoszenia powiązane z pojazdem klienta są pierwszą wersją historii napraw widoczną na `/vehicles/:vehicleId`. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -49,6 +50,8 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 - Po wykonaniu naprawy personel może przejść z `CONFIRMED` do `READY_FOR_PICKUP`.
   Wymagany jest opis wykonanych prac i kwota brutto większa od zera. Status
   `READY_FOR_PICKUP` oznacza, że auto czeka na odbiór i płatność na miejscu poza systemem.
+  Po odbiorze auta personel może przejść z `READY_FOR_PICKUP` do `COMPLETED`;
+  ten status oznacza zakończone zgłoszenie widoczne w historii napraw pojazdu.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
   Personel korzysta z danych w zakresie przyznanych uprawnień.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
@@ -73,12 +76,13 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Wewnętrznie wybrany dzień jest zapisywany jako początek dnia roboczego 08:00,
   ale interfejs nie umawia klienta na konkretną godzinę. Statusy `PENDING`,
   `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu; `READY_FOR_PICKUP`,
-  `REJECTED` i
+  `COMPLETED`, `REJECTED` i
   `CANCELLED` je zwalniają. Zmiana dnia zwalnia poprzedni i zajmuje nowy atomowo.
   Backend zabezpiecza równoległe próby zajęcia miejsc.
-- Pierwszy zapis zakończonej naprawy powstaje przy statusie `READY_FOR_PICKUP`
-  i zawiera opis wykonanych prac oraz kwotę brutto do zapłaty. Docelowa historia
-  napraw i faktury mogą rozbudować ten zapis o dokument sprzedaży. Sam opis usterki
+- Pierwszy zapis wykonanej naprawy powstaje przy statusie `READY_FOR_PICKUP`
+  i zawiera opis wykonanych prac oraz kwotę brutto do zapłaty. Do historii pojazdu
+  trafia po oznaczeniu odbioru auta statusem `COMPLETED`. Docelowe faktury mogą
+  rozbudować ten zapis o dokument sprzedaży. Sam opis usterki
   lub przyjęcie rezerwacji nie stanowi wpisu potwierdzającego wykonanie naprawy.
 - Katalog ma dwa poziomy: kategoria → usługa. Nie dodawaj kolejnych poziomów
   podkategorii bez nowego wymagania. Nazwa kategorii jest unikalna, a nazwa usługi

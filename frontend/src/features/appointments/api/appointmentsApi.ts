@@ -22,6 +22,7 @@ function isAppointmentStatus(value: unknown): value is AppointmentStatus {
     || value === 'TIME_PROPOSED'
     || value === 'CONFIRMED'
     || value === 'READY_FOR_PICKUP'
+    || value === 'COMPLETED'
     || value === 'CANCELLED'
     || value === 'REJECTED'
 }
@@ -86,6 +87,8 @@ function isAppointment(value: unknown): value is Appointment {
     && (value.totalGrossAmount === null || typeof value.totalGrossAmount === 'number')
     && (value.repairCompletedAt === null || isDateTime(value.repairCompletedAt))
     && isNullableString(value.repairCompletedBy)
+    && (value.vehiclePickedUpAt === null || isDateTime(value.vehiclePickedUpAt))
+    && isNullableString(value.vehiclePickedUpBy)
 }
 
 function appointmentFrom(value: unknown): Appointment {
@@ -179,5 +182,11 @@ export async function completeRepair(
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ repairDescription, totalGrossAmount }),
+  }))
+}
+
+export async function markVehiclePickedUp(appointmentId: number): Promise<Appointment> {
+  return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/mark-picked-up`, {
+    method: 'POST',
   }))
 }

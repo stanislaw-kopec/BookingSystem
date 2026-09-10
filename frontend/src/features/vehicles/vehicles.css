@@ -29,3 +29,15 @@
   .vehicle-vin-field { grid-column: auto; }
   .vehicle-card { align-items: flex-start; flex-direction: column; gap: 10px; }
 }
+.repair-history-list { display: grid; gap: 16px; margin: 18px 0 0; padding: 0; list-style: none; }
+.repair-history-card { padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.repair-history-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+.repair-history-card-heading h4 { margin: 0; }
+.repair-history-card-heading strong { white-space: nowrap; }
+.repair-history-card dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 16px 0 0; }
+.repair-history-card dt { color: var(--muted); font-size: 0.82rem; }
+.repair-history-card dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+@media (max-width: 650px) {
+  .repair-history-card-heading { flex-direction: column; }
+  .repair-history-card dl { grid-template-columns: 1fr; }
+}

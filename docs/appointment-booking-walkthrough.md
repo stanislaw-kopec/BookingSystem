@@ -7,7 +7,7 @@ zgłoszeń przez personel. Najważniejsze rozróżnienie brzmi: klient najpierw 
 ## 1. Przepływ statusów
 
 ```text
-PENDING ───────────────> CONFIRMED ───────────────> READY_FOR_PICKUP
+PENDING ───────────────> CONFIRMED ───────────────> READY_FOR_PICKUP ───────────────> COMPLETED
     │                         ▲
     ├───────────────> REJECTED
     ├──────────────> CANCELLED
@@ -24,6 +24,8 @@ PENDING ───────────────> CONFIRMED ─────
   kontakcie telefonicznym lub mailowym.
 - `READY_FOR_PICKUP` oznacza, że mechanik zakończył naprawę, opisał wykonane prace
   i podał kwotę brutto do zapłaty przy odbiorze auta. Płatność odbywa się poza systemem.
+- `COMPLETED` oznacza, że klient odebrał samochód, a zgłoszenie jest widoczne
+  w historii napraw pojazdu.
 
 Przejścia sprawdza backend. Ukrycie przycisku w Reacie poprawia interfejs, ale nie
 chroni danych przed ręcznie przygotowanym żądaniem HTTP.
@@ -84,6 +86,8 @@ miejsca, więc dzień może wrócić do kalendarza jako dostępny.
 
 Zakończenie naprawy zmienia status na `READY_FOR_PICKUP`. Ten status pokazuje, że
 auto czeka na odbiór i płatność na miejscu, ale nie blokuje już kalendarza przyjęć.
+Po odebraniu samochodu personel zmienia status na `COMPLETED`; taki wpis pojawia się
+w historii napraw pojazdu.
 
 ## 6. Endpointy i uprawnienia
 
@@ -101,6 +105,7 @@ POST /api/staff/appointments/{id}/reject                    odrzucenie
 POST /api/staff/appointments/{id}/propose-time              propozycja dnia
 POST /api/staff/appointments/{id}/confirm-proposed          potwierdzenie gościa
 POST /api/staff/appointments/{id}/complete-repair           zakończenie naprawy
+POST /api/staff/appointments/{id}/mark-picked-up            potwierdzenie odbioru auta
 ```
 
 Operacje CLIENT korzystają z właściciela sesji. Operacje personelu wymagają roli
@@ -121,7 +126,10 @@ Używa tej samej listy zgłoszeń personelu co kolejka, ale prezentuje aktywne z
 w tygodniowym widoku dni od poniedziałku do piątku. `StaffAppointmentsPage` pod
 `/staff/appointments` pozostaje miejscem podejmowania decyzji o zgłoszeniach.
 W tym samym panelu przy statusie `CONFIRMED` pojawia się akcja „Praca zakończona”,
-która zapisuje opis wykonanych prac i kwotę brutto do zapłaty.
+która zapisuje opis wykonanych prac i kwotę brutto do zapłaty. Przy statusie
+`READY_FOR_PICKUP` mechanik widzi przycisk „Samochód został odebrany”, który ustawia
+status `COMPLETED`. Szczegóły pojazdu pobierają historię z
+`GET /api/vehicles/{vehicleId}/repair-history`, czyli z zakończonych zgłoszeń klienta.
 
 ```text
 appointments/

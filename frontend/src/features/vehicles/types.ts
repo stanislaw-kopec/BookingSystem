@@ -9,3 +9,15 @@ export interface VehicleInput {
 export interface Vehicle extends VehicleInput {
   id: number
 }
+
+export interface RepairHistoryEntry {
+  appointmentId: number
+  appointmentReference: string
+  visitDate: string
+  repairDescription: string
+  totalGrossAmount: number
+  repairCompletedAt: string
+  repairCompletedBy: string
+  vehiclePickedUpAt: string
+  vehiclePickedUpBy: string
+}

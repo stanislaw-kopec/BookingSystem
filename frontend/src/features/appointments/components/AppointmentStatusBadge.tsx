@@ -5,6 +5,7 @@ const labels: Record<AppointmentStatus, string> = {
   TIME_PROPOSED: 'Zaproponowano nowy dzień',
   CONFIRMED: 'Potwierdzone',
   READY_FOR_PICKUP: 'Czeka na odbiór',
+  COMPLETED: 'Zakończone',
   CANCELLED: 'Odwołane',
   REJECTED: 'Odrzucone',
 }
