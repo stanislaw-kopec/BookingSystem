@@ -356,6 +356,20 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$[0].totalGrossAmount").value(850.00))
             .andExpect(jsonPath("$[0].vehiclePickedUpBy").value(staff.getUsername()));
 
+        byte[] invoice = mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
+                    vehicle.getId(), appointment.getId())
+                .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", "application/pdf"))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+            .andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(invoice, 0, 4)).isEqualTo("%PDF");
+
+        mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
+                    vehicle.getId(), appointment.getId())
+                .with(user(otherClient().getUsername()).roles("CLIENT")))
+            .andExpect(status().isNotFound());
+
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
                 .with(user(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
@@ -509,6 +523,10 @@ class AppointmentIntegrationTest {
                     .formatted(proposed)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("TIME_PROPOSED"));
+    }
+
+    private AppUser otherClient() {
+        return createClient("invoice-other-client", true);
     }
 
     private AppUser createClient(String username, boolean withProfile) {

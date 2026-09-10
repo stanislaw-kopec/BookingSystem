@@ -9,6 +9,8 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
   const [vehicle, setVehicle] = useState<Vehicle | null>(null)
   const [repairHistory, setRepairHistory] = useState<RepairHistoryEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [invoiceError, setInvoiceError] = useState<string | null>(null)
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
   const [revision, setRevision] = useState(0)
 
   useEffect(() => {
@@ -31,8 +33,29 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
 
   function retryLoading() {
     setError(null)
+    setInvoiceError(null)
     setRepairHistory(null)
     setRevision((value) => value + 1)
+  }
+
+  async function downloadInvoice(entry: RepairHistoryEntry) {
+    setDownloadingInvoiceId(entry.appointmentId)
+    setInvoiceError(null)
+    try {
+      const invoice = await vehiclesApi.downloadRepairInvoice(vehicleId, entry.appointmentId)
+      const url = URL.createObjectURL(invoice)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = vehiclesApi.repairInvoiceFilename(entry)
+      document.body.append(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (cause) {
+      setInvoiceError(errorMessage(cause))
+    } finally {
+      setDownloadingInvoiceId(null)
+    }
   }
 
   return (
@@ -66,6 +89,7 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
               <h3 id="repair-history-heading">Historia napraw</h3>
               <span className="count-badge">{repairHistory?.length ?? 0} wpisów</span>
             </div>
+            {invoiceError && <p className="message error" role="alert">{invoiceError}</p>}
             {repairHistory === null && <p role="status">Ładowanie historii napraw…</p>}
             {repairHistory?.length === 0 && (
               <p className="empty-state">
@@ -89,6 +113,13 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
                       <div><dt>Pracę zamknął</dt><dd>{entry.repairCompletedBy}</dd></div>
                       <div><dt>Odbiór potwierdził</dt><dd>{entry.vehiclePickedUpBy}</dd></div>
                     </dl>
+                    <div className="repair-history-actions">
+                      <button type="button" className="button secondary"
+                        disabled={downloadingInvoiceId === entry.appointmentId}
+                        onClick={() => void downloadInvoice(entry)}>
+                        {downloadingInvoiceId === entry.appointmentId ? 'Pobieranie…' : 'Pobierz fakturę'}
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -175,7 +175,7 @@ Numer rejestracyjny jest zapisywany wielkimi literami bez spacji.
 Kliknięcie pojazdu prowadzi do `http://localhost:5173/vehicles/{vehicleId}`.
 Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pokazuje zakończone naprawy powiązane z tym pojazdem. Wpis pojawia się,
 gdy personel zakończy pracę, a potem oznaczy samochód jako odebrany przez klienta.
-Moduł faktur pozostaje dalszym etapem rozbudowy. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+Przy każdym wpisie można pobrać prostą fakturę PDF. Jeśli profil klienta ma uzupełnione dane firmy, PDF użyje danych firmowych; w przeciwnym razie użyje danych imiennych i adresowych klienta. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
 
 ## Umawianie wizyty
 
@@ -214,6 +214,7 @@ jeden dzień. `PENDING`, `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym 
 odrzucenie albo odwołanie je zwalnia. Backend ponownie sprawdza dostępność podczas
 zapisu i blokuje wybrany dzień w transakcji, żeby równoczesne żądania nie przekroczyły limitu.
 Statusy `READY_FOR_PICKUP` i `COMPLETED` nie zajmują już miejsca w kalendarzu przyjęć.
+Dla `COMPLETED` klient może pobrać PDF faktury z historii pojazdu.
 
 | Status | Znaczenie |
 | --- | --- |
@@ -284,6 +285,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `GET /api/vehicles` | Lista własnych pojazdów | CLIENT |
 | `GET /api/vehicles/{vehicleId}` | Szczegóły własnego pojazdu | CLIENT |
 | `GET /api/vehicles/{vehicleId}/repair-history` | Historia zakończonych napraw własnego pojazdu | CLIENT |
+| `GET /api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice` | Pobranie faktury PDF za zakończoną naprawę | CLIENT |
 | `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
 | `GET /api/appointments/availability` | Kalendarz dni na 30 dni | Publiczny |
 | `POST /api/appointments/guest` | Wysłanie zgłoszenia bez konta | Publiczny, CSRF |

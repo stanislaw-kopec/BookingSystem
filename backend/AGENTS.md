@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R11. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R12. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -123,8 +123,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `POST /api/appointments/{id}/confirm-proposed` oraz
   `POST /api/appointments/{id}/cancel` należą do CLIENT.
 - Endpointy pod `/api/staff/appointments` udostępniają MECHANIC/ADMIN listę oraz
-  akcje `accept`, `reject`, `propose-time`, `confirm-proposed` dla gościa i
-  `complete-repair`.
+  akcje `accept`, `reject`, `propose-time`, `confirm-proposed` dla gościa,
+  `complete-repair` i `mark-picked-up`.
 - Publiczny odczyt dostępności nie ujawnia danych klientów ani zgłoszeń. Publiczny
   zapis gościa wymaga tokenu CSRF, imienia i nazwiska oraz co najmniej telefonu albo
   poprawnego e-maila. Opis usterki ma od 10 do 2000 znaków.
@@ -152,8 +152,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Faktura musi mieć powiązanie pozwalające pokazać udokumentowane naprawy właściwego
   pojazdu i klienta. Nie generuj historii wykonanych napraw ze zgłoszeń oczekujących.
 - Obecny zapis zakończenia naprawy przechowuje jedną kwotę brutto i opis prac.
-  Nie rozbijaj jej jeszcze na netto, VAT, pozycje faktury ani płatności online bez
-  osobnego wymagania.
+  Prosty PDF faktury wylicza netto i VAT 23% z tej kwoty brutto. Nie dodawaj jeszcze
+  osobnych pozycji faktury, korekt ani płatności online bez osobnego wymagania.
 - Zachowuj dane i pozycje wystawionego dokumentu z momentu jego wystawienia.
   Późniejsza zmiana profilu klienta lub oferty usług nie może zmieniać historii faktury.
 - Sposób wystawiania, statusy, korekty, numeracja i eksport dokumentów pozostają

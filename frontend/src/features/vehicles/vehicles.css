@@ -41,3 +41,5 @@
   .repair-history-card-heading { flex-direction: column; }
   .repair-history-card dl { grid-template-columns: 1fr; }
 }
+
+.repair-history-actions { display: flex; justify-content: flex-end; margin-top: 16px; }

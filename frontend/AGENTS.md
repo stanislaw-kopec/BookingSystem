@@ -100,8 +100,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   jako „Czeka na odbiór”, `CANCELLED` jako „Odwołane”, a `REJECTED` jako „Odrzucone”.
   Pokazuj pierwotny i proponowany dzień
   bez sugerowania wykonanej naprawy.
-- Historia napraw i dane dokumentów pochodzą z API. Nie twórz fikcyjnych faktur
-  ani lokalnych wpisów udających trwale zapisane dane.
+- Historia napraw i dane dokumentów pochodzą z API. Przy zakończonej naprawie pokaż
+  przycisk „Pobierz fakturę”, który pobiera PDF z backendu. Nie twórz lokalnych
+  faktur ani wpisów udających trwale zapisane dane.
 
 ## Komunikacja i uruchamianie
 

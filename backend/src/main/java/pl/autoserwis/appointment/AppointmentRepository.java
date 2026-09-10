@@ -14,6 +14,9 @@ public interface AppointmentRepository extends JpaRepository<AppointmentRequest,
     List<AppointmentRequest> findAllByOrderByCreatedAtDesc();
     List<AppointmentRequest> findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(
         Long vehicleId, Long clientId, AppointmentStatus status);
+
+    Optional<AppointmentRequest> findByIdAndVehicle_IdAndClient_IdAndStatus(
+        Long id, Long vehicleId, Long clientId, AppointmentStatus status);
     @Query("""
         select appointment.currentStartAt
         from AppointmentRequest appointment

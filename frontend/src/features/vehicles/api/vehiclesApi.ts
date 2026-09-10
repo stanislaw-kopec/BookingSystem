@@ -62,3 +62,22 @@ export async function createVehicle(input: VehicleInput): Promise<Vehicle> {
     body: JSON.stringify(input),
   }))
 }
+
+export async function downloadRepairInvoice(vehicleId: number, appointmentId: number): Promise<Blob> {
+  const response = await fetch(`/api/vehicles/${vehicleId}/repair-history/${appointmentId}/invoice`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null)
+    const message = isRecord(payload) && typeof payload.message === 'string'
+      ? payload.message
+      : 'Nie udało się pobrać faktury.'
+    throw new ApiError(response.status, message)
+  }
+  return response.blob()
+}
+
+export function repairInvoiceFilename(entry: RepairHistoryEntry): string {
+  return `invoice-${entry.appointmentReference}.pdf`
+}

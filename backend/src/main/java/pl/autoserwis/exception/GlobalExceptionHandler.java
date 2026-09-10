@@ -10,6 +10,7 @@ import pl.autoserwis.appointment.AppointmentConflictException;
 import pl.autoserwis.appointment.AppointmentValidationException;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
+import pl.autoserwis.invoice.InvoiceGenerationException;
 import pl.autoserwis.profile.ProfileValidationException;
 import pl.autoserwis.vehicle.VehicleConflictException;
 import pl.autoserwis.vehicle.VehicleValidationException;
@@ -87,6 +88,11 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> databaseConflict() {
         // Database constraints also protect concurrent writes.
         return error(409, "Operacja powoduje konflikt z istniejącymi danymi. Odśwież widok i spróbuj ponownie.");
+    }
+
+    @ExceptionHandler(InvoiceGenerationException.class)
+    ResponseEntity<ApiError> invoiceGeneration() {
+        return error(500, "Nie udało się wygenerować faktury PDF. Spróbuj ponownie później.");
     }
 
     private ResponseEntity<ApiError> error(int status, String message) {

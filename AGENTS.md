@@ -38,6 +38,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
 | R10 | Mechanik i administrator mogą zakończyć potwierdzone zgłoszenie w panelu `/staff/appointments`, wpisując opis wykonanych prac oraz końcową kwotę brutto do zapłaty przy odbiorze auta. Zakończenie naprawy ustawia status `READY_FOR_PICKUP` („Czeka na odbiór”). Płatność odbywa się na miejscu poza systemem. Pierwsza wersja zapisuje jedną kwotę brutto, bez pozycji faktury, netto, VAT i płatności online. |
 | R11 | Mechanik i administrator mogą oznaczyć zgłoszenie ze statusem `READY_FOR_PICKUP` jako odebrane przez klienta. Akcja „Samochód został odebrany” ustawia status `COMPLETED` („Zakończone”). Zakończone zgłoszenia powiązane z pojazdem klienta są pierwszą wersją historii napraw widoczną na `/vehicles/:vehicleId`. |
+| R12 | Klient może pobrać prostą fakturę PDF z historii napraw własnego pojazdu przy zakończonym zgłoszeniu `COMPLETED`. Faktura zawiera logo Mietek Customs, numer, datę wystawienia i sprzedaży, dane warsztatu, dane nabywcy imienne albo firmowe z profilu, pojazd, opis wykonanych prac, kwotę netto, VAT 23% wyliczony z zapisanej kwoty brutto, kwotę brutto i informację o płatności przy odbiorze. To pierwsza wersja dokumentu, bez osobnej tabeli faktur, korekt, numeracji księgowej i deklaracji zgodności prawno-księgowej. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -108,9 +109,10 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Sposób edycji, usunięcia lub sprzedaży pojazdu oraz dostępu nowego właściciela
   do wcześniejszych dokumentów. Dalsze rozszerzenia profilu, np. kraj lub osobny
   adres rozliczeniowy osoby prywatnej, wymagają nowego ustalenia.
-- Zakres fakturowania: tworzenie dokumentu w aplikacji czy zapis dokumentu zewnętrznego,
-  pozycje prac/części, dane rozliczenia, numeracja, korekty i ewentualny PDF.
-  Nie zakładaj integracji księgowej ani płatności online.
+- Zakres pełnego fakturowania: osobna tabela faktur, pozycje prac/części, korekty,
+  docelowa numeracja księgowa, eksport dokumentów i ewentualna integracja księgowa.
+  Obecna wersja generuje prosty PDF z zakończonego zgłoszenia, bez płatności online
+  i bez deklaracji zgodności prawno-księgowej.
 - Odzyskiwanie haseł i zarządzanie kontami. Rejestracja klienta jest dostępna;
   obecne uwierzytelnianie używa sesji Spring Security i ochrony CSRF. Ewentualna zmiana mechanizmu
   uwierzytelniania wymaga konkretnej potrzeby, JWT nie jest wymaganiem.

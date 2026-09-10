@@ -130,6 +130,10 @@ która zapisuje opis wykonanych prac i kwotę brutto do zapłaty. Przy statusie
 `READY_FOR_PICKUP` mechanik widzi przycisk „Samochód został odebrany”, który ustawia
 status `COMPLETED`. Szczegóły pojazdu pobierają historię z
 `GET /api/vehicles/{vehicleId}/repair-history`, czyli z zakończonych zgłoszeń klienta.
+Każdy wpis historii ma przycisk „Pobierz fakturę”, który pobiera PDF z
+`GET /api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice`. PDF używa
+danych firmowych klienta, jeśli profil ma je uzupełnione, albo danych imiennych
+w przeciwnym razie.
 
 ```text
 appointments/
