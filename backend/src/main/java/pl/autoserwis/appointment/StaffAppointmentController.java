@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.appointment.dto.AppointmentResponse;
+import pl.autoserwis.appointment.dto.CompleteRepairRequest;
 import pl.autoserwis.appointment.dto.ProposeAppointmentTimeRequest;
 import pl.autoserwis.appointment.dto.StaffMessageRequest;
 
@@ -45,5 +46,12 @@ public class StaffAppointmentController {
     public AppointmentResponse confirmGuestProposedTime(Authentication authentication,
             @PathVariable Long appointmentId) {
         return appointmentService.confirmGuestProposedTime(authentication.getName(), appointmentId);
+    }
+
+    @PostMapping("/{appointmentId}/complete-repair")
+    public AppointmentResponse completeRepair(Authentication authentication,
+            @PathVariable Long appointmentId,
+            @Valid @RequestBody CompleteRepairRequest request) {
+        return appointmentService.completeRepair(authentication.getName(), appointmentId, request);
     }
 }

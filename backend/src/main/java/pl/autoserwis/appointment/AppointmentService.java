@@ -12,6 +12,8 @@ import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.Year;
@@ -186,6 +188,19 @@ public class AppointmentService {
         return response(appointments.save(appointment));
     }
 
+    @Transactional
+    public AppointmentResponse completeRepair(String staffUsername, Long appointmentId,
+            CompleteRepairRequest request) {
+        AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
+        requireStatus(appointment, AppointmentStatus.CONFIRMED,
+            "Naprawę można zakończyć tylko dla potwierdzonej wizyty.");
+        appointment.completeRepair(user(staffUsername),
+            normalizedRepairDescription(request.repairDescription()),
+            normalizedMoney(request.totalGrossAmount()),
+            Instant.now());
+        return response(appointments.save(appointment));
+    }
+
     private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {
         appointments.lockAppointmentDay(schedule.visitDate(appointment.getCurrentStartAt()));
         if (schedule.isFull(appointment.getCurrentStartAt())) {
@@ -242,6 +257,19 @@ public class AppointmentService {
         return normalized;
     }
 
+    private String normalizedRepairDescription(String value) {
+        String normalized = value.strip();
+        if (normalized.length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
+            throw new AppointmentValidationException(Map.of("repairDescription",
+                "Opis wykonanych prac musi mieć co najmniej 10 znaków."));
+        }
+        return normalized;
+    }
+
+    private BigDecimal normalizedMoney(BigDecimal value) {
+        return value.setScale(2, RoundingMode.UNNECESSARY);
+    }
+
     private void validateNormalizedDescription(Map<String, String> errors, String value) {
         if (value != null && value.strip().length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
             errors.put("problemDescription", "Opis problemu musi mieć co najmniej 10 znaków.");
@@ -292,7 +320,9 @@ public class AppointmentService {
             appointment.getProblemDescription(), text(appointment.getStaffMessage()),
             offset(appointment.getCreatedAt()), offset(appointment.getStaffActionAt()),
             appointment.getStaffActionBy() == null ? null : appointment.getStaffActionBy().getUsername(),
-            offset(appointment.getClientConfirmedAt()));
+            offset(appointment.getClientConfirmedAt()), text(appointment.getRepairDescription()),
+            appointment.getTotalGrossAmount(), offset(appointment.getRepairCompletedAt()),
+            appointment.getRepairCompletedBy() == null ? null : appointment.getRepairCompletedBy().getUsername());
     }
 
     private OffsetDateTime offset(Instant value) {

@@ -10,8 +10,9 @@ const statusPriority = {
   TIME_PROPOSED: 0,
   PENDING: 1,
   CONFIRMED: 2,
-  CANCELLED: 3,
-  REJECTED: 4,
+  READY_FOR_PICKUP: 3,
+  CANCELLED: 4,
+  REJECTED: 5,
 } as const
 
 const cancellableStatuses = new Set<Appointment['status']>([

@@ -193,6 +193,8 @@ własne zgłoszenia i ich statusy, pozwala potwierdzić zaproponowany dzień ora
 odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”, a lista
 własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inny dzień, klient może go potwierdzić w panelu.
+Po zakończeniu naprawy klient widzi status „Czeka na odbiór”, opis wykonanych prac
+oraz kwotę brutto do zapłaty na miejscu.
 
 Mechanik i administrator mają w menu konta zakładkę
 `http://localhost:5173/staff/schedule` („Grafik”), która pokazuje aktywne zgłoszenia
@@ -200,18 +202,24 @@ na tygodniowym kalendarzu pracy warsztatu. Szczegółowa kolejka zgłoszeń jest
 `http://localhost:5173/staff/appointments`. Panel pozwala przyjąć lub odrzucić
 zgłoszenie oraz wskazać inny wolny dzień. W przypadku gościa personel potwierdza
 nowy dzień po uzgodnieniu go poza aplikacją.
+Po potwierdzeniu wizyty personel może wybrać „Praca zakończona”, wpisać wykonane
+prace i końcową kwotę brutto. System nie obsługuje płatności online; płatność odbywa
+się przy odbiorze auta poza aplikacją.
 
 Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, dni od poniedziałku do
 piątku oraz horyzontu 30 dni. Warsztat przyjmuje bazowo 4 aktywne zgłoszenia na
 jeden dzień. `PENDING`, `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu;
 odrzucenie albo odwołanie je zwalnia. Backend ponownie sprawdza dostępność podczas
 zapisu i blokuje wybrany dzień w transakcji, żeby równoczesne żądania nie przekroczyły limitu.
+Status `READY_FOR_PICKUP` oznacza, że naprawa jest zakończona i nie zajmuje już
+miejsca w kalendarzu przyjęć.
 
 | Status | Znaczenie |
 | --- | --- |
 | `PENDING` | Zgłoszenie oczekuje na decyzję warsztatu |
 | `TIME_PROPOSED` | Personel zaproponował inny dzień |
 | `CONFIRMED` | Dzień został potwierdzony |
+| `READY_FOR_PICKUP` | Naprawa zakończona, auto czeka na odbiór i płatność na miejscu |
 | `REJECTED` | Zgłoszenie zostało odrzucone, a miejsce zwolnione |
 
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
@@ -284,6 +292,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/confirm-proposed` | Potwierdzenie dnia gościa po kontakcie | MECHANIC, ADMIN, CSRF |
+| `POST /api/staff/appointments/{id}/complete-repair` | Zakończenie naprawy i ustawienie odbioru auta | MECHANIC, ADMIN, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek

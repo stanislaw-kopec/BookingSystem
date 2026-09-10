@@ -54,6 +54,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości oraz akcjami
   potwierdzenia, odrzucenia i zaproponowania innego dnia. Propozycję gościa
   personel potwierdza w panelu po kontakcie telefonicznym lub mailowym.
+- R10: w `/staff/appointments` przy zgłoszeniu `CONFIRMED` pokaż akcję „Praca zakończona”.
+  Formularz wymaga opisu wykonanych prac i kwoty brutto do zapłaty przy odbiorze.
+  Po zapisie zgłoszenie ma status `READY_FOR_PICKUP`, a klient widzi opis prac i kwotę
+  w swoich wizytach. Nie dodawaj jeszcze płatności online ani rozbicia netto/VAT.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
@@ -92,8 +96,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Ukrywanie panelu lub zabezpieczenie trasy nie zastępuje autoryzacji backendu.
   Po wylogowaniu usuwaj z widoku i pamięci klienta dane poprzedniej sesji.
 - Statusy przedstawiaj po polsku: `PENDING` jako „Oczekujące”, `TIME_PROPOSED` jako
-  „Zaproponowano nowy dzień”, `CONFIRMED` jako „Potwierdzone”, `CANCELLED` jako
-  „Odwołane”, a `REJECTED` jako „Odrzucone”. Pokazuj pierwotny i proponowany dzień
+  „Zaproponowano nowy dzień”, `CONFIRMED` jako „Potwierdzone”, `READY_FOR_PICKUP`
+  jako „Czeka na odbiór”, `CANCELLED` jako „Odwołane”, a `REJECTED` jako „Odrzucone”.
+  Pokazuj pierwotny i proponowany dzień
   bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Nie twórz fikcyjnych faktur
   ani lokalnych wpisów udających trwale zapisane dane.

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.vehicle.Vehicle;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -93,6 +94,19 @@ public class AppointmentRequest {
     @Column(name = "client_confirmed_at")
     private Instant clientConfirmedAt;
 
+    @Column(name = "repair_description", length = 2000)
+    private String repairDescription;
+
+    @Column(name = "total_gross_amount", precision = 10, scale = 2)
+    private BigDecimal totalGrossAmount;
+
+    @Column(name = "repair_completed_at")
+    private Instant repairCompletedAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "repair_completed_by_id")
+    private AppUser repairCompletedBy;
+
     public AppointmentRequest(UUID reference, AppointmentRequesterType requesterType,
             AppUser client, Vehicle vehicle, String firstName, String lastName,
             String phoneNumber, String contactEmail, String vehicleMake, String vehicleModel,
@@ -150,6 +164,16 @@ public class AppointmentRequest {
     public void confirmGuestProposedTime(AppUser staff, Instant actionAt) {
         status = AppointmentStatus.CONFIRMED;
         recordStaffAction(staff, actionAt, staffMessage);
+    }
+
+    public void completeRepair(AppUser staff, String repairDescription,
+            BigDecimal totalGrossAmount, Instant actionAt) {
+        status = AppointmentStatus.READY_FOR_PICKUP;
+        this.repairDescription = repairDescription;
+        this.totalGrossAmount = totalGrossAmount;
+        repairCompletedAt = actionAt;
+        repairCompletedBy = staff;
+        updatedAt = actionAt;
     }
 
     private void recordStaffAction(AppUser staff, Instant actionAt, String message) {

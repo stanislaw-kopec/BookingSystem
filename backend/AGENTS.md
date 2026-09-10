@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R09. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R10. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -32,6 +32,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Klient może odwołać wyłącznie własne aktywne zgłoszenie ze statusem `PENDING`,
   `TIME_PROPOSED` albo `CONFIRMED`. Odwołanie ustawia `CANCELLED`, nie zapisuje
   akcji personelu i zwalnia miejsce w kalendarzu.
+- Personel może zakończyć wyłącznie zgłoszenie ze statusem `CONFIRMED`. Zakończenie
+  zapisuje opis wykonanych prac, kwotę brutto do zapłaty, czas zamknięcia i użytkownika
+  personelu, a status przechodzi na `READY_FOR_PICKUP`. Płatność odbywa się poza systemem.
 - Sprawdzaj własność pojazdu i zasobu na backendzie. Tożsamość klienta przy zapisie
   ma wynikać z uwierzytelnienia; dane przesłane przez przeglądarkę nie nadają uprawnień.
 - Zabezpieczaj prywatne dane i operacje przez istniejącą konfigurację Spring Security.
@@ -88,8 +91,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Numer rejestracyjny normalizuj do wielkich liter bez spacji, a VIN do wielkich liter.
   Numer rejestracyjny i podany VIN są unikalne dla jednego właściciela bez rozróżniania
   wielkości liter. Sprawdzaj konflikt w serwisie i zachowaj indeksy bazy na wypadek wyścigu.
-- Historia napraw będzie pochodziła z faktur. Obecny endpoint pojazdu nie tworzy
-  zastępczych wpisów historii ani nie uznaje zgłoszenia za wykonaną naprawę.
+- Pierwszy zapis zakończonej naprawy znajduje się przy zgłoszeniu ze statusem
+  `READY_FOR_PICKUP`. Docelowa historia napraw będzie mogła zostać połączona z fakturami.
+  Nie uznawaj samego zgłoszenia albo potwierdzenia wizyty za wykonaną naprawę.
 
 ## Dostępność i współbieżność
 
@@ -98,7 +102,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   Kontrakt API zwraca datę, pojemność dnia, liczbę wolnych miejsc oraz techniczne
   znaczniki początku i końca dnia roboczego. Frontend nie wylicza dostępności samodzielnie.
 - Pierwsza wersja używa jednego wspólnego zasobu warsztatu. Zgłoszenia `PENDING`,
-  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w bieżącym dniu. `REJECTED` i
+  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w bieżącym dniu. `READY_FOR_PICKUP`,
+  `REJECTED` i
   `CANCELLED` zwalniają miejsce, a propozycja nowego dnia atomowo zwalnia poprzedni
   dzień i zajmuje nowy.
 - Samo odczytanie wolnego dnia przed zapisem nie zabezpiecza przed wyścigiem.
@@ -118,7 +123,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `POST /api/appointments/{id}/confirm-proposed` oraz
   `POST /api/appointments/{id}/cancel` należą do CLIENT.
 - Endpointy pod `/api/staff/appointments` udostępniają MECHANIC/ADMIN listę oraz
-  akcje `accept`, `reject`, `propose-time` i `confirm-proposed` dla gościa.
+  akcje `accept`, `reject`, `propose-time`, `confirm-proposed` dla gościa i
+  `complete-repair`.
 - Publiczny odczyt dostępności nie ujawnia danych klientów ani zgłoszeń. Publiczny
   zapis gościa wymaga tokenu CSRF, imienia i nazwiska oraz co najmniej telefonu albo
   poprawnego e-maila. Opis usterki ma od 10 do 2000 znaków.
@@ -131,8 +137,11 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - MECHANIC i ADMIN pobierają kolejkę zgłoszeń i wykonują operacje decyzji. Propozycja
   nowego dnia musi wskazywać wolny dzień zwrócony przez te same reguły dostępności.
   Personel może zatwierdzić propozycję gościa dopiero po kontakcie poza aplikacją.
+- MECHANIC i ADMIN mogą zakończyć naprawę dla statusu `CONFIRMED`. Formularz
+  zakończenia wymaga opisu wykonanych prac i kwoty brutto większej od zera.
 - Przechowuj pierwotny dzień, bieżący dzień, kopie danych kontaktowych i pojazdu,
-  opis, publiczny losowy numer referencyjny, czas utworzenia oraz dane decyzji.
+  opis, publiczny losowy numer referencyjny, czas utworzenia, dane decyzji oraz
+  dane zakończenia naprawy.
 
 ## Baza i dokumenty napraw
 
@@ -142,6 +151,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `numeric` w PostgreSQL; ustal skalę, walutę i zaokrąglenia z modelem rozliczeń.
 - Faktura musi mieć powiązanie pozwalające pokazać udokumentowane naprawy właściwego
   pojazdu i klienta. Nie generuj historii wykonanych napraw ze zgłoszeń oczekujących.
+- Obecny zapis zakończenia naprawy przechowuje jedną kwotę brutto i opis prac.
+  Nie rozbijaj jej jeszcze na netto, VAT, pozycje faktury ani płatności online bez
+  osobnego wymagania.
 - Zachowuj dane i pozycje wystawionego dokumentu z momentu jego wystawienia.
   Późniejsza zmiana profilu klienta lub oferty usług nie może zmieniać historii faktury.
 - Sposób wystawiania, statusy, korekty, numeracja i eksport dokumentów pozostają

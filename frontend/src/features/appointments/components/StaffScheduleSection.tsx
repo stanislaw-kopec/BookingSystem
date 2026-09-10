@@ -15,8 +15,9 @@ const statusPriority = {
   PENDING: 0,
   TIME_PROPOSED: 1,
   CONFIRMED: 2,
-  CANCELLED: 3,
-  REJECTED: 4,
+  READY_FOR_PICKUP: 3,
+  CANCELLED: 4,
+  REJECTED: 5,
 } as const
 
 function currentDateKey() {

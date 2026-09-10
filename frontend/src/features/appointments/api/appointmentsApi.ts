@@ -21,6 +21,7 @@ function isAppointmentStatus(value: unknown): value is AppointmentStatus {
   return value === 'PENDING'
     || value === 'TIME_PROPOSED'
     || value === 'CONFIRMED'
+    || value === 'READY_FOR_PICKUP'
     || value === 'CANCELLED'
     || value === 'REJECTED'
 }
@@ -81,6 +82,10 @@ function isAppointment(value: unknown): value is Appointment {
     && (value.staffActionAt === null || isDateTime(value.staffActionAt))
     && isNullableString(value.staffActionBy)
     && (value.clientConfirmedAt === null || isDateTime(value.clientConfirmedAt))
+    && typeof value.repairDescription === 'string'
+    && (value.totalGrossAmount === null || typeof value.totalGrossAmount === 'number')
+    && (value.repairCompletedAt === null || isDateTime(value.repairCompletedAt))
+    && isNullableString(value.repairCompletedBy)
 }
 
 function appointmentFrom(value: unknown): Appointment {
@@ -162,5 +167,17 @@ export async function proposeAppointmentTime(
 export async function confirmGuestProposedTime(appointmentId: number): Promise<Appointment> {
   return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/confirm-proposed`, {
     method: 'POST',
+  }))
+}
+
+export async function completeRepair(
+  appointmentId: number,
+  repairDescription: string,
+  totalGrossAmount: number,
+): Promise<Appointment> {
+  return appointmentFrom(await apiRequest(`/api/staff/appointments/${appointmentId}/complete-repair`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ repairDescription, totalGrossAmount }),
   }))
 }

@@ -36,6 +36,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny dzień. Zalogowany klient widzi własne zgłoszenia, potwierdza zaproponowany dzień i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Główne menu zawiera publiczny link „Umów wizytę”, a prywatne linki klienta, w tym „Moje wizyty”, znajdują się w menu konta w prawym górnym rogu. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
 | R08 | Mechanik i administrator mają graficzną zakładkę `/staff/schedule` („Grafik”) z tygodniowym widokiem aktywnych zgłoszeń pogrupowanych według dni przyjęcia auta. Panel `/staff/appointments` służy do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego dnia. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
+| R10 | Mechanik i administrator mogą zakończyć potwierdzone zgłoszenie w panelu `/staff/appointments`, wpisując opis wykonanych prac oraz końcową kwotę brutto do zapłaty przy odbiorze auta. Zakończenie naprawy ustawia status `READY_FOR_PICKUP` („Czeka na odbiór”). Płatność odbywa się na miejscu poza systemem. Pierwsza wersja zapisuje jedną kwotę brutto, bez pozycji faktury, netto, VAT i płatności online. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -45,6 +46,9 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Klient może odwołać własne aktywne zgłoszenie ze statusu `PENDING`,
   `TIME_PROPOSED` albo `CONFIRMED`; status `CANCELLED` zwalnia miejsce. Wysłanie
   formularza nie jest automatycznym potwierdzeniem wizyty.
+- Po wykonaniu naprawy personel może przejść z `CONFIRMED` do `READY_FOR_PICKUP`.
+  Wymagany jest opis wykonanych prac i kwota brutto większa od zera. Status
+  `READY_FOR_PICKUP` oznacza, że auto czeka na odbiór i płatność na miejscu poza systemem.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
   Personel korzysta z danych w zakresie przyznanych uprawnień.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
@@ -68,10 +72,13 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   do piątku, dziennego limitu 4 aktywnych zgłoszeń i horyzontu 30 dni.
   Wewnętrznie wybrany dzień jest zapisywany jako początek dnia roboczego 08:00,
   ale interfejs nie umawia klienta na konkretną godzinę. Statusy `PENDING`,
-  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu; `REJECTED` i
+  `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu; `READY_FOR_PICKUP`,
+  `REJECTED` i
   `CANCELLED` je zwalniają. Zmiana dnia zwalnia poprzedni i zajmuje nowy atomowo.
   Backend zabezpiecza równoległe próby zajęcia miejsc.
-- Historia napraw opisuje wykonane prace udokumentowane fakturą. Sam opis usterki
+- Pierwszy zapis zakończonej naprawy powstaje przy statusie `READY_FOR_PICKUP`
+  i zawiera opis wykonanych prac oraz kwotę brutto do zapłaty. Docelowa historia
+  napraw i faktury mogą rozbudować ten zapis o dokument sprzedaży. Sam opis usterki
   lub przyjęcie rezerwacji nie stanowi wpisu potwierdzającego wykonanie naprawy.
 - Katalog ma dwa poziomy: kategoria → usługa. Nie dodawaj kolejnych poziomów
   podkategorii bez nowego wymagania. Nazwa kategorii jest unikalna, a nazwa usługi
@@ -129,9 +136,10 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 
 ## Kolejność rozwoju i jakość
 
-- Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy oraz
-  zgłoszenia wizyt z kalendarzem i decyzją personelu. Kolejne etapy obejmują zlecenia
-  napraw, faktury z danymi historii napraw i dalsze reguły harmonogramu.
+- Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
+  zgłoszenia wizyt z kalendarzem i decyzją personelu oraz zakończenie naprawy
+  statusem `READY_FOR_PICKUP`. Kolejne etapy obejmują zlecenia napraw, faktury
+  z danymi historii napraw i dalsze reguły harmonogramu.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

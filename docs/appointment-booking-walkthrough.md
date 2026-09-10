@@ -7,7 +7,7 @@ zgłoszeń przez personel. Najważniejsze rozróżnienie brzmi: klient najpierw 
 ## 1. Przepływ statusów
 
 ```text
-PENDING ───────────────> CONFIRMED
+PENDING ───────────────> CONFIRMED ───────────────> READY_FOR_PICKUP
     │                         ▲
     ├───────────────> REJECTED
     ├──────────────> CANCELLED
@@ -22,6 +22,8 @@ PENDING ───────────────> CONFIRMED
 - `TIME_PROPOSED` oznacza, że personel wskazał inny dzień. Klient z kontem
   potwierdza go w swoim panelu. Dla gościa personel zapisuje potwierdzenie po
   kontakcie telefonicznym lub mailowym.
+- `READY_FOR_PICKUP` oznacza, że mechanik zakończył naprawę, opisał wykonane prace
+  i podał kwotę brutto do zapłaty przy odbiorze auta. Płatność odbywa się poza systemem.
 
 Przejścia sprawdza backend. Ukrycie przycisku w Reacie poprawia interfejs, ale nie
 chroni danych przed ręcznie przygotowanym żądaniem HTTP.
@@ -80,6 +82,9 @@ zwolniony, a nowy zajęty.
 Odwołanie przez klienta zmienia status na `CANCELLED`. Taki status także nie blokuje
 miejsca, więc dzień może wrócić do kalendarza jako dostępny.
 
+Zakończenie naprawy zmienia status na `READY_FOR_PICKUP`. Ten status pokazuje, że
+auto czeka na odbiór i płatność na miejscu, ale nie blokuje już kalendarza przyjęć.
+
 ## 6. Endpointy i uprawnienia
 
 ```text
@@ -95,6 +100,7 @@ POST /api/staff/appointments/{id}/accept                    przyjęcie
 POST /api/staff/appointments/{id}/reject                    odrzucenie
 POST /api/staff/appointments/{id}/propose-time              propozycja dnia
 POST /api/staff/appointments/{id}/confirm-proposed          potwierdzenie gościa
+POST /api/staff/appointments/{id}/complete-repair           zakończenie naprawy
 ```
 
 Operacje CLIENT korzystają z właściciela sesji. Operacje personelu wymagają roli
@@ -114,6 +120,8 @@ przez link w komunikacie sukcesu lub pozycję „Moje wizyty” w menu konta.
 Używa tej samej listy zgłoszeń personelu co kolejka, ale prezentuje aktywne zgłoszenia
 w tygodniowym widoku dni od poniedziałku do piątku. `StaffAppointmentsPage` pod
 `/staff/appointments` pozostaje miejscem podejmowania decyzji o zgłoszeniach.
+W tym samym panelu przy statusie `CONFIRMED` pojawia się akcja „Praca zakończona”,
+która zapisuje opis wykonanych prac i kwotę brutto do zapłaty.
 
 ```text
 appointments/

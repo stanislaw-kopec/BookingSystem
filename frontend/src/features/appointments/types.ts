@@ -1,4 +1,4 @@
-export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'CANCELLED' | 'REJECTED'
+export type AppointmentStatus = 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED' | 'READY_FOR_PICKUP' | 'CANCELLED' | 'REJECTED'
 
 export type AppointmentRequesterType = 'CLIENT' | 'GUEST'
 
@@ -60,4 +60,13 @@ export interface Appointment {
   staffActionAt: string | null
   staffActionBy: string | null
   clientConfirmedAt: string | null
+  repairDescription: string
+  totalGrossAmount: number | null
+  repairCompletedAt: string | null
+  repairCompletedBy: string | null
+}
+
+export interface CompleteRepairInput {
+  repairDescription: string
+  totalGrossAmount: number
 }

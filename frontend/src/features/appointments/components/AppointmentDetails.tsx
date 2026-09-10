@@ -9,6 +9,10 @@ interface Props {
 
 export function AppointmentDetails({ appointment, showContact = false }: Props) {
   const timeChanged = appointment.currentStartAt !== appointment.requestedStartAt
+  const formattedTotal = appointment.totalGrossAmount === null
+    ? ''
+    : new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' })
+      .format(appointment.totalGrossAmount)
 
   return (
     <div className="appointment-card-content">
@@ -41,6 +45,24 @@ export function AppointmentDetails({ appointment, showContact = false }: Props) 
             <dt>Wiadomość z warsztatu</dt>
             <dd>{appointment.staffMessage}</dd>
           </div>
+        )}
+        {appointment.repairDescription && (
+          <>
+            <div>
+              <dt>Wykonane prace</dt>
+              <dd className="appointment-description">{appointment.repairDescription}</dd>
+            </div>
+            <div>
+              <dt>Do zapłaty przy odbiorze</dt>
+              <dd>{formattedTotal} brutto</dd>
+            </div>
+            {appointment.repairCompletedAt && (
+              <div>
+                <dt>Naprawę zakończono</dt>
+                <dd>{formatAppointmentDate(appointment.repairCompletedAt)}</dd>
+              </div>
+            )}
+          </>
         )}
         {showContact && (
           <div>

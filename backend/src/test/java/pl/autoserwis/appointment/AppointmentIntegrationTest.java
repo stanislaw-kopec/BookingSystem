@@ -301,6 +301,70 @@ class AppointmentIntegrationTest {
     }
 
     @Test
+    void staffCompletesConfirmedRepairAndMarksAppointmentReadyForPickup() throws Exception {
+        AppUser client = createClient("completed-repair-client", true);
+        AppUser staff = createUser("completed-repair-mechanic", UserRole.MECHANIC);
+        Vehicle vehicle = createVehicle(client, "Renault", "Megane", "WX123", null);
+        createClientAppointment(client, vehicle, workingDate(2));
+        AppointmentRequest appointment = appointments.findAll().getFirst();
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(repairJson("Wymieniono tarcze i klocki hamulcowe.", "850.00")))
+            .andExpect(status().isConflict());
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("CONFIRMED"));
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(repairJson("Wymieniono tarcze i klocki hamulcowe.", "850.00")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.status").value("READY_FOR_PICKUP"))
+            .andExpect(jsonPath("$.repairDescription").value("Wymieniono tarcze i klocki hamulcowe."))
+            .andExpect(jsonPath("$.totalGrossAmount").value(850.00))
+            .andExpect(jsonPath("$.repairCompletedAt").exists())
+            .andExpect(jsonPath("$.repairCompletedBy").value(staff.getUsername()));
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(repairJson("Ponowny opis wykonanych prac.", "100.00")))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void validatesCompletedRepairDescriptionAndGrossAmount() throws Exception {
+        AppUser client = createClient("repair-validation-client", true);
+        AppUser staff = createUser("repair-validation-mechanic", UserRole.MECHANIC);
+        Vehicle vehicle = createVehicle(client, "Seat", "Leon", "RZ123", null);
+        createClientAppointment(client, vehicle, workingDate(2));
+        AppointmentRequest appointment = appointments.findAll().getFirst();
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(repairJson("Za krótko", "0.00")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.fieldErrors.repairDescription").exists())
+            .andExpect(jsonPath("$.fieldErrors.totalGrossAmount").exists());
+    }
+
+    @Test
     void changingRequestsRequiresCsrfAndCorrectRole() throws Exception {
         AppUser client = createClient("secured-appointment-client", true);
         AppUser mechanic = createUser("secured-appointment-mechanic", UserRole.MECHANIC);
@@ -495,5 +559,14 @@ class AppointmentIntegrationTest {
             }
             """.formatted(phoneNumber, contactEmail, productionYear, registrationNumber,
                 vin, visitDate, description);
+    }
+
+    private String repairJson(String repairDescription, String totalGrossAmount) {
+        return """
+            {
+              "repairDescription": "%s",
+              "totalGrossAmount": %s
+            }
+            """.formatted(repairDescription, totalGrossAmount);
     }
 }

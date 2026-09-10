@@ -57,6 +57,7 @@
 .status-pending { color: #75530b; border-color: #dfbd66; background: #fff8df; }
 .status-time_proposed { color: #285584; border-color: #8fb6df; background: #edf6ff; }
 .status-confirmed { color: var(--success); border-color: #8bc4a3; background: #effaf3; }
+.status-ready_for_pickup { color: #7b3f00; border-color: #e1a85d; background: #fff4df; }
 .status-cancelled { color: #62545c; border-color: #c8bac2; background: #f7f2f5; }
 .status-rejected { color: var(--danger); border-color: #e4a5a5; background: #fff4f4; }
 .appointment-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
@@ -71,6 +72,8 @@
 .requester-type { padding: 6px 22px; color: var(--muted); font-size: 0.8rem; border-bottom: 1px solid var(--border); background: var(--background); }
 .staff-decision-form { margin: 0 22px 22px; }
 .staff-decision-form .availability-calendar { margin-bottom: 20px; }
+.repair-completion-form { margin: 0 22px 22px; }
+.repair-completion-form .appointment-form-grid { margin-top: 12px; }
 .staff-schedule-section { max-width: 1168px; }
 .staff-schedule-heading, .staff-schedule-toolbar {
   display: flex;
