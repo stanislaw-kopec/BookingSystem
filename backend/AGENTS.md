@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R14. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R15. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -60,7 +60,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   zabezpieczają także indeksy bazy. Usunięcie niepustej kategorii zwraca 409;
   nie wprowadzaj kaskadowego usuwania usług.
 - Sesje obsługuje Spring Security. Zachowaj CSRF dla operacji zmieniających dane,
-  BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta.
+  BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta. Konta mechaników tworzy wyłącznie ADMIN przez endpointy administracyjne.
 - `local` tworzy brakujące konta i dane demonstracyjne; nie zmienia haseł, profili,
   pojazdów ani zgłoszeń, które już istnieją. Nie stosuj demonstracyjnej bazy ani jej
   kont we wdrożeniu produkcyjnym.
@@ -74,6 +74,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   Login i e-mail są unikalne bez rozróżniania wielkości liter.
 - Backend ponownie sprawdza zgodność haseł. Nigdy nie przyjmuj roli z formularza rejestracji.
   Po rejestracji frontend loguje użytkownika istniejącym mechanizmem sesji.
+- `GET /api/admin/staff/mechanics`, `POST /api/admin/staff/mechanics`, `PUT /api/admin/staff/mechanics/{mechanicId}`, `PUT /api/admin/staff/mechanics/{mechanicId}/password` i `PUT /api/admin/staff/mechanics/{mechanicId}/status` są dostępne wyłącznie dla ADMIN.
+  POST tworzy konto z rolą MECHANIC, nawet jeśli przeglądarka spróbuje przesłać inną rolę. Edycja dotyczy tylko kont MECHANIC. Używaj tych samych reguł loginu, e-maila, hasła, unikalności i limitu BCrypt co przy rejestracji klienta. Dezaktywowane konto nie może się zalogować.
 - E-mail jest obecnie daną konta potrzebną do unikalności i przyszłego odzyskiwania
   dostępu. Pełne dane kontaktowe i rozliczeniowe powstaną w osobnym profilu klienta.
 

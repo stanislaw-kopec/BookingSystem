@@ -18,6 +18,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
             .orElseThrow(() -> new UsernameNotFoundException("Nieprawidłowy login lub hasło."));
         return User.withUsername(user.getUsername())
             .password(user.getPasswordHash())
+            .disabled(!user.isEnabled())
             .roles(user.getRole().name())
             .build();
     }

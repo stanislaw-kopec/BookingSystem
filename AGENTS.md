@@ -41,6 +41,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R12 | Klient może pobrać prostą fakturę PDF z historii napraw własnego pojazdu przy zakończonym zgłoszeniu `COMPLETED`. Faktura zawiera logo Mietek Customs, numer, datę wystawienia i sprzedaży, dane warsztatu, dane nabywcy imienne albo firmowe z profilu, pojazd, opis wykonanych prac, wyszczególnione pozycje robocizny i części, wartości netto i brutto oraz informację o płatności przy odbiorze. To pierwsza wersja dokumentu, bez osobnej tabeli faktur, korekt, numeracji księgowej i deklaracji zgodności prawno-księgowej. |
 | R13 | Profil Springa `local` przygotowuje dane pokazowe do prezentacji aplikacji: klientów indywidualnych i firmowych, ich profile, pojazdy oraz zgłoszenia w różnych statusach, w tym naprawy gotowe do odbioru i zakończone z możliwością pobrania faktury PDF. Seed działa idempotentnie: tworzy brakujące rekordy demonstracyjne, ale nie nadpisuje istniejących kont, haseł, profili, pojazdów ani zgłoszeń. |
 | R14 | Administrator ma dedykowany panel `/admin/schedule-settings` do konfiguracji grafiku warsztatu. Może ustawić domyślną liczbę miejsc dziennie, horyzont rezerwacji, godziny pracy oraz wyjątki dla konkretnych dat: dzień zamknięty albo niestandardową liczbę miejsc. Mechanik może oglądać grafik i obsługiwać zgłoszenia, ale nie zarządza konfiguracją dostępności. Publiczny kalendarz i propozycje terminów korzystają z konfiguracji zapisanej w backendzie. |
+| R15 | Administrator ma dedykowany panel `/admin/staff-accounts` do zarządzania kontami mechaników: tworzenia kont, edycji loginu i e-maila, resetowania hasła oraz aktywowania albo dezaktywowania dostępu. Publiczna rejestracja tworzy wyłącznie konta klientów, a rola `MECHANIC` nie może zostać nadana przez formularz publiczny. Konto mechanika zawiera login, e-mail, hasło ustawione przez admina oraz status aktywności; backend zawsze nadaje rolę `MECHANIC` samodzielnie. Mechanik nie może tworzyć ani zarządzać kontami personelu. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -56,7 +57,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Po odbiorze auta personel może przejść z `READY_FOR_PICKUP` do `COMPLETED`;
   ten status oznacza zakończone zgłoszenie widoczne w historii napraw pojazdu.
 - Klient korzysta z własnego profilu, pojazdów, zgłoszeń i dokumentów.
-  Personel korzysta z danych w zakresie przyznanych uprawnień.
+  Personel korzysta z danych w zakresie przyznanych uprawnień. Konta mechaników tworzy wyłącznie administrator.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
   przyjmuje identyfikatora użytkownika, którego profil ma zostać odczytany lub zapisany.
 - Właściciel pojazdu również wynika z sesji. Lista i szczegóły używają zapytań
@@ -102,9 +103,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Automatyczne wygasanie blokady zgłoszenia oczekującego, przekładanie
   potwierdzonych wizyt oraz odrzucenie propozycji dnia przez klienta.
 - Powiadomienia e-mail/SMS i zabezpieczenie publicznego formularza przed spamem.
-- Podział pozostałych uprawnień administratora, pracownika i mechanika: zarządzanie
-  harmonogramem, konta oraz faktury. Edycję katalogu usług i podgląd grafiku już
-  przyznano rolom MECHANIC i ADMIN.
+- Podział pozostałych uprawnień administratora, pracownika i mechanika: tworzenie kont administratorów oraz faktury. Edycję katalogu usług, podgląd grafiku i obsługę zgłoszeń przyznano rolom MECHANIC i ADMIN, a konfigurację grafiku oraz zarządzanie kontami mechaników roli ADMIN.
 - Sposób edycji, usunięcia lub sprzedaży pojazdu oraz dostępu nowego właściciela
   do wcześniejszych dokumentów. Dalsze rozszerzenia profilu, np. kraj lub osobny
   adres rozliczeniowy osoby prywatnej, wymagają nowego ustalenia.
@@ -112,7 +111,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   docelowa numeracja księgowa, eksport dokumentów i ewentualna integracja księgowa.
   Obecna wersja generuje prosty PDF z zakończonego zgłoszenia, bez płatności online
   i bez deklaracji zgodności prawno-księgowej.
-- Odzyskiwanie haseł i zarządzanie kontami. Rejestracja klienta jest dostępna;
+- Odzyskiwanie haseł klientów i administratorów oraz samoobsługowa zmiana hasła. Rejestracja klienta i zarządzanie kontami mechaników przez admina są dostępne;
   obecne uwierzytelnianie używa sesji Spring Security i ochrony CSRF. Ewentualna zmiana mechanizmu
   uwierzytelniania wymaga konkretnej potrzeby, JWT nie jest wymaganiem.
 
@@ -135,7 +134,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   zakończone naprawy i pozwala pobrać prostą fakturę PDF. Działają publiczna dostępność,
   zgłoszenia wizyt klienta i gościa, panel własnych zgłoszeń, grafik MECHANIC/ADMIN
   oraz decyzje personelu z proponowaniem nowego dnia. Administrator zarządza
-  podstawową konfiguracją grafiku i wyjątkami dni. Pełny moduł faktur pozostaje do rozbudowy.
+  podstawową konfiguracją grafiku, wyjątkami dni oraz kontami mechaników. Pełny moduł faktur pozostaje do rozbudowy.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
@@ -172,3 +171,4 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 Z głównego folderu: `docker compose config --quiet` sprawdza konfigurację,
 `docker compose up --build -d --wait` uruchamia całość, a `docker compose ps`
 pokazuje stan usług. Pełna instrukcja, adresy i sposób zatrzymywania są w `README.md`.
+

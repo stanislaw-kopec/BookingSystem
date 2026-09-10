@@ -16,9 +16,12 @@ import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.user.UserRole;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -58,6 +61,175 @@ class RegistrationIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.user.username").value("new-client"))
             .andExpect(jsonPath("$.user.roles[0]").value("CLIENT"));
+    }
+
+
+    @Test
+    void adminCreatesMechanicAccount() throws Exception {
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "new-mechanic", "NEW.MECHANIC@Example.COM", "mechanic-password-2026", "mechanic-password-2026")))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.username").value("new-mechanic"))
+            .andExpect(jsonPath("$.email").value("new.mechanic@example.com"))
+            .andExpect(jsonPath("$.role").value("MECHANIC"))
+            .andExpect(jsonPath("$.enabled").value(true));
+
+        AppUser saved = users.findByUsernameIgnoreCase("NEW-MECHANIC").orElseThrow();
+        assertThat(saved.getRole()).isEqualTo(UserRole.MECHANIC);
+        assertThat(passwords.matches("mechanic-password-2026", saved.getPasswordHash())).isTrue();
+
+        mockMvc.perform(get("/api/admin/staff/mechanics")
+                .with(user("admin").roles("ADMIN")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[*].username", hasItem("new-mechanic")));
+    }
+
+    @Test
+    void onlyAdminCreatesMechanicAccounts() throws Exception {
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(user("mechanic").roles("MECHANIC"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "blocked-mechanic", "blocked@example.com", "mechanic-password", "mechanic-password")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/admin/staff/mechanics")
+                .with(user("client").roles("CLIENT")))
+            .andExpect(status().isForbidden());
+
+        assertThat(users.findByUsernameIgnoreCase("blocked-mechanic")).isEmpty();
+    }
+
+    @Test
+    void validatesMechanicAccountLikeRegistration() throws Exception {
+        users.saveAndFlush(new AppUser(
+            "existing-mechanic", "existing-mechanic@example.com", passwords.encode("existing-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "EXISTING-MECHANIC", "other@example.com", "password-one", "password-two")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.fieldErrors.passwordConfirmation").exists());
+
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "EXISTING-MECHANIC", "other@example.com", "new-password", "new-password")))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.fieldErrors.username").exists());
+    }
+
+    @Test
+    void adminUpdatesMechanicAccount() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "editable-mechanic", "editable-mechanic@example.com", passwords.encode("old-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "username": "updated-mechanic",
+                      "email": "UPDATED.MECHANIC@Example.COM"
+                    }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.username").value("updated-mechanic"))
+            .andExpect(jsonPath("$.email").value("updated.mechanic@example.com"))
+            .andExpect(jsonPath("$.enabled").value(true));
+
+        AppUser saved = users.findById(mechanic.getId()).orElseThrow();
+        assertThat(saved.getUsername()).isEqualTo("updated-mechanic");
+        assertThat(saved.getEmail()).isEqualTo("updated.mechanic@example.com");
+    }
+
+    @Test
+    void adminResetsMechanicPassword() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "password-mechanic", "password-mechanic@example.com", passwords.encode("old-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "password": "new-password-2026",
+                      "passwordConfirmation": "new-password-2026"
+                    }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.username").value("password-mechanic"));
+
+        AppUser saved = users.findById(mechanic.getId()).orElseThrow();
+        assertThat(passwords.matches("new-password-2026", saved.getPasswordHash())).isTrue();
+    }
+
+    @Test
+    void adminDisablesMechanicLoginAndCanEnableAccountAgain() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "disabled-mechanic", "disabled-mechanic@example.com", passwords.encode("mechanic-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    { "enabled": false }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.enabled").value(false));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .param("username", "disabled-mechanic")
+                .param("password", "mechanic-password"))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    { "enabled": true }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.enabled").value(true));
+
+        mockMvc.perform(post("/api/auth/login")
+                .with(csrf())
+                .param("username", "disabled-mechanic")
+                .param("password", "mechanic-password"))
+            .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void adminStaffPanelDoesNotModifyNonMechanicAccounts() throws Exception {
+        AppUser client = users.saveAndFlush(new AppUser(
+            "staff-panel-client", "staff-panel-client@example.com", passwords.encode("client-password"), UserRole.CLIENT));
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", client.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "username": "wrong-account",
+                      "email": "wrong-account@example.com"
+                    }
+                    """))
+            .andExpect(status().isNotFound());
     }
 
     @Test
@@ -139,3 +311,4 @@ class RegistrationIntegrationTest {
             """.formatted(username, email, password, confirmation);
     }
 }
+

@@ -81,9 +81,14 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdmini
                     Zarządzaj ofertą
                   </a>
                   {canAdminister && (
-                    <NavLink className={accountLinkClassName} to="/admin/schedule-settings" onClick={closeAccountMenu}>
-                      Konfiguracja grafiku
-                    </NavLink>
+                    <>
+                      <NavLink className={accountLinkClassName} to="/admin/schedule-settings" onClick={closeAccountMenu}>
+                        Konfiguracja grafiku
+                      </NavLink>
+                      <NavLink className={accountLinkClassName} to="/admin/staff-accounts" onClick={closeAccountMenu}>
+                        Konta mechaników
+                      </NavLink>
+                    </>
                   )}
                 </>
               )}

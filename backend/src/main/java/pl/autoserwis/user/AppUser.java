@@ -27,10 +27,27 @@ public class AppUser {
     @Column(nullable = false, length = 20)
     private UserRole role;
 
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     public AppUser(String username, String email, String passwordHash, UserRole role) {
         this.username = username;
         this.email = email;
         this.passwordHash = passwordHash;
         this.role = role;
+        this.enabled = true;
+    }
+
+    public void updateAccount(String username, String email) {
+        this.username = username;
+        this.email = email;
+    }
+
+    public void changePassword(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 }
