@@ -44,7 +44,8 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
   własny pojazd albo dodaje go w formularzu, dzień przyjęcia auta z API i opis usterki. Osobna,
   chroniona trasa `/my-appointments` („Moje wizyty”) pokazuje własne zgłoszenia
-  z filtrowaniem po statusie, sortowaniem po dacie przyjęcia auta i paginacją listy.
+  z filtrowaniem po statusie, sortowaniem po dacie przyjęcia auta i paginacją listy
+  obsługiwaną przez backend.
   Pozwala też potwierdzić dzień ze statusem `TIME_PROPOSED` albo odwołać aktywną
   wizytę. Główne menu zawiera publiczny link „Umów wizytę”, a prywatny link
   „Moje wizyty” jest dostępny z menu konta.

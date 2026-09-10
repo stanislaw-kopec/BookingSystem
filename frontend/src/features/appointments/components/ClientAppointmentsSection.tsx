@@ -1,23 +1,13 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
-import type { Appointment, AppointmentStatus } from '../types'
+import type { Appointment, AppointmentPage, AppointmentStatus } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
 import '../appointments.css'
 
 const pageSize = 5
-
-const statusPriority = {
-  TIME_PROPOSED: 0,
-  PENDING: 1,
-  CONFIRMED: 2,
-  READY_FOR_PICKUP: 3,
-  COMPLETED: 4,
-  CANCELLED: 5,
-  REJECTED: 6,
-} as const
 
 const statusLabels: Record<AppointmentStatus, string> = {
   PENDING: 'Oczekuje na decyzję',
@@ -49,24 +39,8 @@ const cancellableStatuses = new Set<Appointment['status']>([
   'CONFIRMED',
 ])
 
-function sortAppointments(appointments: Appointment[]) {
-  return [...appointments].sort((first, second) => {
-    const byStatus = statusPriority[first.status] - statusPriority[second.status]
-    return byStatus || second.createdAt.localeCompare(first.createdAt)
-  })
-}
-
-function sortAppointmentsByDate(appointments: Appointment[], direction: DateSortDirection) {
-  return [...appointments].sort((first, second) => {
-    const byDate = direction === 'DESC'
-      ? second.currentStartAt.localeCompare(first.currentStartAt)
-      : first.currentStartAt.localeCompare(second.currentStartAt)
-    return byDate || statusPriority[first.status] - statusPriority[second.status]
-  })
-}
-
 export function ClientAppointmentsSection() {
-  const [appointments, setAppointments] = useState<Appointment[] | null>(null)
+  const [appointmentPage, setAppointmentPage] = useState<AppointmentPage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -75,16 +49,21 @@ export function ClientAppointmentsSection() {
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL')
   const [dateSortDirection, setDateSortDirection] = useState<DateSortDirection>('DESC')
-  const [currentPage, setCurrentPage] = useState(1)
+  const [currentPage, setCurrentPage] = useState(0)
   const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
   useEffect(() => {
     const controller = new AbortController()
-    appointmentsApi.getClientAppointments(controller.signal)
+    appointmentsApi.getClientAppointments(currentPage, pageSize, dateSortDirection, statusFilter, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
-          setAppointments(sortAppointments(result))
+          const lastPage = Math.max(0, result.totalPages - 1)
+          if (currentPage > lastPage) {
+            setCurrentPage(lastPage)
+            return
+          }
+          setAppointmentPage(result)
           setError(null)
         }
       })
@@ -95,21 +74,13 @@ export function ClientAppointmentsSection() {
         if (!controller.signal.aborted) setIsLoading(false)
       })
     return () => controller.abort()
-  }, [revision])
+  }, [currentPage, dateSortDirection, revision, statusFilter])
 
-  const visibleAppointments = useMemo(() => {
-    if (appointments === null) return []
-    const filtered = statusFilter === 'ALL'
-      ? appointments
-      : appointments.filter((appointment) => appointment.status === statusFilter)
-    return sortAppointmentsByDate(filtered, dateSortDirection)
-  }, [appointments, dateSortDirection, statusFilter])
-
-  const totalPages = Math.max(1, Math.ceil(visibleAppointments.length / pageSize))
-  const safeCurrentPage = Math.min(currentPage, totalPages)
-  const firstVisibleIndex = (safeCurrentPage - 1) * pageSize
-  const pagedAppointments = visibleAppointments.slice(firstVisibleIndex, firstVisibleIndex + pageSize)
-
+  const appointments = appointmentPage?.content ?? []
+  const totalElements = appointmentPage?.totalElements ?? 0
+  const totalPages = appointmentPage?.totalPages ?? 0
+  const firstVisibleIndex = totalElements === 0 ? 0 : currentPage * pageSize + 1
+  const lastVisibleIndex = Math.min((currentPage * pageSize) + appointments.length, totalElements)
 
   function retry() {
     setIsLoading(true)
@@ -117,14 +88,21 @@ export function ClientAppointmentsSection() {
     setRevision((value) => value + 1)
   }
 
+  function refreshCurrentPage() {
+    setIsLoading(true)
+    setRevision((value) => value + 1)
+  }
+
   function changeStatusFilter(value: StatusFilter) {
+    setIsLoading(true)
     setStatusFilter(value)
-    setCurrentPage(1)
+    setCurrentPage(0)
   }
 
   function changeDateSortDirection(value: DateSortDirection) {
+    setIsLoading(true)
     setDateSortDirection(value)
-    setCurrentPage(1)
+    setCurrentPage(0)
   }
 
   async function confirmProposedTime(appointmentId: number) {
@@ -132,9 +110,8 @@ export function ClientAppointmentsSection() {
     setActionError(null)
     setNotice(null)
     try {
-      const updated = await appointmentsApi.confirmProposedTime(appointmentId)
-      setAppointments((current) => sortAppointments((current ?? []).map((appointment) =>
-        appointment.id === updated.id ? updated : appointment)))
+      await appointmentsApi.confirmProposedTime(appointmentId)
+      refreshCurrentPage()
       setNotice('Nowy dzień wizyty został potwierdzony.')
     } catch (cause) {
       setActionError(errorMessage(cause))
@@ -148,9 +125,8 @@ export function ClientAppointmentsSection() {
     setActionError(null)
     setNotice(null)
     try {
-      const updated = await appointmentsApi.cancelClientAppointment(appointmentId)
-      setAppointments((current) => sortAppointments((current ?? []).map((appointment) =>
-        appointment.id === updated.id ? updated : appointment)))
+      await appointmentsApi.cancelClientAppointment(appointmentId)
+      refreshCurrentPage()
       setNotice('Wizyta została odwołana.')
     } catch (cause) {
       setActionError(errorMessage(cause))
@@ -193,16 +169,16 @@ export function ClientAppointmentsSection() {
         {notice && <p className="message success" role="status">{notice}</p>}
         {actionError && <p className="message error" role="alert">{actionError}</p>}
         {isLoading && <p role="status">Ładowanie zgłoszeń…</p>}
-        {!isLoading && error && appointments === null && (
+        {!isLoading && error && appointmentPage === null && (
           <div className="message error" role="alert">
             <p>{error}</p>
             <button type="button" className="button secondary" onClick={retry}>Spróbuj ponownie</button>
           </div>
         )}
-        {appointments?.length === 0 && (
+        {appointmentPage && appointmentPage.totalElements === 0 && statusFilter === 'ALL' && (
           <p className="empty-state">Nie masz jeszcze żadnych zgłoszeń wizyt.</p>
         )}
-        {appointments && appointments.length > 0 && (
+        {appointmentPage && (appointmentPage.totalElements > 0 || statusFilter !== 'ALL') && (
           <>
             <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie wizyt">
               <label className="form-field compact-field">
@@ -221,16 +197,15 @@ export function ClientAppointmentsSection() {
                 </select>
               </label>
               <p className="appointment-list-summary">
-                Pokazuję {pagedAppointments.length === 0 ? 0 : firstVisibleIndex + 1}–{firstVisibleIndex + pagedAppointments.length}
-                {' '}z {visibleAppointments.length} zgłoszeń
+                Pokazuję {firstVisibleIndex}–{lastVisibleIndex} z {totalElements} zgłoszeń
               </p>
             </div>
-            {visibleAppointments.length === 0 ? (
+            {appointments.length === 0 ? (
               <p className="empty-state">Brak zgłoszeń pasujących do wybranego statusu.</p>
             ) : (
               <>
                 <ul className="appointment-list">
-                  {pagedAppointments.map((appointment) => (
+                  {appointments.map((appointment) => (
                     <li className="appointment-card" key={appointment.id}>
                       <AppointmentDetails appointment={appointment} />
                       {(appointment.status === 'TIME_PROPOSED'
@@ -269,14 +244,20 @@ export function ClientAppointmentsSection() {
                 {totalPages > 1 && (
                   <nav className="appointment-pagination" aria-label="Strony wizyt">
                     <button type="button" className="button secondary"
-                      disabled={safeCurrentPage === 1}
-                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}>
+                      disabled={currentPage === 0}
+                      onClick={() => {
+                        setIsLoading(true)
+                        setCurrentPage((page) => Math.max(0, page - 1))
+                      }}>
                       Poprzednia
                     </button>
-                    <span>Strona {safeCurrentPage} z {totalPages}</span>
+                    <span>Strona {currentPage + 1} z {totalPages}</span>
                     <button type="button" className="button secondary"
-                      disabled={safeCurrentPage === totalPages}
-                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}>
+                      disabled={currentPage >= totalPages - 1}
+                      onClick={() => {
+                        setIsLoading(true)
+                        setCurrentPage((page) => Math.min(totalPages - 1, page + 1))
+                      }}>
                       Następna
                     </button>
                   </nav>

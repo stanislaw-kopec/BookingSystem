@@ -23,6 +23,7 @@ import pl.autoserwis.vehicle.VehicleRepository;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -292,12 +293,57 @@ class AppointmentIntegrationTest {
         mockMvc.perform(get("/api/appointments")
                 .with(user(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1));
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.totalElements").value(1))
+            .andExpect(jsonPath("$.totalPages").value(1));
 
         mockMvc.perform(get("/api/appointments")
                 .with(user(other.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(0));
+            .andExpect(jsonPath("$.content.length()").value(0))
+            .andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
+    void clientAppointmentsSupportBackendPaginationFilteringAndDateSorting() throws Exception {
+        AppUser client = createClient("paged-client", true);
+        AppUser staff = createUser("paged-mechanic", UserRole.MECHANIC);
+        Vehicle vehicle = createVehicle(client, "Toyota", "Avensis", "PG123", null);
+        createClientAppointment(client, vehicle, workingDate(1));
+        createClientAppointment(client, vehicle, workingDate(3));
+        createClientAppointment(client, vehicle, workingDate(5));
+        List<AppointmentRequest> clientAppointments = appointments.findByClient_IdOrderByCreatedAtDesc(client.getId());
+        AppointmentRequest confirmed = clientAppointments.get(1);
+
+        mockMvc.perform(post("/api/staff/appointments/{id}/accept", confirmed.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(csrf()))
+            .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/appointments")
+                .param("page", "0")
+                .param("size", "2")
+                .param("sortDirection", "ASC")
+                .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(2))
+            .andExpect(jsonPath("$.page").value(0))
+            .andExpect(jsonPath("$.size").value(2))
+            .andExpect(jsonPath("$.totalElements").value(3))
+            .andExpect(jsonPath("$.totalPages").value(2))
+            .andExpect(jsonPath("$.content[0].currentStartAt").value(apiTime(workingDate(1))))
+            .andExpect(jsonPath("$.content[1].currentStartAt").value(apiTime(workingDate(3))));
+
+        mockMvc.perform(get("/api/appointments")
+                .param("status", "CONFIRMED")
+                .param("page", "0")
+                .param("size", "5")
+                .param("sortDirection", "DESC")
+                .with(user(client.getUsername()).roles("CLIENT")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content.length()").value(1))
+            .andExpect(jsonPath("$.content[0].status").value("CONFIRMED"))
+            .andExpect(jsonPath("$.totalElements").value(1));
     }
 
     @Test

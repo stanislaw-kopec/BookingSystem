@@ -32,6 +32,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Klient może odwołać wyłącznie własne aktywne zgłoszenie ze statusem `PENDING`,
   `TIME_PROPOSED` albo `CONFIRMED`. Odwołanie ustawia `CANCELLED`, nie zapisuje
   akcji personelu i zwalnia miejsce w kalendarzu.
+- Lista własnych zgłoszeń klienta używa paginacji backendowej. `GET /api/appointments`
+  przyjmuje `status`, `page`, `size` i `sortDirection`, ogranicza wynik do właściciela
+  wynikającego z sesji i sortuje po dacie przyjęcia auta.
 - Personel może zakończyć wyłącznie zgłoszenie ze statusem `CONFIRMED`. Zakończenie
   zapisuje opis wykonanych prac, kwotę brutto do zapłaty, czas zamknięcia i użytkownika
   personelu, a status przechodzi na `READY_FOR_PICKUP`. Płatność odbywa się poza systemem.

@@ -190,7 +190,8 @@ dodawania samochodu; zapisany pojazd zostaje od razu wybrany w zgłoszeniu. Utwo
 zgłoszenia wymaga uzupełnionego profilu, ponieważ warsztat kopiuje z niego aktualne
 dane kontaktowe. Osobna podstrona `/my-appointments` („Moje wizyty”) pokazuje
 własne zgłoszenia i ich statusy. Listę można filtrować po statusie, sortować po
-dacie przyjęcia auta oraz przeglądać stronami. Panel pozwala potwierdzić
+dacie przyjęcia auta oraz przeglądać stronami; te operacje wykonuje backend na
+podstawie parametrów `status`, `page`, `size` i `sortDirection`. Panel pozwala potwierdzić
 zaproponowany dzień oraz odwołać aktywną wizytę. Główne menu ma publiczny link „Umów wizytę”, a lista
 własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inny dzień, klient może go potwierdzić w panelu.
@@ -306,7 +307,7 @@ uzupełnia kontrolę uprawnień backendu.
 | `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
 | `GET /api/appointments/availability` | Kalendarz dni na 30 dni | Publiczny |
 | `POST /api/appointments/guest` | Wysłanie zgłoszenia bez konta | Publiczny, CSRF |
-| `GET /api/appointments` | Lista własnych zgłoszeń | CLIENT |
+| `GET /api/appointments` | Strona własnych zgłoszeń; obsługuje `status`, `page`, `size`, `sortDirection` | CLIENT |
 | `POST /api/appointments` | Zgłoszenie dla własnego pojazdu | CLIENT, CSRF |
 | `POST /api/appointments/{id}/confirm-proposed` | Potwierdzenie nowego dnia | Właściciel CLIENT, CSRF |
 | `POST /api/appointments/{id}/cancel` | Odwołanie aktywnej wizyty | Właściciel CLIENT, CSRF |

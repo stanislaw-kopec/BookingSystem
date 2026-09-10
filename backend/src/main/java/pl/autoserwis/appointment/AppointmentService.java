@@ -1,5 +1,8 @@
 package pl.autoserwis.appointment;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.dto.*;
@@ -24,6 +27,8 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class AppointmentService {
     private static final int MINIMUM_PROBLEM_DESCRIPTION_LENGTH = 10;
+    private static final int DEFAULT_PAGE_SIZE = 5;
+    private static final int MAXIMUM_PAGE_SIZE = 50;
     private final AppointmentRepository appointments;
     private final AppointmentSchedule schedule;
     private final UserRepository users;
@@ -45,6 +50,26 @@ public class AppointmentService {
         return appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).stream()
             .map(this::response)
             .toList();
+    }
+    public AppointmentPageResponse getCurrentClientAppointments(String username,
+            AppointmentStatus status, int page, int size, String direction) {
+        AppUser client = user(username);
+        int pageNumber = Math.max(page, 0);
+        int pageSize = normalizedPageSize(size);
+        Sort.Direction sortDirection = "ASC".equalsIgnoreCase(direction)
+            ? Sort.Direction.ASC
+            : Sort.Direction.DESC;
+        PageRequest pageable = PageRequest.of(pageNumber, pageSize,
+            Sort.by(sortDirection, "currentStartAt").and(Sort.by(Sort.Direction.ASC, "id")));
+        Page<AppointmentRequest> result = status == null
+            ? appointments.findByClient_Id(client.getId(), pageable)
+            : appointments.findByClient_IdAndStatus(client.getId(), status, pageable);
+        return new AppointmentPageResponse(
+            result.getContent().stream().map(this::response).toList(),
+            result.getNumber(),
+            result.getSize(),
+            result.getTotalElements(),
+            result.getTotalPages());
     }
     public List<AppointmentResponse> getStaffAppointments() {
         return appointments.findAllByOrderByCreatedAtDesc().stream()
@@ -248,6 +273,10 @@ public class AppointmentService {
     }
     private BigDecimal normalizedMoney(BigDecimal value) {
         return value.setScale(2, RoundingMode.UNNECESSARY);
+    }
+    private int normalizedPageSize(int size) {
+        if (size < 1) return DEFAULT_PAGE_SIZE;
+        return Math.min(size, MAXIMUM_PAGE_SIZE);
     }
     private void validateNormalizedDescription(Map<String, String> errors, String value) {
         if (value != null && value.strip().length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {

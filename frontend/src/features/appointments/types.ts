@@ -68,6 +68,14 @@ export interface Appointment {
   vehiclePickedUpBy: string | null
 }
 
+export interface AppointmentPage {
+  content: Appointment[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+}
+
 export interface CompleteRepairInput {
   repairDescription: string
   totalGrossAmount: number

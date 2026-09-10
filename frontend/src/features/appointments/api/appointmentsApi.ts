@@ -3,6 +3,7 @@ import type {
   Appointment,
   AppointmentAvailability,
   AppointmentDay,
+  AppointmentPage,
   AppointmentRequesterType,
   AppointmentStatus,
   ClientAppointmentInput,
@@ -101,6 +102,25 @@ function appointmentsFrom(value: unknown): Appointment[] {
   throw new ApiError(502, 'Serwer zwrócił nieprawidłową listę zgłoszeń.')
 }
 
+function isAppointmentPage(value: unknown): value is AppointmentPage {
+  return isRecord(value)
+    && Array.isArray(value.content)
+    && value.content.every(isAppointment)
+    && typeof value.page === 'number'
+    && Number.isSafeInteger(value.page)
+    && typeof value.size === 'number'
+    && Number.isSafeInteger(value.size)
+    && typeof value.totalElements === 'number'
+    && Number.isSafeInteger(value.totalElements)
+    && typeof value.totalPages === 'number'
+    && Number.isSafeInteger(value.totalPages)
+}
+
+function appointmentPageFrom(value: unknown): AppointmentPage {
+  if (isAppointmentPage(value)) return value
+  throw new ApiError(502, 'Serwer zwrócił nieprawidłową stronę zgłoszeń.')
+}
+
 export async function getAvailability(signal?: AbortSignal): Promise<AppointmentAvailability> {
   return availabilityFrom(await apiRequest('/api/appointments/availability', { signal }))
 }
@@ -121,8 +141,20 @@ export async function createGuestAppointment(input: GuestAppointmentInput): Prom
   }))
 }
 
-export async function getClientAppointments(signal?: AbortSignal): Promise<Appointment[]> {
-  return appointmentsFrom(await apiRequest('/api/appointments', { signal }))
+export async function getClientAppointments(
+  page: number,
+  size: number,
+  sortDirection: 'ASC' | 'DESC',
+  status: AppointmentStatus | 'ALL',
+  signal?: AbortSignal,
+): Promise<AppointmentPage> {
+  const params = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    sortDirection,
+  })
+  if (status !== 'ALL') params.set('status', status)
+  return appointmentPageFrom(await apiRequest(`/api/appointments?${params}`, { signal }))
 }
 
 export async function confirmProposedTime(appointmentId: number): Promise<Appointment> {

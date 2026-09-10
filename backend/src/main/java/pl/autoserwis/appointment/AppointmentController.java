@@ -6,8 +6,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.appointment.dto.*;
 
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/appointments")
 public class AppointmentController {
@@ -23,8 +21,13 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public List<AppointmentResponse> getCurrentClientAppointments(Authentication authentication) {
-        return appointmentService.getCurrentClientAppointments(authentication.getName());
+    public AppointmentPageResponse getCurrentClientAppointments(Authentication authentication,
+            @RequestParam(required = false) AppointmentStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        return appointmentService.getCurrentClientAppointments(authentication.getName(),
+            status, page, size, sortDirection);
     }
 
     @PostMapping
