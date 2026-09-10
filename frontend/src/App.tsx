@@ -1,8 +1,10 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { AuthProvider } from './features/auth/AuthProvider'
+import { RequireAdmin } from './features/auth/components/RequireAdmin'
 import { RequireClient } from './features/auth/components/RequireClient'
 import { RequireStaff } from './features/auth/components/RequireStaff'
+import { AdminScheduleSettingsPage } from './pages/AdminScheduleSettingsPage'
 import { AppointmentsPage } from './pages/AppointmentsPage'
 import { HomePage } from './pages/HomePage'
 import { MyAppointmentsPage } from './pages/MyAppointmentsPage'
@@ -29,6 +31,7 @@ export default function App() {
             <Route path="staff/schedule" element={<RequireStaff><StaffSchedulePage /></RequireStaff>} />
             <Route path="staff/appointments" element={<RequireStaff><StaffAppointmentsPage /></RequireStaff>} />
             <Route path="staff/appointments/:appointmentId" element={<RequireStaff><StaffAppointmentDetailsPage /></RequireStaff>} />
+            <Route path="admin/schedule-settings" element={<RequireAdmin><AdminScheduleSettingsPage /></RequireAdmin>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

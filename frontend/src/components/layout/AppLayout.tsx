@@ -12,6 +12,7 @@ export function AppLayout() {
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
   const canManage = auth.user?.roles.some((role) => role === 'MECHANIC' || role === 'ADMIN') ?? false
+  const canAdminister = auth.user?.roles.includes('ADMIN') ?? false
   const isClient = auth.user?.roles.includes('CLIENT') ?? false
 
   async function handleLogout() {
@@ -29,7 +30,7 @@ export function AppLayout() {
   return (
     <div id="start">
       <SiteHeader user={auth.user} isLoading={auth.isLoading} isLoggingOut={isLoggingOut}
-        canManage={canManage} canViewProfile={isClient}
+        canManage={canManage} canAdminister={canAdminister} canViewProfile={isClient}
         onLogin={() => setIsLoginOpen(true)} onLogout={() => void handleLogout()} />
       {(auth.error || logoutError) && (
         <div className="page-content app-message">

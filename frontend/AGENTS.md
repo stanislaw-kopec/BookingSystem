@@ -63,6 +63,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Formularz wymaga opisu wykonanych prac oraz pozycji robocizny lub części z ilością i ceną brutto.
   Po zapisie zgłoszenie ma status `READY_FOR_PICKUP`, a klient widzi opis prac i kwotę
   w swoich wizytach. Nie dodawaj jeszcze płatności online ani rozbicia netto/VAT.
+- R14: `/admin/schedule-settings` jest chronioną zakładką ADMIN do ustawiania domyślnej liczby miejsc, horyzontu rezerwacji, godzin pracy i wyjątków dni. Link pokazuj w menu konta tylko administratorowi.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.
@@ -136,7 +137,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   obsługują formularz gościa, formularz i listę CLIENT oraz kolejkę personelu.
   `AppointmentsPage` dobiera wariant formularza po zakończeniu sprawdzania sesji.
   `MyAppointmentsPage` wyświetla wyłącznie listę zgłoszeń i jest chroniona przez `RequireClient`, a
-  `StaffAppointmentsPage` i `StaffSchedulePage` chroni `RequireStaff`. Przewodnik znajduje się w
+  `StaffAppointmentsPage` i `StaffSchedulePage` chroni `RequireStaff`, a `AdminScheduleSettingsPage` chroni `RequireAdmin`. Przewodnik znajduje się w
   `docs/appointment-booking-walkthrough.md`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj

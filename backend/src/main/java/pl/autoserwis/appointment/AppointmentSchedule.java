@@ -17,10 +17,10 @@ import java.util.stream.IntStream;
 @Component
 public class AppointmentSchedule {
     public static final ZoneId TIME_ZONE = ZoneId.of("Europe/Warsaw");
-    public static final LocalTime WORKDAY_START = LocalTime.of(8, 0);
-    public static final LocalTime WORKDAY_END = LocalTime.of(16, 0);
-    public static final int DAILY_CAPACITY = 4;
-    public static final int BOOKING_HORIZON_DAYS = 30;
+    public static final LocalTime WORKDAY_START = WorkshopScheduleConfigService.DEFAULT_WORKDAY_START;
+    public static final LocalTime WORKDAY_END = WorkshopScheduleConfigService.DEFAULT_WORKDAY_END;
+    public static final int DAILY_CAPACITY = WorkshopScheduleConfigService.DEFAULT_DAILY_CAPACITY;
+    public static final int BOOKING_HORIZON_DAYS = WorkshopScheduleConfigService.DEFAULT_BOOKING_HORIZON_DAYS;
 
     private static final Set<AppointmentStatus> BLOCKING_STATUSES = EnumSet.of(
         AppointmentStatus.PENDING,
@@ -28,15 +28,18 @@ public class AppointmentSchedule {
         AppointmentStatus.CONFIRMED);
 
     private final AppointmentRepository appointments;
+    private final WorkshopScheduleConfigService scheduleConfig;
 
-    public AppointmentSchedule(AppointmentRepository appointments) {
+    public AppointmentSchedule(AppointmentRepository appointments, WorkshopScheduleConfigService scheduleConfig) {
         this.appointments = appointments;
+        this.scheduleConfig = scheduleConfig;
     }
 
     public AppointmentAvailabilityResponse availability() {
         ZonedDateTime now = ZonedDateTime.now(TIME_ZONE);
+        WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
         LocalDate firstDate = now.toLocalDate();
-        LocalDate lastDate = firstDate.plusDays(BOOKING_HORIZON_DAYS);
+        LocalDate lastDate = firstDate.plusDays(settings.getBookingHorizonDays());
         Instant rangeStart = firstDate.atStartOfDay(TIME_ZONE).toInstant();
         Instant rangeEnd = lastDate.plusDays(1).atStartOfDay(TIME_ZONE).toInstant();
         Map<LocalDate, Long> activeCounts = appointments.findBlockingStarts(
@@ -44,24 +47,15 @@ public class AppointmentSchedule {
             .map(this::dateOf)
             .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
 
-        List<AppointmentDayResponse> days = IntStream.rangeClosed(0, BOOKING_HORIZON_DAYS)
+        Map<LocalDate, ScheduleDayOverride> overrides = scheduleConfig.overridesByDate(firstDate, lastDate);
+        List<AppointmentDayResponse> days = IntStream.rangeClosed(0, settings.getBookingHorizonDays())
             .mapToObj(firstDate::plusDays)
-            .filter(this::isWorkingDay)
             .filter(date -> date.isAfter(now.toLocalDate()))
-            .map(date -> {
-                int occupied = activeCounts.getOrDefault(date, 0L).intValue();
-                int remainingCapacity = Math.max(DAILY_CAPACITY - occupied, 0);
-                return new AppointmentDayResponse(
-                    date,
-                    dayStart(date).toOffsetDateTime(),
-                    dayEnd(date).toOffsetDateTime(),
-                    DAILY_CAPACITY,
-                    remainingCapacity,
-                    remainingCapacity > 0);
-            })
+            .filter(date -> isWorkingDay(date) || overrides.containsKey(date))
+            .map(date -> day(date, settings, overrides.get(date), activeCounts.getOrDefault(date, 0L).intValue()))
             .toList();
 
-        return new AppointmentAvailabilityResponse(TIME_ZONE.getId(), DAILY_CAPACITY, days);
+        return new AppointmentAvailabilityResponse(TIME_ZONE.getId(), settings.getDefaultDailyCapacity(), days);
     }
 
     public Instant validateAndNormalize(LocalDate visitDate) {
@@ -71,13 +65,15 @@ public class AppointmentSchedule {
         if (!visitDate.isAfter(today)) {
             throw invalidVisitDate("Dzień wizyty musi przypadać w przyszłości.");
         }
-        if (visitDate.isAfter(today.plusDays(BOOKING_HORIZON_DAYS))) {
-            throw invalidVisitDate("Dzień wizyty musi mieścić się w ciągu najbliższych 30 dni.");
+        WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
+        if (visitDate.isAfter(today.plusDays(settings.getBookingHorizonDays()))) {
+            throw invalidVisitDate("Dzień wizyty musi mieścić się w aktualnym horyzoncie rezerwacji.");
         }
-        if (!isWorkingDay(visitDate)) {
-            throw invalidVisitDate("Wizyty można umawiać od poniedziałku do piątku.");
+        ScheduleDayOverride override = scheduleConfig.overridesByDate(visitDate, visitDate).get(visitDate);
+        if (capacityFor(visitDate, settings, override) <= 0) {
+            throw invalidVisitDate("Ten dzień jest niedostępny w grafiku warsztatu.");
         }
-        return dayStart(visitDate).truncatedTo(ChronoUnit.SECONDS).toInstant();
+        return dayStart(visitDate, settings).truncatedTo(ChronoUnit.SECONDS).toInstant();
     }
 
     public LocalDate visitDate(Instant startAt) {
@@ -88,20 +84,45 @@ public class AppointmentSchedule {
         LocalDate date = dateOf(startAt);
         Instant rangeStart = date.atStartOfDay(TIME_ZONE).toInstant();
         Instant rangeEnd = date.plusDays(1).atStartOfDay(TIME_ZONE).toInstant();
-        return appointments.findBlockingStarts(BLOCKING_STATUSES, rangeStart, rangeEnd)
-            .size() >= DAILY_CAPACITY;
+        WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
+        ScheduleDayOverride override = scheduleConfig.overridesByDate(date, date).get(date);
+        int capacity = capacityFor(date, settings, override);
+        return capacity <= 0 || appointments.findBlockingStarts(BLOCKING_STATUSES, rangeStart, rangeEnd)
+            .size() >= capacity;
     }
 
     private LocalDate dateOf(Instant startAt) {
         return startAt.atZone(TIME_ZONE).toLocalDate();
     }
 
-    private ZonedDateTime dayStart(LocalDate date) {
-        return date.atTime(WORKDAY_START).atZone(TIME_ZONE);
+    public static Set<AppointmentStatus> blockingStatuses() {
+        return BLOCKING_STATUSES;
     }
 
-    private ZonedDateTime dayEnd(LocalDate date) {
-        return date.atTime(WORKDAY_END).atZone(TIME_ZONE);
+    private AppointmentDayResponse day(LocalDate date, WorkshopScheduleSettings settings,
+            ScheduleDayOverride override, int occupied) {
+        int capacity = capacityFor(date, settings, override);
+        int remainingCapacity = Math.max(capacity - occupied, 0);
+        return new AppointmentDayResponse(
+            date,
+            dayStart(date, settings).toOffsetDateTime(),
+            dayEnd(date, settings).toOffsetDateTime(),
+            capacity,
+            remainingCapacity,
+            capacity > 0 && remainingCapacity > 0);
+    }
+
+    private int capacityFor(LocalDate date, WorkshopScheduleSettings settings, ScheduleDayOverride override) {
+        if (override != null) return override.isClosed() ? 0 : override.getCapacity();
+        return isWorkingDay(date) ? settings.getDefaultDailyCapacity() : 0;
+    }
+
+    private ZonedDateTime dayStart(LocalDate date, WorkshopScheduleSettings settings) {
+        return date.atTime(settings.getWorkdayStart()).atZone(TIME_ZONE);
+    }
+
+    private ZonedDateTime dayEnd(LocalDate date, WorkshopScheduleSettings settings) {
+        return date.atTime(settings.getWorkdayEnd()).atZone(TIME_ZONE);
     }
 
     private boolean isWorkingDay(LocalDate date) {

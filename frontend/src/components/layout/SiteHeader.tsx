@@ -9,6 +9,7 @@ interface Props {
   isLoading: boolean
   isLoggingOut: boolean
   canManage: boolean
+  canAdminister: boolean
   canViewProfile: boolean
   onLogin: () => void
   onLogout: () => void
@@ -18,7 +19,7 @@ function accountLinkClassName({ isActive }: { isActive: boolean }) {
   return isActive ? 'account-dropdown-item active' : 'account-dropdown-item'
 }
 
-export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewProfile, onLogin, onLogout }: Props) {
+export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdminister, canViewProfile, onLogin, onLogout }: Props) {
   function closeAccountMenu(event: MouseEvent<HTMLAnchorElement>) {
     event.currentTarget.closest('details')?.removeAttribute('open')
   }
@@ -79,6 +80,11 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canViewPr
                   <a className="account-dropdown-item" href="/#service-management" onClick={closeAccountMenu}>
                     Zarządzaj ofertą
                   </a>
+                  {canAdminister && (
+                    <NavLink className={accountLinkClassName} to="/admin/schedule-settings" onClick={closeAccountMenu}>
+                      Konfiguracja grafiku
+                    </NavLink>
+                  )}
                 </>
               )}
               <button type="button" className="account-dropdown-item logout" disabled={isLoggingOut} onClick={onLogout}>

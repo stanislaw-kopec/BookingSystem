@@ -29,8 +29,10 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = "spring.docker.compose.enabled=false")
@@ -59,6 +61,89 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.days[0].capacity").value(4))
             .andExpect(jsonPath("$.days[0].remainingCapacity").value(4))
             .andExpect(jsonPath("$.days[0].available").value(true));
+    }
+
+
+    @Test
+    void adminConfiguresDailyCapacityAndClosedDays() throws Exception {
+        LocalDate visitDate = workingDate(1);
+
+        mockMvc.perform(put("/api/admin/schedule/settings")
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "defaultDailyCapacity": 3,
+                      "bookingHorizonDays": 45,
+                      "workdayStart": "07:30",
+                      "workdayEnd": "15:30"
+                    }
+                    """))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.settings.defaultDailyCapacity").value(3))
+            .andExpect(jsonPath("$.settings.bookingHorizonDays").value(45))
+            .andExpect(jsonPath("$.settings.workdayStart").value("07:30:00"))
+            .andExpect(jsonPath("$.settings.workdayEnd").value("15:30:00"));
+
+        mockMvc.perform(put("/api/admin/schedule/overrides/{date}", visitDate)
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"date":"%s","capacity":0,"closed":true,"note":"Szkolenie zespołu"}
+                    """.formatted(visitDate)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.overrides[0].date").value(visitDate.toString()))
+            .andExpect(jsonPath("$.overrides[0].closed").value(true));
+
+        mockMvc.perform(post("/api/appointments/guest")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(guestJson(visitDate, "+48 500 600 700", "", "KR901", "",
+                    "Próba rezerwacji w zamkniętym dniu.")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.fieldErrors.visitDate").exists());
+    }
+
+    @Test
+    void configuredDayCapacityLimitsNewAppointments() throws Exception {
+        LocalDate visitDate = workingDate(2);
+        mockMvc.perform(put("/api/admin/schedule/overrides/{date}", visitDate)
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"date":"%s","capacity":1,"closed":false,"note":"Mniejszy skład"}
+                    """.formatted(visitDate)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.overrides[0].capacity").value(1));
+
+        createGuestAppointment(visitDate, "Pierwsze zgłoszenie w dniu z mniejszą pojemnością.");
+
+        mockMvc.perform(post("/api/appointments/guest")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(guestJson(visitDate, "+48 500 600 700", "", "KR902", "",
+                    "Drugie zgłoszenie ponad limit dnia.")))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.fieldErrors.visitDate").exists());
+    }
+
+    @Test
+    void onlyAdminCanManageScheduleConfiguration() throws Exception {
+        mockMvc.perform(get("/api/admin/schedule")
+                .with(user("mechanic").roles("MECHANIC")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/admin/schedule/settings")
+                .with(user("client").roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"defaultDailyCapacity":4,"bookingHorizonDays":30,"workdayStart":"08:00","workdayEnd":"16:00"}
+                    """))
+            .andExpect(status().isForbidden());
     }
 
     @Test

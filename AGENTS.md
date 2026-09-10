@@ -32,7 +32,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R03 | Klient może zalogować się, zarejestrować i zarządzać wyłącznie własnym profilem na osobnej podstronie `/profile`. Profil zawiera imię, nazwisko, telefon, kontaktowy e-mail i adres oraz opcjonalne dane firmy: nazwę, NIP i adres rozliczeniowy. Po zalogowaniu klient otwiera profil z menu konta w prawym górnym rogu. Zapisany profil domyślnie pokazuje podsumowanie; formularz pojawia się po wybraniu edycji. |
 | R04 | Pozycja „Moje pojazdy” w menu konta prowadzi do `/vehicles`. Klient może dodać pojazd z marką, modelem, rokiem produkcji, numerem rejestracyjnym i opcjonalnym VIN oraz przeglądać wyłącznie własne pojazdy. Wybranie pojazdu otwiera osobną podstronę `/vehicles/:vehicleId` ze szczegółami i historią napraw. |
 | R05 | Historia napraw pojazdu w pierwszej wersji powstaje na podstawie zakończonych zgłoszeń `COMPLETED`, a docelowo może zostać rozbudowana o faktury wystawiane przez uprawniony personel. |
-| R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych dni przyjęcia auta od poniedziałku do piątku. Pierwsza wersja przyjmuje bazowo 4 aktywne zgłoszenia na dzień. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera dzień przyjęcia auta i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, dzień przyjęcia auta oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. Interfejs informuje, że auto można zostawić rano albo po wcześniejszym uzgodnieniu dzień wcześniej. |
+| R06 | Publiczna podstrona `/appointments` udostępnia kalendarz wolnych dni przyjęcia auta wynikający z konfiguracji grafiku warsztatu. Zalogowany klient wybiera własny pojazd lub dodaje go w formularzu, wybiera dzień przyjęcia auta i opisuje usterkę. Gość podaje dane pojazdu, imię i nazwisko, co najmniej telefon albo e-mail, dzień przyjęcia auta oraz opis; zgłoszenie gościa nie tworzy konta ani pojazdu w katalogu klienta. Interfejs informuje, że auto można zostawić rano albo po wcześniejszym uzgodnieniu dzień wcześniej. |
 | R07 | Wysłane zgłoszenie ma status `PENDING` i oczekuje na decyzję personelu. Personel może je potwierdzić, odrzucić albo zaproponować inny dzień. Zalogowany klient widzi własne zgłoszenia, filtruje je po statusie, sortuje po dacie przyjęcia auta, przechodzi między stronami listy, potwierdza zaproponowany dzień i może odwołać aktywną wizytę na osobnej podstronie `/my-appointments` („Moje wizyty”). Paginacja, filtrowanie i sortowanie własnych wizyt są obsługiwane po stronie backendu. Główne menu zawiera publiczny link „Umów wizytę”, a prywatne linki klienta, w tym „Moje wizyty”, znajdują się w menu konta w prawym górnym rogu. Gość nie ma panelu ani publicznego podglądu statusu; warsztat kontaktuje się z nim telefonicznie lub mailowo. |
 | R08 | Mechanik i administrator mają graficzną zakładkę `/staff/schedule` („Grafik”) z tygodniowym widokiem aktywnych zgłoszeń pogrupowanych według dni przyjęcia auta. Kliknięcie zgłoszenia w grafiku prowadzi do `/staff/appointments/:appointmentId`, gdzie personel widzi pełne szczegóły zgłoszenia i historię zakończonych napraw powiązanego pojazdu, jeśli pojazd istnieje w kartotece klienta. Panel `/staff/appointments` służy do obsługi zgłoszeń klientów oraz gości: potwierdzania, odrzucania i proponowania innego wolnego dnia. Lista zgłoszeń personelu obsługuje po stronie backendu paginację, filtrowanie po statusie i sortowanie po dacie przyjęcia auta. Dla gościa personel może potwierdzić propozycję po uzgodnieniu jej poza aplikacją. Panel zleceń napraw i pozostałe zarządzanie wizytami pozostają dalszym etapem. |
 | R09 | Mechanik i administrator mogą dodawać, edytować i usuwać kategorie oferty oraz przypisane do nich usługi. Przykładowe kategorie to elektryka, wulkanizacja i mechanika. Każda usługa należy do jednej kategorii i może zostać przeniesiona do innej. |
@@ -40,6 +40,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R11 | Mechanik i administrator mogą oznaczyć zgłoszenie ze statusem `READY_FOR_PICKUP` jako odebrane przez klienta. Akcja „Samochód został odebrany” ustawia status `COMPLETED` („Zakończone”). Zakończone zgłoszenia powiązane z pojazdem klienta są pierwszą wersją historii napraw widoczną na `/vehicles/:vehicleId`. |
 | R12 | Klient może pobrać prostą fakturę PDF z historii napraw własnego pojazdu przy zakończonym zgłoszeniu `COMPLETED`. Faktura zawiera logo Mietek Customs, numer, datę wystawienia i sprzedaży, dane warsztatu, dane nabywcy imienne albo firmowe z profilu, pojazd, opis wykonanych prac, wyszczególnione pozycje robocizny i części, wartości netto i brutto oraz informację o płatności przy odbiorze. To pierwsza wersja dokumentu, bez osobnej tabeli faktur, korekt, numeracji księgowej i deklaracji zgodności prawno-księgowej. |
 | R13 | Profil Springa `local` przygotowuje dane pokazowe do prezentacji aplikacji: klientów indywidualnych i firmowych, ich profile, pojazdy oraz zgłoszenia w różnych statusach, w tym naprawy gotowe do odbioru i zakończone z możliwością pobrania faktury PDF. Seed działa idempotentnie: tworzy brakujące rekordy demonstracyjne, ale nie nadpisuje istniejących kont, haseł, profili, pojazdów ani zgłoszeń. |
+| R14 | Administrator ma dedykowany panel `/admin/schedule-settings` do konfiguracji grafiku warsztatu. Może ustawić domyślną liczbę miejsc dziennie, horyzont rezerwacji, godziny pracy oraz wyjątki dla konkretnych dat: dzień zamknięty albo niestandardową liczbę miejsc. Mechanik może oglądać grafik i obsługiwać zgłoszenia, ale nie zarządza konfiguracją dostępności. Publiczny kalendarz i propozycje terminów korzystają z konfiguracji zapisanej w backendzie. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -73,9 +74,9 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 - Kalendarz pokazuje dostępność, ale backend ponownie sprawdza dzień przyjęcia auta
   przy wysłaniu zgłoszenia i proponowaniu nowego dnia. Nie dopuszczaj do przekroczenia
   dziennego limitu aktywnych zgłoszeń, także przy równoczesnych żądaniach.
-- Pierwsza wersja kalendarza używa strefy `Europe/Warsaw`, dni od poniedziałku
-  do piątku, dziennego limitu 4 aktywnych zgłoszeń i horyzontu 30 dni.
-  Wewnętrznie wybrany dzień jest zapisywany jako początek dnia roboczego 08:00,
+- Kalendarz używa strefy `Europe/Warsaw`, dni od poniedziałku do piątku jako domyślnie
+  roboczych, a limit miejsc, horyzont rezerwacji i godziny pracy wynikają z konfiguracji admina.
+  Wewnętrznie wybrany dzień jest zapisywany jako skonfigurowany początek dnia roboczego,
   ale interfejs nie umawia klienta na konkretną godzinę. Statusy `PENDING`,
   `TIME_PROPOSED` i `CONFIRMED` zajmują miejsce w danym dniu; `READY_FOR_PICKUP`,
   `COMPLETED`, `REJECTED` i
@@ -96,9 +97,6 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 Nie zapisuj poniższych decyzji jako uzgodnionych, dopóki nie wynikają z rozmowy.
 Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 
-- Rzeczywiste godziny pracy, święta, dni zamknięcia i docelowa liczba miejsc na dzień.
-  Obecna strefa, dni robocze i limit 4 aut dziennie są ustawieniem pierwszej wersji,
-  dopóki użytkownik nie poda danych warsztatu.
 - Wiele stanowisk, różne długości usług i przypisywanie mechanika pozostają dalszym
   etapem planowania pracy warsztatu po przyjęciu auta.
 - Automatyczne wygasanie blokady zgłoszenia oczekującego, przekładanie
@@ -136,8 +134,8 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   dodawać własne pojazdy oraz otwierać ich szczegóły. Widok historii napraw pokazuje
   zakończone naprawy i pozwala pobrać prostą fakturę PDF. Działają publiczna dostępność,
   zgłoszenia wizyt klienta i gościa, panel własnych zgłoszeń, grafik MECHANIC/ADMIN
-  oraz decyzje personelu z proponowaniem nowego dnia. Zlecenia napraw i faktury
-  pozostają do zbudowania.
+  oraz decyzje personelu z proponowaniem nowego dnia. Administrator zarządza
+  podstawową konfiguracją grafiku i wyjątkami dni. Pełny moduł faktur pozostaje do rozbudowy.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
@@ -146,7 +144,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
   zgłoszenia wizyt z kalendarzem i decyzją personelu, zakończenie naprawy,
   odbiór auta, historia napraw, prosta faktura PDF oraz lokalne dane pokazowe.
-  Kolejne etapy obejmują pełniejsze zlecenia napraw i dalsze reguły harmonogramu.
+  Kolejne etapy obejmują dalsze reguły harmonogramu, powiadomienia i pełniejszy moduł faktur.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

@@ -33,6 +33,7 @@ public class SecurityConfig {
                     "/api/appointments/availability").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/appointments/guest")
                     .permitAll()
+                .requestMatchers("/api/admin/schedule", "/api/admin/schedule/**").hasRole("ADMIN")
                 .requestMatchers("/api/profile/**").hasRole("CLIENT")
                 .requestMatchers("/api/vehicles", "/api/vehicles/**").hasRole("CLIENT")
                 .requestMatchers("/api/staff/appointments", "/api/staff/appointments/**")

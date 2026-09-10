@@ -43,6 +43,18 @@ public interface AppointmentRepository extends JpaRepository<AppointmentRequest,
         @Param("statuses") Collection<AppointmentStatus> statuses,
         @Param("rangeStart") Instant rangeStart,
         @Param("rangeEnd") Instant rangeEnd);
+
+    @Query("""
+        select count(appointment)
+        from AppointmentRequest appointment
+        where appointment.status in :statuses
+          and appointment.currentStartAt >= :rangeStart
+          and appointment.currentStartAt < :rangeEnd
+        """)
+    long countBlockingStarts(
+        @Param("statuses") Collection<AppointmentStatus> statuses,
+        @Param("rangeStart") Instant rangeStart,
+        @Param("rangeEnd") Instant rangeEnd);
     @Query(value = "select 1 from pg_advisory_xact_lock(hashtext(cast(:visitDate as text)))",
         nativeQuery = true)
     Integer lockAppointmentDay(@Param("visitDate") LocalDate visitDate);
