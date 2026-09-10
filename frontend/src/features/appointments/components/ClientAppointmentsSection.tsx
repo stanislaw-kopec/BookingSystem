@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
+import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
 import type { Appointment } from '../types'
 import { AppointmentDetails } from './AppointmentDetails'
 import '../appointments.css'
@@ -36,6 +37,7 @@ export function ClientAppointmentsSection() {
   const [actionError, setActionError] = useState<string | null>(null)
   const [confirmingId, setConfirmingId] = useState<number | null>(null)
   const [cancellingId, setCancellingId] = useState<number | null>(null)
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
   const [notice, setNotice] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
 
@@ -95,6 +97,28 @@ export function ClientAppointmentsSection() {
     }
   }
 
+  async function downloadInvoice(appointment: Appointment) {
+    if (appointment.vehicleId === null) return
+    setDownloadingInvoiceId(appointment.id)
+    setActionError(null)
+    setNotice(null)
+    try {
+      const invoice = await vehiclesApi.downloadRepairInvoice(appointment.vehicleId, appointment.id)
+      const url = URL.createObjectURL(invoice)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `invoice-${appointment.reference}.pdf`
+      document.body.append(link)
+      link.click()
+      link.remove()
+      URL.revokeObjectURL(url)
+    } catch (cause) {
+      setActionError(errorMessage(cause))
+    } finally {
+      setDownloadingInvoiceId(null)
+    }
+  }
+
   return (
     <section className="page-section appointments-section" aria-label="Moje wizyty">
       <section className="appointment-block appointment-list-section" aria-labelledby="client-appointments-heading">
@@ -121,8 +145,17 @@ export function ClientAppointmentsSection() {
             {appointments.map((appointment) => (
               <li className="appointment-card" key={appointment.id}>
                 <AppointmentDetails appointment={appointment} />
-                {(appointment.status === 'TIME_PROPOSED' || cancellableStatuses.has(appointment.status)) && (
+                {(appointment.status === 'TIME_PROPOSED'
+                  || cancellableStatuses.has(appointment.status)
+                  || (appointment.status === 'COMPLETED' && appointment.vehicleId !== null)) && (
                   <div className="appointment-card-actions actions">
+                    {appointment.status === 'COMPLETED' && appointment.vehicleId !== null && (
+                      <button type="button" className="button secondary"
+                        disabled={downloadingInvoiceId === appointment.id}
+                        onClick={() => void downloadInvoice(appointment)}>
+                        {downloadingInvoiceId === appointment.id ? 'Pobieranie…' : 'Pobierz fakturę'}
+                      </button>
+                    )}
                     {appointment.status === 'TIME_PROPOSED' && (
                       <>
                         <p>Sprawdź nowy dzień wskazany przez warsztat i potwierdź, jeśli Ci odpowiada.</p>

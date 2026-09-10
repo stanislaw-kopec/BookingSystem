@@ -195,7 +195,8 @@ własnych wizyt jest dostępna z menu konta.
 Jeśli personel zaproponuje inny dzień, klient może go potwierdzić w panelu.
 Po zakończeniu naprawy klient widzi status „Czeka na odbiór”, opis wykonanych prac
 oraz kwotę brutto do zapłaty na miejscu. Gdy auto zostanie odebrane, status zmienia się
-na „Zakończone”, a wpis trafia do historii napraw pojazdu.
+na „Zakończone”, wpis trafia do historii napraw pojazdu, a przy zakończonej wizycie
+w „Moich wizytach” pojawia się przycisk pobrania faktury PDF.
 
 Mechanik i administrator mają w menu konta zakładkę
 `http://localhost:5173/staff/schedule` („Grafik”), która pokazuje aktywne zgłoszenia
