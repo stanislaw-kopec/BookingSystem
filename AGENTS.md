@@ -150,8 +150,8 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,
   spójna obsługa błędów, testy jednostkowe i integracyjne, dokumentacja oraz CI.
-  Testcontainers, OpenAPI i GitHub Actions są skonfigurowane; rozwijaj je dalej
-  tylko przy konkretnych potrzebach.
+  Testcontainers, OpenAPI, GitHub Actions oraz testy bezpieczeństwa kont mechaników
+  są skonfigurowane; rozwijaj je dalej tylko przy konkretnych potrzebach.
 - Dobieraj sprawdzenia do zmian. Dla samych instrukcji wystarcza przegląd treści
   i różnic; nie uruchamiaj całego środowiska ani nie dodawaj testów dokumentacji.
 - Po implementacji opisz, co działa, jak to sprawdzono i co pozostaje niegotowe.

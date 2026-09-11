@@ -63,6 +63,29 @@ class RegistrationIntegrationTest {
             .andExpect(jsonPath("$.user.roles[0]").value("CLIENT"));
     }
 
+    @Test
+    void publicRegistrationIgnoresSubmittedRoleAndCreatesClientOnly() throws Exception {
+        mockMvc.perform(post("/api/auth/register")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {
+                      "username": "role-smuggling-client",
+                      "email": "role-smuggling@example.com",
+                      "password": "safe-password-2026",
+                      "passwordConfirmation": "safe-password-2026",
+                      "role": "ADMIN",
+                      "enabled": false
+                    }
+                    """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.username").value("role-smuggling-client"));
+
+        AppUser saved = users.findByUsernameIgnoreCase("role-smuggling-client").orElseThrow();
+        assertThat(saved.getRole()).isEqualTo(UserRole.CLIENT);
+        assertThat(saved.isEnabled()).isTrue();
+    }
+
 
     @Test
     void adminCreatesMechanicAccount() throws Exception {
@@ -103,6 +126,135 @@ class RegistrationIntegrationTest {
             .andExpect(status().isForbidden());
 
         assertThat(users.findByUsernameIgnoreCase("blocked-mechanic")).isEmpty();
+    }
+
+    @Test
+    void anonymousCannotAccessStaffAccountPanel() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "anonymous-boundary-mechanic", "anonymous-boundary-mechanic@example.com",
+            passwords.encode("old-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(get("/api/admin/staff/mechanics"))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "anonymous-created-mechanic", "anonymous-created@example.com",
+                    "mechanic-password", "mechanic-password")))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(staffUpdateJson("anonymous-updated", "anonymous-updated@example.com")))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(passwordResetJson("new-password-2026", "new-password-2026")))
+            .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(statusJson(false)))
+            .andExpect(status().isUnauthorized());
+
+        assertThat(users.findByUsernameIgnoreCase("anonymous-created-mechanic")).isEmpty();
+    }
+
+    @Test
+    void clientAndMechanicCannotManageStaffAccounts() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "role-boundary-mechanic", "role-boundary-mechanic@example.com",
+            passwords.encode("old-password"), UserRole.MECHANIC));
+
+        for (String role : new String[] {"CLIENT", "MECHANIC"}) {
+            mockMvc.perform(get("/api/admin/staff/mechanics")
+                    .with(user("blocked-" + role.toLowerCase()).roles(role)))
+                .andExpect(status().isForbidden());
+
+            mockMvc.perform(post("/api/admin/staff/mechanics")
+                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(registrationJson(
+                        "blocked-" + role.toLowerCase() + "-mechanic",
+                        "blocked-" + role.toLowerCase() + "@example.com",
+                        "mechanic-password", "mechanic-password")))
+                .andExpect(status().isForbidden());
+
+            mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
+                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(staffUpdateJson("blocked-update-" + role.toLowerCase(),
+                        "blocked-update-" + role.toLowerCase() + "@example.com")))
+                .andExpect(status().isForbidden());
+
+            mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
+                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(passwordResetJson("new-password-2026", "new-password-2026")))
+                .andExpect(status().isForbidden());
+
+            mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
+                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(statusJson(false)))
+                .andExpect(status().isForbidden());
+        }
+
+        AppUser unchanged = users.findById(mechanic.getId()).orElseThrow();
+        assertThat(unchanged.getUsername()).isEqualTo("role-boundary-mechanic");
+        assertThat(unchanged.isEnabled()).isTrue();
+        assertThat(passwords.matches("old-password", unchanged.getPasswordHash())).isTrue();
+        assertThat(users.findByUsernameIgnoreCase("blocked-client-mechanic")).isEmpty();
+        assertThat(users.findByUsernameIgnoreCase("blocked-mechanic-mechanic")).isEmpty();
+    }
+
+    @Test
+    void staffAccountMutationsRequireCsrfToken() throws Exception {
+        AppUser mechanic = users.saveAndFlush(new AppUser(
+            "csrf-staff-mechanic", "csrf-staff-mechanic@example.com",
+            passwords.encode("old-password"), UserRole.MECHANIC));
+
+        mockMvc.perform(post("/api/admin/staff/mechanics")
+                .with(user("admin").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(registrationJson(
+                    "csrf-created-mechanic", "csrf-created@example.com",
+                    "mechanic-password", "mechanic-password")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(staffUpdateJson("csrf-updated-mechanic", "csrf-updated@example.com")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(passwordResetJson("new-password-2026", "new-password-2026")))
+            .andExpect(status().isForbidden());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
+                .with(user("admin").roles("ADMIN"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(statusJson(false)))
+            .andExpect(status().isForbidden());
+
+        AppUser unchanged = users.findById(mechanic.getId()).orElseThrow();
+        assertThat(unchanged.getUsername()).isEqualTo("csrf-staff-mechanic");
+        assertThat(unchanged.isEnabled()).isTrue();
+        assertThat(passwords.matches("old-password", unchanged.getPasswordHash())).isTrue();
+        assertThat(users.findByUsernameIgnoreCase("csrf-created-mechanic")).isEmpty();
     }
 
     @Test
@@ -230,6 +382,26 @@ class RegistrationIntegrationTest {
                     }
                     """))
             .andExpect(status().isNotFound());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", client.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(passwordResetJson("new-password-2026", "new-password-2026")))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", client.getId())
+                .with(user("admin").roles("ADMIN"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(statusJson(false)))
+            .andExpect(status().isNotFound());
+
+        AppUser unchanged = users.findById(client.getId()).orElseThrow();
+        assertThat(unchanged.getRole()).isEqualTo(UserRole.CLIENT);
+        assertThat(unchanged.getUsername()).isEqualTo("staff-panel-client");
+        assertThat(unchanged.isEnabled()).isTrue();
+        assertThat(passwords.matches("client-password", unchanged.getPasswordHash())).isTrue();
     }
 
     @Test
@@ -313,6 +485,32 @@ class RegistrationIntegrationTest {
               "passwordConfirmation": "%s"
             }
             """.formatted(username, email, password, confirmation);
+    }
+
+    private String staffUpdateJson(String username, String email) {
+        return """
+            {
+              "username": "%s",
+              "email": "%s"
+            }
+            """.formatted(username, email);
+    }
+
+    private String passwordResetJson(String password, String confirmation) {
+        return """
+            {
+              "password": "%s",
+              "passwordConfirmation": "%s"
+            }
+            """.formatted(password, confirmation);
+    }
+
+    private String statusJson(boolean enabled) {
+        return """
+            {
+              "enabled": %s
+            }
+            """.formatted(enabled);
     }
 }
 

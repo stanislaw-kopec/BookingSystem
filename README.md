@@ -453,7 +453,7 @@ npm run build
 npm run lint
 ```
 
-Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję i CSRF.
+Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję, CSRF oraz administracyjne zarządzanie kontami mechaników.
 Budowa obrazu Docker pomija uruchomienie testów — sprawdzaj je osobno.
 
 Szczegóły mechanizmów: [gotowość usług w Compose](https://docs.docker.com/compose/how-tos/startup-order/),

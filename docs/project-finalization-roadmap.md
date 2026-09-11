@@ -66,11 +66,11 @@ Mocne punkty do pokazania:
 - Testcontainers,
 - walidacja i spójny format błędów.
 
-## Priorytet 4: testy kont mechaników
+## Priorytet 4: testy kont mechaników — wdrożone
 
-W projekcie jest dużo testów integracyjnych, ale warto domknąć obszar zarządzania kontami personelu.
+Obszar zarządzania kontami personelu jest pokryty testami integracyjnymi.
 
-Przykładowe testy:
+Obecny zakres testów:
 
 - admin może utworzyć konto mechanika,
 - mechanik nie może tworzyć kont mechaników,
