@@ -290,3 +290,23 @@ export async function markVehiclePickedUp(appointmentId: number): Promise<Appoin
     method: 'POST',
   }))
 }
+
+
+export async function downloadStaffRepairInvoice(appointmentId: number): Promise<Blob> {
+  const response = await fetch(`/api/staff/appointments/${appointmentId}/invoice`, {
+    credentials: 'same-origin',
+    cache: 'no-store',
+  })
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null)
+    const message = isRecord(payload) && typeof payload.message === 'string'
+      ? payload.message
+      : 'Nie udało się pobrać faktury.'
+    throw new ApiError(response.status, message)
+  }
+  return response.blob()
+}
+
+export function staffRepairInvoiceFilename(appointment: { reference: string }): string {
+  return `invoice-${appointment.reference}.pdf`
+}

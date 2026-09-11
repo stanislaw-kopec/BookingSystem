@@ -1,5 +1,9 @@
 package pl.autoserwis.appointment;
 import jakarta.validation.Valid;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.appointment.dto.AppointmentPageResponse;
@@ -7,7 +11,9 @@ import pl.autoserwis.appointment.dto.AppointmentResponse;
 import pl.autoserwis.appointment.dto.CompleteRepairRequest;
 import pl.autoserwis.appointment.dto.ProposeAppointmentTimeRequest;
 import pl.autoserwis.appointment.dto.StaffMessageRequest;
+import pl.autoserwis.invoice.InvoiceFile;
 import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 @RestController
 @RequestMapping("/api/staff/appointments")
@@ -35,6 +41,18 @@ public class StaffAppointmentController {
     @GetMapping("/{appointmentId}/repair-history")
     public List<RepairHistoryEntryResponse> getRepairHistory(@PathVariable Long appointmentId) {
         return appointmentService.getStaffAppointmentRepairHistory(appointmentId);
+    }
+
+    @GetMapping("/{appointmentId}/invoice")
+    public ResponseEntity<byte[]> getRepairInvoice(@PathVariable Long appointmentId) {
+        InvoiceFile invoice = appointmentService.getStaffRepairInvoice(appointmentId);
+        ContentDisposition disposition = ContentDisposition.attachment()
+            .filename(invoice.filename(), StandardCharsets.UTF_8)
+            .build();
+        return ResponseEntity.ok()
+            .contentType(MediaType.APPLICATION_PDF)
+            .header(HttpHeaders.CONTENT_DISPOSITION, disposition.toString())
+            .body(invoice.content());
     }
     @PostMapping("/{appointmentId}/accept")
     public AppointmentResponse accept(Authentication authentication, @PathVariable Long appointmentId) {

@@ -502,6 +502,15 @@ class AppointmentIntegrationTest {
             .andReturn().getResponse().getContentAsByteArray();
         assertThat(new String(invoice, 0, 4)).isEqualTo("%PDF");
 
+        byte[] staffInvoice = mockMvc.perform(get("/api/staff/appointments/{appointmentId}/invoice",
+                    appointment.getId())
+                .with(user(staff.getUsername()).roles("MECHANIC")))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", "application/pdf"))
+            .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+            .andReturn().getResponse().getContentAsByteArray();
+        assertThat(new String(staffInvoice, 0, 4)).isEqualTo("%PDF");
+
         mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
                     vehicle.getId(), appointment.getId())
                 .with(user(otherClient().getUsername()).roles("CLIENT")))

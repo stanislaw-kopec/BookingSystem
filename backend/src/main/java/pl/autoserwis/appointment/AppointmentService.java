@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.dto.*;
 import pl.autoserwis.exception.ResourceNotFoundException;
+import pl.autoserwis.invoice.InvoiceFile;
+import pl.autoserwis.invoice.InvoicePdfGenerator;
 import pl.autoserwis.profile.ClientProfile;
 import pl.autoserwis.profile.ClientProfileRepository;
 import pl.autoserwis.user.AppUser;
@@ -36,13 +38,16 @@ public class AppointmentService {
     private final UserRepository users;
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
+    private final InvoicePdfGenerator invoicePdfGenerator;
     public AppointmentService(AppointmentRepository appointments, AppointmentSchedule schedule,
-            UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles) {
+            UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles,
+            InvoicePdfGenerator invoicePdfGenerator) {
         this.appointments = appointments;
         this.schedule = schedule;
         this.users = users;
         this.profiles = profiles;
         this.vehicles = vehicles;
+        this.invoicePdfGenerator = invoicePdfGenerator;
     }
     public AppointmentAvailabilityResponse getAvailability() {
         return schedule.availability();
@@ -109,6 +114,19 @@ public class AppointmentService {
                 appointment.getVehicle().getId(), AppointmentStatus.COMPLETED).stream()
             .map(this::repairHistoryEntry)
             .toList();
+    }
+    public InvoiceFile getStaffRepairInvoice(Long appointmentId) {
+        AppointmentRequest appointment = appointments.findById(appointmentId)
+            .filter(request -> request.getStatus() == AppointmentStatus.COMPLETED)
+            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zakończonej naprawy."));
+        if (appointment.getRequesterType() != AppointmentRequesterType.CLIENT
+                || appointment.getClient() == null
+                || appointment.getVehicle() == null) {
+            throw new ResourceNotFoundException("Faktura jest dostępna tylko dla zakończonej naprawy klienta z kontem.");
+        }
+        ClientProfile profile = profiles.findByUser_Id(appointment.getClient().getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono profilu klienta."));
+        return invoicePdfGenerator.generate(appointment, appointment.getVehicle(), profile);
     }
     @Transactional
     public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {
@@ -331,7 +349,6 @@ public class AppointmentService {
         if (!errors.isEmpty()) throw new AppointmentValidationException(errors);
         return normalized;
     }
-
     private BigDecimal normalizedDecimal(BigDecimal value, String field, Map<String, String> errors, String message) {
         if (value == null) return null;
         try {
@@ -409,7 +426,6 @@ public class AppointmentService {
                 item.getQuantity(), item.getUnitGrossAmount(), item.getTotalGrossAmount()))
             .toList();
     }
-
     private String text(String value) {
         return value == null ? "" : value;
     }

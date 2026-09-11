@@ -12,6 +12,8 @@ export function StaffAppointmentDetailsSection({ appointmentId }: { appointmentI
   const [appointment, setAppointment] = useState<Appointment | null>(null)
   const [repairHistory, setRepairHistory] = useState<RepairHistoryEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [invoiceError, setInvoiceError] = useState<string | null>(null)
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false)
   const [revision, setRevision] = useState(0)
 
   useEffect(() => {
@@ -37,7 +39,27 @@ export function StaffAppointmentDetailsSection({ appointmentId }: { appointmentI
     setAppointment(null)
     setRepairHistory(null)
     setError(null)
+    setInvoiceError(null)
     setRevision((value) => value + 1)
+  }
+
+  async function downloadInvoice() {
+    if (!appointment) return
+    setIsDownloadingInvoice(true)
+    setInvoiceError(null)
+    try {
+      const invoice = await appointmentsApi.downloadStaffRepairInvoice(appointment.id)
+      const url = URL.createObjectURL(invoice)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = appointmentsApi.staffRepairInvoiceFilename(appointment)
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (cause) {
+      setInvoiceError(errorMessage(cause))
+    } finally {
+      setIsDownloadingInvoice(false)
+    }
   }
 
   return (
@@ -65,6 +87,15 @@ export function StaffAppointmentDetailsSection({ appointmentId }: { appointmentI
               {appointment.requesterType === 'CLIENT' ? 'Klient z kontem' : 'Gość bez konta'}
             </p>
             <AppointmentDetails appointment={appointment} showContact />
+            {invoiceError && <p className="message error" role="alert">{invoiceError}</p>}
+            {appointment.status === 'COMPLETED' && appointment.requesterType === 'CLIENT' && (
+              <div className="appointment-card-actions actions">
+                <button type="button" className="button secondary" disabled={isDownloadingInvoice}
+                  onClick={() => void downloadInvoice()}>
+                  {isDownloadingInvoice ? 'Pobieranie…' : 'Pobierz fakturę'}
+                </button>
+              </div>
+            )}
           </article>
 
           <section className="repair-history staff-repair-history" aria-labelledby="staff-repair-history-heading">

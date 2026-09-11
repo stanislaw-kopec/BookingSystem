@@ -108,7 +108,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Pokazuj pierwotny i proponowany dzień
   bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Przy zakończonej naprawie pokaż
-  przycisk „Pobierz fakturę” w historii pojazdu oraz w „Moich wizytach”, który
+  przycisk „Pobierz fakturę” w historii pojazdu, w „Moich wizytach” oraz w panelu personelu przy zakończonym zgłoszeniu klienta z kontem. Przycisk
   pobiera PDF z backendu. Nie twórz lokalnych faktur ani wpisów udających trwale
   zapisane dane.
 

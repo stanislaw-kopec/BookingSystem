@@ -69,6 +69,7 @@ export function StaffAppointmentsSection() {
   const [dateSortDirection, setDateSortDirection] = useState<DateSortDirection>('DESC')
   const [currentPage, setCurrentPage] = useState(0)
   const [notice, setNotice] = useState<string | null>(null)
+  const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
   const availability = useAppointmentAvailability()
 
   useEffect(() => {
@@ -158,6 +159,25 @@ export function StaffAppointmentsSection() {
       if (cause instanceof ApiError) setFieldErrors(cause.fieldErrors)
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  async function downloadInvoice(appointment: Appointment) {
+    setDownloadingInvoiceId(appointment.id)
+    setActionError(null)
+    setNotice(null)
+    try {
+      const invoice = await appointmentsApi.downloadStaffRepairInvoice(appointment.id)
+      const url = URL.createObjectURL(invoice)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = appointmentsApi.staffRepairInvoiceFilename(appointment)
+      link.click()
+      URL.revokeObjectURL(url)
+    } catch (cause) {
+      setActionError(errorMessage(cause))
+    } finally {
+      setDownloadingInvoiceId(null)
     }
   }
 
@@ -357,6 +377,16 @@ export function StaffAppointmentsSection() {
                           <button type="button" className="button" disabled={isSaving}
                             onClick={() => beginAction(appointment.id, 'complete')}>
                             Praca zakończona
+                          </button>
+                        </div>
+                      )}
+
+                      {appointment.status === 'COMPLETED' && appointment.requesterType === 'CLIENT' && (
+                        <div className="appointment-card-actions actions">
+                          <button type="button" className="button secondary"
+                            disabled={downloadingInvoiceId === appointment.id}
+                            onClick={() => void downloadInvoice(appointment)}>
+                            {downloadingInvoiceId === appointment.id ? 'Pobieranie…' : 'Pobierz fakturę'}
                           </button>
                         </div>
                       )}

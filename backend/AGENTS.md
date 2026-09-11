@@ -162,7 +162,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Kwoty pieniężne przechowuj i obliczaj w `BigDecimal` oraz odpowiednim typie
   `numeric` w PostgreSQL; ustal skalę, walutę i zaokrąglenia z modelem rozliczeń.
 - Faktura musi mieć powiązanie pozwalające pokazać udokumentowane naprawy właściwego
-  pojazdu i klienta. Nie generuj historii wykonanych napraw ze zgłoszeń oczekujących.
+  pojazdu i klienta. Klient pobiera PDF tylko dla własnego pojazdu i zakończonego zgłoszenia,
+  a mechanik lub administrator może pobrać PDF zakończonego zgłoszenia klienta z kontem
+  przez endpoint personelu. Nie generuj historii wykonanych napraw ze zgłoszeń oczekujących.
 - Zapis zakończenia naprawy przechowuje opis prac oraz pozycje robocizny i części.
   Backend wylicza sumę brutto z pozycji, a prosty PDF faktury wyszczególnia te pozycje oraz pokazuje wartości netto i brutto.
   Nie dodawaj jeszcze korekt, płatności online ani pełnej integracji księgowej bez osobnego wymagania.
