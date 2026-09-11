@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router-dom'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
 import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
 import { VehicleForm } from '../../vehicles/components/VehicleForm'
@@ -151,20 +152,18 @@ export function ClientAppointmentForm() {
         {vehicles && vehicles.length > 0 && (
           <div className="form-field">
             <label htmlFor="appointment-vehicle">Wybierz pojazd</label>
-            <select id="appointment-vehicle" value={selectedVehicleId} required
-              aria-invalid={Boolean(fieldErrors.vehicleId)}
-              aria-describedby={fieldErrors.vehicleId ? 'appointment-vehicle-error' : undefined}
-              onChange={(event) => {
-                setSelectedVehicleId(event.target.value)
+            <CustomSelect id="appointment-vehicle" value={selectedVehicleId}
+              invalid={Boolean(fieldErrors.vehicleId)}
+              describedBy={fieldErrors.vehicleId ? 'appointment-vehicle-error' : undefined}
+              options={vehicles.map((vehicle) => ({
+                value: String(vehicle.id),
+                label: `${vehicle.make} ${vehicle.model} · ${vehicle.registrationNumber}`,
+              }))}
+              onChange={(value) => {
+                setSelectedVehicleId(value)
                 setError(null)
                 setFieldErrors((current) => ({ ...current, vehicleId: '' }))
-              }}>
-              {vehicles.map((vehicle) => (
-                <option key={vehicle.id} value={vehicle.id}>
-                  {vehicle.make} {vehicle.model} · {vehicle.registrationNumber}
-                </option>
-              ))}
-            </select>
+              }} />
             {fieldErrors.vehicleId && (
               <small id="appointment-vehicle-error" className="field-error">{fieldErrors.vehicleId}</small>
             )}

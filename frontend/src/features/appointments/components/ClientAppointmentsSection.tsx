@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
 import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
@@ -183,18 +184,18 @@ export function ClientAppointmentsSection() {
             <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie wizyt">
               <label className="form-field compact-field">
                 <span>Status</span>
-                <select value={statusFilter} onChange={(event) => changeStatusFilter(event.target.value as StatusFilter)}>
-                  {statusFilterOptions.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
+                <CustomSelect id="client-appointment-status-filter" value={statusFilter}
+                  options={statusFilterOptions}
+                  onChange={(value) => changeStatusFilter(value as StatusFilter)} />
               </label>
               <label className="form-field compact-field">
                 <span>Sortowanie po dacie</span>
-                <select value={dateSortDirection} onChange={(event) => changeDateSortDirection(event.target.value as DateSortDirection)}>
-                  <option value="DESC">Od najnowszych</option>
-                  <option value="ASC">Od najstarszych</option>
-                </select>
+                <CustomSelect id="client-appointment-date-sort" value={dateSortDirection}
+                  options={[
+                    { value: 'DESC', label: 'Od najnowszych' },
+                    { value: 'ASC', label: 'Od najstarszych' },
+                  ]}
+                  onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
               </label>
               <p className="appointment-list-summary">
                 Pokazuję {firstVisibleIndex}–{lastVisibleIndex} z {totalElements} zgłoszeń

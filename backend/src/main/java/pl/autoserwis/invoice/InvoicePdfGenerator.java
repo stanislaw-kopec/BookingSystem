@@ -176,7 +176,7 @@ public class InvoicePdfGenerator {
         summary.addCell(summaryLabelCell("VAT 23%"));
         summary.addCell(summaryValueCell(money(vat)));
         summary.addCell(summaryLabelCell("Razem brutto"));
-        summary.addCell(summaryValueCell(money(gross), TITLE_FONT));
+        summary.addCell(summaryValueCell(money(gross)));
         document.add(summary);
 
         Paragraph payment = new Paragraph("Sposób płatności: płatność na miejscu przy odbiorze auta. Status: zapłacono przy odbiorze.", NORMAL_FONT);

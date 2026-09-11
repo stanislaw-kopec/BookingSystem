@@ -8,10 +8,11 @@
 }
 .vehicle-choice { margin-bottom: 28px; }
 .vehicle-choice > .form-field { max-width: 620px; }
+.vehicle-choice .vehicle-form { margin-top: 24px; }
 .appointment-form, .staff-decision-form, .guest-success {
   padding: 24px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--surface);
 }
 .appointment-step + .appointment-step { margin-top: 32px; padding-top: 28px; border-top: 1px solid var(--border); }
@@ -25,7 +26,7 @@
 .calendar-heading h3 { margin-bottom: 2px; }
 .calendar-navigation { display: flex; align-items: center; gap: 10px; font-size: 0.86rem; color: var(--muted); }
 .calendar-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
-.calendar-day { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 7px; background: var(--background); }
+.calendar-day { min-width: 0; padding: 12px; border: 1px solid var(--border); border-radius: 14px; background: var(--background); }
 .calendar-day h4 { min-height: 48px; margin: 0 0 10px; font-size: 0.92rem; text-transform: capitalize; }
 .calendar-day-choice {
   display: grid;
@@ -37,16 +38,16 @@
   font-size: 0.8rem;
   text-align: left;
   border: 1px solid var(--border);
-  border-radius: 5px;
+  border-radius: 10px;
   background: var(--surface);
 }
 .calendar-day-choice span { display: block; color: inherit; font-size: 0.78rem; font-weight: 400; }
 .calendar-day-choice:hover:not(:disabled) { border-color: var(--primary); }
 .calendar-day-choice.selected { color: #fff; border-color: var(--primary); background: var(--primary); font-weight: 700; }
-.calendar-day-choice:disabled { color: var(--muted); background: #edf0f4; }
+.calendar-day-choice:disabled { color: var(--muted); background: #2b2927; }
 .calendar-error { display: block; margin-top: 10px; }
 .calendar-legend { margin-top: 8px; font-size: 0.82rem; }
-.selected-day { margin-top: 14px; padding: 10px 12px; border-left: 3px solid var(--primary); background: #edf5ff; }
+.selected-day { margin-top: 14px; padding: 10px 12px; border-left: 3px solid var(--primary); background: var(--info-soft); }
 .appointment-submit { margin-top: 24px; }
 .appointment-list-controls {
   display: flex;
@@ -56,30 +57,67 @@
   margin-bottom: 18px;
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--surface);
 }
 .appointment-list-controls .compact-field { max-width: 240px; margin: 0; }
 .appointment-list-summary { margin: 0 0 8px auto; color: var(--muted); font-size: 0.9rem; }
 .appointment-list { display: grid; gap: 18px; margin: 0; padding: 0; list-style: none; }
-.appointment-card { overflow: hidden; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.appointment-card { overflow: hidden; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
 .appointment-card-content { padding: 22px; }
 .appointment-card-heading { margin-bottom: 20px; }
 .appointment-reference { margin-bottom: 4px; color: var(--muted); font-size: 0.8rem; overflow-wrap: anywhere; }
-.appointment-status { flex: 0 0 auto; padding: 4px 9px; border: 1px solid; border-radius: 999px; font-size: 0.8rem; font-weight: 700; }
-.status-pending { color: #75530b; border-color: #dfbd66; background: #fff8df; }
-.status-time_proposed { color: #285584; border-color: #8fb6df; background: #edf6ff; }
-.status-confirmed { color: var(--success); border-color: #8bc4a3; background: #effaf3; }
-.status-completed { color: #166534; background: #dcfce7; }
-.status-ready_for_pickup { color: #7b3f00; border-color: #e1a85d; background: #fff4df; }
-.status-cancelled { color: #62545c; border-color: #c8bac2; background: #f7f2f5; }
-.status-rejected { color: var(--danger); border-color: #e4a5a5; background: #fff4f4; }
+.appointment-status {
+  flex: 0 0 auto;
+  padding: 5px 11px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.01em;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+}
+.status-pending {
+  color: #fff6cf;
+  border-color: #f6c90e;
+  background: #5b4108;
+}
+.status-time_proposed {
+  color: #edf7ff;
+  border-color: #7ab7ff;
+  background: #123d63;
+}
+.status-confirmed {
+  color: #edfff4;
+  border-color: #62d48f;
+  background: #175235;
+}
+.status-ready_for_pickup {
+  color: #1f1600;
+  border-color: #ffe27a;
+  background: #f6c90e;
+}
+.status-completed {
+  color: #071a0f;
+  border-color: #a8f5c3;
+  background: #62d48f;
+}
+.status-cancelled {
+  color: #f8edf3;
+  border-color: #c8bac2;
+  background: #463641;
+}
+.status-rejected {
+  color: #fff2ef;
+  border-color: #ff8a80;
+  background: #7d201b;
+}
 .appointment-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 24px; margin: 0; }
 .appointment-facts div { min-width: 0; }
 .appointment-facts dt { color: var(--muted); font-size: 0.83rem; }
 .appointment-facts dd { margin: 3px 0 0; font-weight: 600; overflow-wrap: anywhere; white-space: pre-wrap; }
 .appointment-facts .appointment-description { font-weight: 400; }
-.appointment-facts .proposed-time { padding: 10px; border-radius: 6px; background: #edf5ff; }
+.appointment-facts .proposed-time { padding: 10px; border-radius: 12px; background: var(--info-soft); }
 .appointment-card-actions { padding: 16px 22px; border-top: 1px solid var(--border); background: var(--background); }
 .appointment-card-actions p { margin-bottom: 10px; }
 .appointment-pagination {
@@ -90,7 +128,7 @@
   margin-top: 22px;
 }
 .appointment-pagination span { color: var(--muted); font-weight: 700; }
-.danger-button { color: var(--danger); border-color: #e4a5a5; }
+.danger-button { color: var(--danger); border-color: rgb(255 107 95 / 46%); }
 .requester-type { padding: 6px 22px; color: var(--muted); font-size: 0.8rem; border-bottom: 1px solid var(--border); background: var(--background); }
 .staff-decision-form { margin: 0 22px 22px; }
 .staff-decision-form .availability-calendar { margin-bottom: 20px; }
@@ -108,7 +146,7 @@
   margin-bottom: 20px;
   padding: 16px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--surface);
 }
 .staff-schedule-toolbar h3 { margin: 0 0 2px; text-align: center; }
@@ -118,7 +156,7 @@
   min-width: 0;
   padding: 14px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   background: var(--surface);
 }
 .staff-schedule-day-header {
@@ -137,8 +175,8 @@
   font-size: 0.75rem;
   font-weight: 700;
 }
-.daily-capacity.open { color: var(--success); border-color: #8bc4a3; background: #effaf3; }
-.daily-capacity.full { color: var(--danger); border-color: #e4a5a5; background: #fff4f4; }
+.daily-capacity.open { color: #edfff4; border-color: #62d48f; background: #175235; }
+.daily-capacity.full { color: #fff2ef; border-color: #ff8a80; background: #7d201b; }
 .free-day { color: var(--muted); font-size: 0.84rem; }
 .staff-schedule-card-list { display: grid; gap: 8px; }
 .staff-schedule-card {
@@ -149,11 +187,11 @@
   text-decoration: none;
   border: 1px solid var(--border);
   border-left-width: 4px;
-  border-radius: 7px;
+  border-radius: 14px;
   background: var(--surface);
 }
-.staff-schedule-card:hover { border-color: var(--primary); box-shadow: 0 8px 18px rgb(17 24 39 / 8%); }
-.staff-schedule-card:focus-visible { outline: 3px solid rgb(37 99 235 / 30%); outline-offset: 2px; }
+.staff-schedule-card:hover { border-color: var(--primary); box-shadow: var(--shadow-soft); }
+.staff-schedule-card:focus-visible { outline: 3px solid rgb(246 201 14 / 45%); outline-offset: 2px; }
 .staff-schedule-card .appointment-status { justify-self: start; font-size: 0.72rem; }
 .staff-schedule-card p { font-size: 0.86rem; line-height: 1.35; }
 .staff-schedule-card-header {
@@ -171,9 +209,13 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
 }
-.schedule-status-pending { border-left-color: #dfbd66; }
-.schedule-status-time_proposed { border-left-color: #8fb6df; }
-.schedule-status-confirmed { border-left-color: #8bc4a3; }
+.schedule-status-pending { border-left-color: #f6c90e; }
+.schedule-status-time_proposed { border-left-color: #7ab7ff; }
+.schedule-status-confirmed { border-left-color: #62d48f; }
+.schedule-status-ready_for_pickup { border-left-color: #ffe27a; }
+.schedule-status-completed { border-left-color: #a8f5c3; }
+.schedule-status-cancelled { border-left-color: #c8bac2; }
+.schedule-status-rejected { border-left-color: #ff8a80; }
 .staff-schedule-note { margin-top: 12px; font-size: 0.86rem; }
 .staff-appointment-details-section { max-width: 1040px; }
 .staff-appointment-details-section .back-link { display: inline-block; margin-bottom: 18px; }
@@ -182,7 +224,7 @@
 .guest-success { max-width: 720px; }
 .guest-success .appointment-facts { margin: 22px 0; }
 .guest-success > .button { margin-top: 22px; }
-.guest-account-hint { margin-top: 14px; padding: 10px 12px; border-left: 3px solid var(--primary); background: #edf5ff; }
+.guest-account-hint { margin-top: 14px; padding: 10px 12px; border-left: 3px solid var(--primary); background: var(--info-soft); }
 
 @media (max-width: 800px) {
   .calendar-days { grid-template-columns: 1fr; }

@@ -6,7 +6,7 @@
 .category-card, .editor-form {
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 24px;
   overflow-wrap: anywhere;
 }
@@ -47,7 +47,7 @@
 .management-row h4 { margin: 0; }
 .delete-confirmation {
   border: 1px solid var(--danger);
-  border-radius: 8px;
+  border-radius: 16px;
   padding: 20px;
   margin: 16px 0;
 }

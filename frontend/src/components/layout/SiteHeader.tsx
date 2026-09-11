@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useRef } from 'react'
 import type { MouseEvent } from 'react'
 import type { CurrentUser } from '../../features/auth/types'
 import { WorkshopLogo } from '../../features/workshop/components/WorkshopLogo'
@@ -20,6 +21,28 @@ function accountLinkClassName({ isActive }: { isActive: boolean }) {
 }
 
 export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdminister, canViewProfile, onLogin, onLogout }: Props) {
+  const accountMenuRef = useRef<HTMLDetailsElement | null>(null)
+
+  useEffect(() => {
+    function closeOnOutsidePointer(event: PointerEvent) {
+      const menu = accountMenuRef.current
+      if (!menu?.open) return
+      if (event.target instanceof Node && menu.contains(event.target)) return
+      menu.removeAttribute('open')
+    }
+
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') accountMenuRef.current?.removeAttribute('open')
+    }
+
+    document.addEventListener('pointerdown', closeOnOutsidePointer)
+    document.addEventListener('keydown', closeOnEscape)
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer)
+      document.removeEventListener('keydown', closeOnEscape)
+    }
+  }, [])
+
   function closeAccountMenu(event: MouseEvent<HTMLAnchorElement>) {
     event.currentTarget.closest('details')?.removeAttribute('open')
   }
@@ -42,7 +65,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdmini
       </nav>
       <div className="account-menu">
         {user ? (
-          <details className="account-dropdown">
+          <details className="account-dropdown" ref={accountMenuRef}>
             <summary className="account-trigger" aria-label={`Menu konta użytkownika ${user.username}`}>
               <span className="account-trigger-text">
                 <span className="account-trigger-label">{accountLabel}</span>
@@ -92,7 +115,7 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdmini
                   )}
                 </>
               )}
-              <button type="button" className="account-dropdown-item logout" disabled={isLoggingOut} onClick={onLogout}>
+              <button type="button" className="account-dropdown-item logout" disabled={isLoggingOut} onClick={() => { accountMenuRef.current?.removeAttribute('open'); onLogout() }}>
                 {isLoggingOut ? 'Wylogowywanie…' : 'Wyloguj'}
               </button>
             </div>

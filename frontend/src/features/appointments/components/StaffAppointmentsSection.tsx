@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, errorMessage } from '../../../api/apiClient'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
 import * as appointmentsApi from '../api/appointmentsApi'
 import { formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
@@ -286,18 +287,18 @@ export function StaffAppointmentsSection() {
           <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie zgłoszeń">
             <label className="form-field compact-field">
               <span>Status</span>
-              <select value={statusFilter} onChange={(event) => changeStatusFilter(event.target.value as StatusFilter)}>
-                {statusFilterOptions.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+              <CustomSelect id="staff-appointment-status-filter" value={statusFilter}
+                options={statusFilterOptions}
+                onChange={(value) => changeStatusFilter(value as StatusFilter)} />
             </label>
             <label className="form-field compact-field">
               <span>Sortowanie po dacie</span>
-              <select value={dateSortDirection} onChange={(event) => changeDateSortDirection(event.target.value as DateSortDirection)}>
-                <option value="DESC">Od najnowszych</option>
-                <option value="ASC">Od najstarszych</option>
-              </select>
+              <CustomSelect id="staff-appointment-date-sort" value={dateSortDirection}
+                options={[
+                  { value: 'DESC', label: 'Od najnowszych' },
+                  { value: 'ASC', label: 'Od najstarszych' },
+                ]}
+                onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
             </label>
             <p className="appointment-list-summary">
               Pokazuję {firstVisibleIndex}–{lastVisibleIndex} z {totalElements} zgłoszeń
@@ -449,10 +450,12 @@ export function StaffAppointmentsSection() {
                                         <div className="repair-item-row" key={index}>
                                           <label>
                                             <span>Typ</span>
-                                            <select value={item.type} onChange={(event) => changeRepairItem(index, { type: event.target.value as RepairItemType })}>
-                                              <option value="LABOR">Robocizna</option>
-                                              <option value="PART">Część</option>
-                                            </select>
+                                            <CustomSelect id={`repair-item-type-${appointment.id}-${index}`} value={item.type}
+                                              options={[
+                                                { value: 'LABOR', label: 'Robocizna' },
+                                                { value: 'PART', label: 'Część' },
+                                              ]}
+                                              onChange={(value) => changeRepairItem(index, { type: value as RepairItemType })} />
                                           </label>
                                           <label>
                                             <span>Nazwa</span>

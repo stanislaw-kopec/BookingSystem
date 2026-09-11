@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import { CustomSelect } from '../../../components/ui/CustomSelect'
 import type { ServiceCategory, ServiceInput, WorkshopService } from '../types'
 
 interface Props {
@@ -27,11 +28,11 @@ export function ServiceForm({ service, categories, disabled, fieldErrors, onSave
       {categories.length === 0 && <p className="muted">Najpierw dodaj kategorię.</p>}
       <fieldset disabled={disabled || categories.length === 0}>
         <label htmlFor="service-category">Kategoria usługi</label>
-        <select id="service-category" value={categoryId} onChange={(event) => setCategoryId(event.target.value)}
-          required aria-invalid={Boolean(fieldErrors.categoryId)} aria-describedby="service-category-error">
-          <option value="">Wybierz kategorię</option>
-          {categories.map((category) => <option key={category.id} value={category.id}>{category.name}</option>)}
-        </select>
+        <CustomSelect id="service-category" value={categoryId}
+          invalid={Boolean(fieldErrors.categoryId)} describedBy="service-category-error"
+          placeholder="Wybierz kategorię"
+          options={categories.map((category) => ({ value: String(category.id), label: category.name }))}
+          onChange={setCategoryId} />
         <span id="service-category-error" className="field-error">{fieldErrors.categoryId}</span>
         <label htmlFor="service-name">Nazwa usługi</label>
         <input id="service-name" value={name} onChange={(event) => setName(event.target.value)}
