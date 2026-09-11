@@ -384,6 +384,19 @@ ostatnich sposobów kontaktu musi być podany. Opis ma od 10 do 2000 znaków.
 Kalendarz wizyt wybiera dzień przyjęcia auta, a pierwsza wersja warsztatu ma limit
 4 aktywnych zgłoszeń na jeden dzień roboczy.
 
+## Automatyczne sprawdzanie w GitHub Actions
+
+Repozytorium ma workflow CI w `.github/workflows/ci.yml`. GitHub uruchamia go po
+`push` na gałąź `main` oraz przy pull requestach do `main`. Workflow składa się
+z trzech niezależnych zadań:
+
+- backend: ustawia Javę 25 i uruchamia `./mvnw test` w katalogu `backend`,
+- frontend: ustawia Node.js 24, wykonuje `npm ci`, `npm run lint` i `npm run build`,
+- Docker Compose: sprawdza poprawność `compose.yaml` poleceniem `docker compose config --quiet`.
+
+Testy backendu korzystają z Testcontainers, więc na runnerze używany jest Docker
+dostępny w środowisku GitHub Actions.
+
 ## Nauka i sprawdzanie zmian
 
 [Przewodnik krok po kroku po katalogu usług](docs/service-catalog-walkthrough.md)

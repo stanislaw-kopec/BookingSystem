@@ -24,14 +24,14 @@ Dlaczego warto:
 - łatwiej opowiedzieć o kontraktach DTO,
 - projekt wygląda bardziej profesjonalnie.
 
-## Priorytet 2: GitHub Actions / CI
+## Priorytet 2: GitHub Actions / CI — wdrożone
 
-Projekt ma testy backendowe i build frontendu, ale brakuje automatycznego sprawdzania po pushu.
+Projekt ma testy backendowe, build frontendu oraz workflow GitHub Actions uruchamiany po pushu i przy pull requestach do `main`.
 
-Zakres minimalny:
+Obecny zakres:
 
-- backend: `mvn test`,
-- frontend: `npm ci`, `npm run lint`, `npm run build`,
+- backend: Java 25 i `./mvnw test`,
+- frontend: Node.js 24, `npm ci`, `npm run lint`, `npm run build`,
 - konfiguracja Docker Compose: `docker compose config --quiet`.
 
 Dlaczego warto:
