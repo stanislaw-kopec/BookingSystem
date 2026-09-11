@@ -10,6 +10,8 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import pl.autoserwis.exception.ApiErrorCode;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -49,7 +51,7 @@ public class SecurityConfig {
                 .loginProcessingUrl("/api/auth/login")
                 .successHandler((request, response, authentication) -> response.setStatus(204))
                 .failureHandler((request, response, exception) ->
-                    writeError(response, 401, "Nieprawidłowy login lub hasło."))
+                    writeError(response, 401, ApiErrorCode.UNAUTHENTICATED, "Invalid username or password."))
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
@@ -59,17 +61,20 @@ public class SecurityConfig {
                 .permitAll())
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint((request, response, exception) ->
-                    writeError(response, 401, "Zaloguj się, aby wykonać tę operację."))
+                    writeError(response, 401, ApiErrorCode.UNAUTHENTICATED, "Authentication is required."))
                 .accessDeniedHandler((request, response, exception) ->
-                    writeError(response, 403, "Brak uprawnień lub nieprawidłowy token formularza. Odśwież stronę.")))
+                    writeError(response, 403, ApiErrorCode.ACCESS_DENIED, "Access denied or invalid CSRF token.")))
             .build();
     }
 
-    private static void writeError(HttpServletResponse response, int status, String message) throws IOException {
+    private static void writeError(HttpServletResponse response, int status,
+            ApiErrorCode code, String message) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         // Messages passed here are fixed server strings, never user input.
-        response.getWriter().write("{\"status\":" + status + ",\"message\":\"" + message + "\",\"fieldErrors\":{}}");
+        response.getWriter().write("{\"status\":" + status
+            + ",\"code\":\"" + code.name()
+            + "\",\"message\":\"" + message + "\",\"fieldErrors\":{}}");
     }
 }

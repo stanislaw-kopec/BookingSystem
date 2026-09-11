@@ -15,7 +15,7 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) {
         var user = users.findByUsernameIgnoreCase(username.strip())
-            .orElseThrow(() -> new UsernameNotFoundException("Nieprawidłowy login lub hasło."));
+            .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password."));
         return User.withUsername(user.getUsername())
             .password(user.getPasswordHash())
             .disabled(!user.isEnabled())

@@ -85,7 +85,8 @@ class VehicleIntegrationTest {
         mockMvc.perform(get("/api/vehicles/{id}", vehicle.getId())
                 .with(user(other.getUsername()).roles("CLIENT")))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.message").value("Nie znaleziono pojazdu."));
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("Vehicle not found."));
     }
 
     @Test

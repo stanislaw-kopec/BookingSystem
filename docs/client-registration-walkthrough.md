@@ -107,14 +107,16 @@ Backend zwraca wspólny obiekt błędu z mapą `fieldErrors`, na przykład:
 ```json
 {
   "status": 409,
-  "message": "Nie można utworzyć konta.",
+  "code": "REGISTRATION_CONFLICT",
+  "message": "Account cannot be created.",
   "fieldErrors": {
-    "email": "Konto z tym adresem e-mail już istnieje."
+    "email": "An account with this email already exists."
   }
 }
 ```
 
-`RegistrationForm` przypisuje wiadomość do właściwego pola przez
+`code` jest stabilny dla kodu frontendu, a tekst `message` można traktować jako
+techniczny fallback. `RegistrationForm` przypisuje wiadomość do właściwego pola przez
 `aria-describedby`. Czytnik ekranu może połączyć pole z błędem,
 a `aria-invalid` informuje, które pole wymaga poprawy. Ogólny komunikat
 pozostaje nad przyciskiem wysyłania.
@@ -138,4 +140,3 @@ Najłatwiejsza kolejność:
 Małe ćwiczenie: wpisz dwa różne hasła i sprawdź błąd generowany przez Reacta.
 Następnie spróbuj ponownie z zajętym loginem `client`. Drugi błąd pochodzi
 z backendu, mimo że oba są pokazane przez ten sam formularz.
-

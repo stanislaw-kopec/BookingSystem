@@ -52,11 +52,11 @@ public class ClientProfileService {
     private void validateCompany(ClientProfileRequest request) {
         if (!request.hasCompanyData()) return;
         Map<String, String> errors = new LinkedHashMap<>();
-        requiredCompany(errors, "companyName", request.companyName(), "Podaj nazwę firmy.");
-        requiredCompany(errors, "taxId", request.taxId(), "Podaj NIP.");
-        requiredCompany(errors, "billingAddressLine", request.billingAddressLine(), "Podaj adres rozliczeniowy.");
-        requiredCompany(errors, "billingPostalCode", request.billingPostalCode(), "Podaj kod pocztowy.");
-        requiredCompany(errors, "billingCity", request.billingCity(), "Podaj miejscowość.");
+        requiredCompany(errors, "companyName", request.companyName(), "Enter a company name.");
+        requiredCompany(errors, "taxId", request.taxId(), "Enter a tax ID.");
+        requiredCompany(errors, "billingAddressLine", request.billingAddressLine(), "Enter a billing address.");
+        requiredCompany(errors, "billingPostalCode", request.billingPostalCode(), "Enter a postal code.");
+        requiredCompany(errors, "billingCity", request.billingCity(), "Enter a city.");
         if (!errors.isEmpty()) throw new ProfileValidationException(errors);
     }
 
@@ -66,7 +66,7 @@ public class ClientProfileService {
 
     private AppUser user(String username) {
         return users.findByUsernameIgnoreCase(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika."));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 
     private String required(String value) {

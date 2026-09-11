@@ -330,7 +330,9 @@ uzupełnia kontrolę uprawnień backendu.
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
 `Location`, aktualizacja 200, a usunięcie 204. Błędy mają wspólny kształt
-`{ "status": 400, "message": "...", "fieldErrors": { "name": "..." } }`.
+`{ "status": 400, "code": "VALIDATION_FAILED", "message": "...", "fieldErrors": { "name": "..." } }`.
+Pole `code` jest stabilnym identyfikatorem technicznym, a `message` jest angielskim
+komunikatem technicznym. Frontend może tłumaczyć znane kody na język interfejsu.
 Nieprawidłowe dane to 400, brak zasobu 404, a duplikat lub niepusta kategoria 409.
 Brak logowania przy poprawnym tokenie CSRF zwraca 401; niewłaściwa rola
 lub brak albo nieprawidłowy token CSRF — 403.

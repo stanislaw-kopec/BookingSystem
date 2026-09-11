@@ -127,12 +127,12 @@ Docelowy kierunek:
 - frontend powinien mapować znane kody błędów na tekst w aktualnym języku użytkownika,
 - nie należy tłumaczyć nazw klas, pól DTO, endpointów ani enumów.
 
-Zakres pierwszego etapu:
+Zakres pierwszego etapu, który warto mieć przed końcowym porządkowaniem:
 
-- rozszerzyć `ApiError` o pole `code`,
-- dodać enum albo klasę ze stałymi kodów błędów,
-- zacząć od najczęstszych błędów: walidacja, brak dostępu, brak zasobu, konflikt terminu, konflikt konta, konflikt pojazdu,
-- zachować kompatybilność z obecnym frontendem, dopóki wszystkie miejsca nie zostaną przeniesione.
+- utrzymać `ApiError.code` jako stabilny kontrakt odpowiedzi,
+- rozwijać enum kodów wraz z kolejnymi wyjątkami domenowymi,
+- mapować znane kody na teksty interfejsu po stronie frontendu,
+- zachować obsługę `message` jako fallback podczas dalszej migracji i18n.
 
 ### Faktury PDF i treści biznesowe
 

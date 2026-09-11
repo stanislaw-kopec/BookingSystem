@@ -8,15 +8,15 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record ScheduleDayOverrideRequest(
-    @NotNull(message = "Podaj dzień wyjątku.")
+    @NotNull(message = "Enter an override date.")
     LocalDate date,
 
-    @Min(value = 0, message = "Liczba miejsc nie może być ujemna.")
-    @Max(value = 20, message = "Liczba miejsc może wynosić maksymalnie 20.")
+    @Min(value = 0, message = "Capacity cannot be negative.")
+    @Max(value = 20, message = "Capacity can be at most 20.")
     int capacity,
 
     boolean closed,
 
-    @Size(max = 200, message = "Notatka może mieć maksymalnie 200 znaków.")
+    @Size(max = 200, message = "Note can have at most 200 characters.")
     String note
 ) {}

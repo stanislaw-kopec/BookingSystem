@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record ProposeAppointmentTimeRequest(
-    @NotNull(message = "Wybierz proponowany dzień.")
+    @NotNull(message = "Select a proposed day.")
     LocalDate visitDate,
 
-    @Size(max = 500, message = "Wiadomość może mieć maksymalnie 500 znaków.")
+    @Size(max = 500, message = "Message can have at most 500 characters.")
     String message
 ) {}

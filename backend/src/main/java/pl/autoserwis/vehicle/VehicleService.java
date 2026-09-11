@@ -54,13 +54,13 @@ public class VehicleService {
     public VehicleResponse getCurrentClientVehicle(String username, Long vehicleId) {
         AppUser owner = user(username);
         return response(vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu.")));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found.")));
     }
 
     public List<RepairHistoryEntryResponse> getCurrentClientVehicleRepairHistory(String username, Long vehicleId) {
         AppUser owner = user(username);
         vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu."));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         return appointments.findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(
                 vehicleId, owner.getId(), AppointmentStatus.COMPLETED).stream()
             .map(this::repairHistoryEntry)
@@ -70,12 +70,12 @@ public class VehicleService {
     public InvoiceFile getCurrentClientRepairInvoice(String username, Long vehicleId, Long appointmentId) {
         AppUser owner = user(username);
         Vehicle vehicle = vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu."));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         AppointmentRequest appointment = appointments.findByIdAndVehicle_IdAndClient_IdAndStatus(
                 appointmentId, vehicleId, owner.getId(), AppointmentStatus.COMPLETED)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zakończonej naprawy."));
+            .orElseThrow(() -> new ResourceNotFoundException("Completed repair not found."));
         ClientProfile profile = profiles.findByUser_Id(owner.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono profilu klienta."));
+            .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
         return invoicePdfGenerator.generate(appointment, vehicle, profile);
     }
 
@@ -89,13 +89,13 @@ public class VehicleService {
 
         if (registrationNumber.length() < 2) {
             throw new VehicleValidationException(Map.of("registrationNumber",
-                "Numer rejestracyjny musi mieć co najmniej 2 znaki."));
+                "Registration number must have at least 2 characters."));
         }
         if (vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCase(owner.getId(), registrationNumber)) {
-            throw new VehicleConflictException("registrationNumber", "Masz już pojazd z tym numerem rejestracyjnym.");
+            throw new VehicleConflictException("registrationNumber", "You already have a vehicle with this registration number.");
         }
         if (vin != null && vehicles.existsByOwner_IdAndVinIgnoreCase(owner.getId(), vin)) {
-            throw new VehicleConflictException("vin", "Masz już pojazd z tym numerem VIN.");
+            throw new VehicleConflictException("vin", "You already have a vehicle with this VIN.");
         }
 
         Vehicle vehicle = new Vehicle(owner, request.make().strip(), request.model().strip(),
@@ -107,13 +107,13 @@ public class VehicleService {
         int latestAllowedYear = Year.now().getValue() + 1;
         if (productionYear > latestAllowedYear) {
             throw new VehicleValidationException(Map.of("productionYear",
-                "Rok produkcji nie może być późniejszy niż " + latestAllowedYear + "."));
+                "Production year cannot be later than " + latestAllowedYear + "."));
         }
     }
 
     private AppUser user(String username) {
         return users.findByUsernameIgnoreCase(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika."));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 
     private String optionalVin(String value) {

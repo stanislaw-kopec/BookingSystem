@@ -1,13 +1,40 @@
 export class ApiError extends Error {
   readonly status: number
+  readonly code: string | null
   readonly fieldErrors: Record<string, string>
 
-  constructor(status: number, message: string, fieldErrors: Record<string, string> = {}) {
+  constructor(
+    status: number,
+    message: string,
+    fieldErrors: Record<string, string> = {},
+    code: string | null = null,
+  ) {
     super(message)
     this.name = 'ApiError'
     this.status = status
+    this.code = code
     this.fieldErrors = fieldErrors
   }
+}
+
+const defaultErrorMessages: Record<string, string> = {
+  ACCESS_DENIED: 'Nie masz uprawnień do wykonania tej operacji.',
+  APPOINTMENT_CONFLICT: 'Nie można wykonać tej operacji dla aktualnego stanu wizyty.',
+  APPOINTMENT_DAY_FULL: 'Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.',
+  APPOINTMENT_VALIDATION_FAILED: 'Sprawdź dane zgłoszenia wizyty.',
+  CSRF_TOKEN_UNAVAILABLE: 'Nie udało się przygotować formularza. Odśwież stronę.',
+  DATA_INTEGRITY_CONFLICT: 'Te dane są już używane albo naruszają ograniczenia systemu.',
+  INVOICE_GENERATION_FAILED: 'Nie udało się wygenerować faktury. Spróbuj ponownie.',
+  MALFORMED_REQUEST: 'Serwer nie mógł odczytać wysłanych danych.',
+  PROFILE_VALIDATION_FAILED: 'Sprawdź dane profilu.',
+  REGISTRATION_CONFLICT: 'Konto z takimi danymi już istnieje.',
+  REGISTRATION_VALIDATION_FAILED: 'Sprawdź dane rejestracji.',
+  RESOURCE_CONFLICT: 'Nie można zapisać zmian, ponieważ zasób jest w konflikcie.',
+  RESOURCE_NOT_FOUND: 'Nie znaleziono zasobu albo nie masz do niego dostępu.',
+  UNAUTHENTICATED: 'Zaloguj się, aby wykonać tę operację.',
+  VALIDATION_FAILED: 'Sprawdź poprawność formularza.',
+  VEHICLE_CONFLICT: 'Masz już pojazd z takimi danymi.',
+  VEHICLE_VALIDATION_FAILED: 'Sprawdź dane pojazdu.',
 }
 
 export function isRecord(value: unknown): value is Record<string, unknown> {
@@ -25,10 +52,13 @@ async function readResponse(response: Response): Promise<unknown> {
         if (typeof value === 'string') fields[key] = value
       }
     }
+    const code = isRecord(payload) && typeof payload.code === 'string'
+      ? payload.code
+      : null
     const message = isRecord(payload) && typeof payload.message === 'string'
       ? payload.message
       : 'Nie udało się wykonać operacji. Spróbuj ponownie.'
-    throw new ApiError(response.status, message, fields)
+    throw new ApiError(response.status, message, fields, code)
   }
   return payload
 }
@@ -44,7 +74,7 @@ export async function apiRequest(path: string, options: RequestInit = {}): Promi
       cache: 'no-store',
     }))
     if (!isRecord(csrf) || typeof csrf.headerName !== 'string' || typeof csrf.token !== 'string') {
-      throw new ApiError(502, 'Nie udało się przygotować formularza. Odśwież stronę.')
+      throw new ApiError(502, 'Nie udało się przygotować formularza. Odśwież stronę.', {}, 'CSRF_TOKEN_UNAVAILABLE')
     }
     headers.set(csrf.headerName, csrf.token)
   }
@@ -58,6 +88,9 @@ export async function apiRequest(path: string, options: RequestInit = {}): Promi
 }
 
 export function errorMessage(error: unknown): string {
+  if (error instanceof ApiError && error.code !== null && error.code in defaultErrorMessages) {
+    return defaultErrorMessages[error.code]
+  }
   return error instanceof ApiError
     ? error.message
     : 'Nie udało się połączyć z serwerem. Spróbuj ponownie.'

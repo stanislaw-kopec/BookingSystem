@@ -24,78 +24,82 @@ public class GlobalExceptionHandler {
         Map<String, String> fields = new LinkedHashMap<>();
         exception.getBindingResult().getFieldErrors().forEach(error ->
             fields.putIfAbsent(error.getField(), error.getDefaultMessage()));
-        return ResponseEntity.badRequest().body(new ApiError(400, "Popraw dane formularza.", fields));
+        return ResponseEntity.badRequest().body(new ApiError(400, ApiErrorCode.VALIDATION_FAILED, fields));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     ResponseEntity<ApiError> invalidJson() {
-        return error(400, "Nieprawidłowy format danych.");
+        return error(400, ApiErrorCode.MALFORMED_REQUEST);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<ApiError> notFound(ResourceNotFoundException exception) {
-        return error(404, exception.getMessage());
+        return error(404, exception.getCode(), exception.getMessage());
     }
 
     @ExceptionHandler(ResourceConflictException.class)
     ResponseEntity<ApiError> conflict(ResourceConflictException exception) {
-        return error(409, exception.getMessage());
+        return error(409, exception.getCode(), exception.getMessage());
     }
 
     @ExceptionHandler(RegistrationValidationException.class)
     ResponseEntity<ApiError> registrationValidation(RegistrationValidationException exception) {
         return ResponseEntity.badRequest()
-            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(RegistrationConflictException.class)
     ResponseEntity<ApiError> registrationConflict(RegistrationConflictException exception) {
         return ResponseEntity.status(409)
-            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(409, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(ProfileValidationException.class)
     ResponseEntity<ApiError> profileValidation(ProfileValidationException exception) {
         return ResponseEntity.badRequest()
-            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(VehicleValidationException.class)
     ResponseEntity<ApiError> vehicleValidation(VehicleValidationException exception) {
         return ResponseEntity.badRequest()
-            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(VehicleConflictException.class)
     ResponseEntity<ApiError> vehicleConflict(VehicleConflictException exception) {
         return ResponseEntity.status(409)
-            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(409, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(AppointmentValidationException.class)
     ResponseEntity<ApiError> appointmentValidation(AppointmentValidationException exception) {
         return ResponseEntity.badRequest()
-            .body(new ApiError(400, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(AppointmentConflictException.class)
     ResponseEntity<ApiError> appointmentConflict(AppointmentConflictException exception) {
         return ResponseEntity.status(409)
-            .body(new ApiError(409, exception.getMessage(), exception.getFieldErrors()));
+            .body(new ApiError(409, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     ResponseEntity<ApiError> databaseConflict() {
         // Database constraints also protect concurrent writes.
-        return error(409, "Operacja powoduje konflikt z istniejącymi danymi. Odśwież widok i spróbuj ponownie.");
+        return error(409, ApiErrorCode.DATA_INTEGRITY_CONFLICT);
     }
 
     @ExceptionHandler(InvoiceGenerationException.class)
     ResponseEntity<ApiError> invoiceGeneration() {
-        return error(500, "Nie udało się wygenerować faktury PDF. Spróbuj ponownie później.");
+        return error(500, ApiErrorCode.INVOICE_GENERATION_FAILED);
     }
 
-    private ResponseEntity<ApiError> error(int status, String message) {
-        return ResponseEntity.status(status).body(new ApiError(status, message, Map.of()));
+    private ResponseEntity<ApiError> error(int status, ApiErrorCode code) {
+        return ResponseEntity.status(status).body(new ApiError(status, code, Map.of()));
+    }
+
+    private ResponseEntity<ApiError> error(int status, ApiErrorCode code, String message) {
+        return ResponseEntity.status(status).body(new ApiError(status, code, message, Map.of()));
     }
 }

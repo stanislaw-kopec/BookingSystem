@@ -6,14 +6,14 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record StaffAccountUpdateRequest(
-    @NotBlank(message = "Podaj login.")
-    @Size(min = 3, max = 30, message = "Login musi mieć od 3 do 30 znaków.")
+    @NotBlank(message = "Enter a username.")
+    @Size(min = 3, max = 30, message = "Username must be between 3 and 30 characters.")
     @Pattern(regexp = "^[A-Za-z0-9._-]+$",
-        message = "Login może zawierać litery bez polskich znaków, cyfry, kropkę, myślnik i podkreślenie.")
+        message = "Username may contain ASCII letters, digits, dot, hyphen and underscore.")
     String username,
 
-    @NotBlank(message = "Podaj adres e-mail.")
-    @Size(max = 254, message = "Adres e-mail może mieć maksymalnie 254 znaki.")
-    @Email(message = "Podaj prawidłowy adres e-mail.")
+    @NotBlank(message = "Enter an email address.")
+    @Size(max = 254, message = "Email address can have at most 254 characters.")
+    @Email(message = "Enter a valid email address.")
     String email
 ) {}

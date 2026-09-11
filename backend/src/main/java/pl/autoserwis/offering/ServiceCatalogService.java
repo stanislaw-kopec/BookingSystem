@@ -45,7 +45,7 @@ public class ServiceCatalogService {
     public ServiceCategoryResponse createCategory(CategoryRequest request) {
         String name = request.name().strip();
         if (categories.existsByNameIgnoreCase(name)) {
-            throw new ResourceConflictException("Kategoria o tej nazwie już istnieje.");
+            throw new ResourceConflictException("A category with this name already exists.");
         }
         ServiceCategory category = categories.save(new ServiceCategory(name, description(request.description())));
         return new ServiceCategoryResponse(category.getId(), category.getName(), category.getDescription(), List.of());
@@ -56,7 +56,7 @@ public class ServiceCatalogService {
         ServiceCategory category = category(id);
         String name = request.name().strip();
         if (categories.existsByNameIgnoreCaseAndIdNot(name, id)) {
-            throw new ResourceConflictException("Kategoria o tej nazwie już istnieje.");
+            throw new ResourceConflictException("A category with this name already exists.");
         }
         category.update(name, description(request.description()));
         return getCategory(id);
@@ -66,7 +66,7 @@ public class ServiceCatalogService {
     public void deleteCategory(Long id) {
         ServiceCategory category = category(id);
         if (services.existsByCategory_Id(id)) {
-            throw new ResourceConflictException("Najpierw przenieś lub usuń usługi z tej kategorii.");
+            throw new ResourceConflictException("Move or delete services from this category first.");
         }
         categories.delete(category);
     }
@@ -76,7 +76,7 @@ public class ServiceCatalogService {
         ServiceCategory category = category(request.categoryId());
         String name = request.name().strip();
         if (services.existsByCategory_IdAndNameIgnoreCase(category.getId(), name)) {
-            throw new ResourceConflictException("Usługa o tej nazwie już istnieje w wybranej kategorii.");
+            throw new ResourceConflictException("A service with this name already exists in the selected category.");
         }
         return toResponse(services.save(new WorkshopService(category, name, description(request.description()))));
     }
@@ -87,7 +87,7 @@ public class ServiceCatalogService {
         ServiceCategory category = category(request.categoryId());
         String name = request.name().strip();
         if (services.existsByCategory_IdAndNameIgnoreCaseAndIdNot(category.getId(), name, id)) {
-            throw new ResourceConflictException("Usługa o tej nazwie już istnieje w wybranej kategorii.");
+            throw new ResourceConflictException("A service with this name already exists in the selected category.");
         }
         service.update(category, name, description(request.description()));
         return toResponse(service);
@@ -99,11 +99,11 @@ public class ServiceCatalogService {
     }
 
     private ServiceCategory category(Long id) {
-        return categories.findById(id).orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono kategorii."));
+        return categories.findById(id).orElseThrow(() -> new ResourceNotFoundException("Category not found."));
     }
 
     private WorkshopService service(Long id) {
-        return services.findById(id).orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono usługi."));
+        return services.findById(id).orElseThrow(() -> new ResourceNotFoundException("Service not found."));
     }
 
     private WorkshopServiceResponse toResponse(WorkshopService service) {

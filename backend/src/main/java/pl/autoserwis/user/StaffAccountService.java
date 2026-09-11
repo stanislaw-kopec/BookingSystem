@@ -43,7 +43,7 @@ public class StaffAccountService {
 
         String username = normalizedUsername(request.username());
         String email = normalizedEmail(request.email());
-        validateUniqueAccount(username, email, null, "Nie można utworzyć konta mechanika.");
+        validateUniqueAccount(username, email, null, "Mechanic account cannot be created.");
 
         AppUser mechanic = users.saveAndFlush(new AppUser(
             username, email, passwords.encode(request.password()), UserRole.MECHANIC));
@@ -55,7 +55,7 @@ public class StaffAccountService {
         AppUser mechanic = mechanic(mechanicId);
         String username = normalizedUsername(request.username());
         String email = normalizedEmail(request.email());
-        validateUniqueAccount(username, email, mechanic.getId(), "Nie można zaktualizować konta mechanika.");
+        validateUniqueAccount(username, email, mechanic.getId(), "Mechanic account cannot be updated.");
         mechanic.updateAccount(username, email);
         return response(mechanic);
     }
@@ -78,13 +78,13 @@ public class StaffAccountService {
     private void validatePasswords(String password, String passwordConfirmation) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (!password.equals(passwordConfirmation)) {
-            errors.put("passwordConfirmation", "Hasła nie są takie same.");
+            errors.put("passwordConfirmation", "Passwords do not match.");
         }
         if (password.getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES) {
-            errors.put("password", "Hasło jest zbyt długie po zakodowaniu.");
+            errors.put("password", "Password is too long after encoding.");
         }
         if (!errors.isEmpty()) {
-            throw new RegistrationValidationException("Popraw dane formularza.", errors);
+            throw new RegistrationValidationException("Form data is invalid.", errors);
         }
     }
 
@@ -92,10 +92,10 @@ public class StaffAccountService {
         Map<String, String> conflicts = new LinkedHashMap<>();
         users.findByUsernameIgnoreCase(username)
             .filter(user -> !user.getId().equals(currentUserId))
-            .ifPresent(user -> conflicts.put("username", "Ten login jest już zajęty."));
+            .ifPresent(user -> conflicts.put("username", "This username is already taken."));
         users.findByEmailIgnoreCase(email)
             .filter(user -> !user.getId().equals(currentUserId))
-            .ifPresent(user -> conflicts.put("email", "Konto z tym adresem e-mail już istnieje."));
+            .ifPresent(user -> conflicts.put("email", "An account with this email already exists."));
         if (!conflicts.isEmpty()) {
             throw new RegistrationConflictException(message, conflicts);
         }
@@ -104,7 +104,7 @@ public class StaffAccountService {
     private AppUser mechanic(Long mechanicId) {
         return users.findById(mechanicId)
             .filter(user -> user.getRole() == UserRole.MECHANIC)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono konta mechanika."));
+            .orElseThrow(() -> new ResourceNotFoundException("Mechanic account not found."));
     }
 
     private String normalizedUsername(String username) {

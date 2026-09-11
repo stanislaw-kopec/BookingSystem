@@ -4,9 +4,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record CategoryRequest(
-    @NotBlank(message = "Podaj nazwę kategorii.")
-    @Size(max = 100, message = "Nazwa może mieć najwyżej 100 znaków.")
+    @NotBlank(message = "Enter a category name.")
+    @Size(max = 100, message = "Name can have at most 100 characters.")
     String name,
-    @Size(max = 500, message = "Opis może mieć najwyżej 500 znaków.")
+    @Size(max = 500, message = "Description can have at most 500 characters.")
     String description
 ) {}

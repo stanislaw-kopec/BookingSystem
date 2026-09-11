@@ -7,17 +7,17 @@ import jakarta.validation.constraints.NotNull;
 import java.time.LocalTime;
 
 public record ScheduleSettingsRequest(
-    @Min(value = 1, message = "Domyślna liczba miejsc musi być większa od 0.")
-    @Max(value = 20, message = "Domyślna liczba miejsc może wynosić maksymalnie 20.")
+    @Min(value = 1, message = "Default daily capacity must be greater than 0.")
+    @Max(value = 20, message = "Default daily capacity can be at most 20.")
     int defaultDailyCapacity,
 
-    @Min(value = 7, message = "Horyzont rezerwacji musi mieć co najmniej 7 dni.")
-    @Max(value = 180, message = "Horyzont rezerwacji może mieć maksymalnie 180 dni.")
+    @Min(value = 7, message = "Booking horizon must be at least 7 days.")
+    @Max(value = 180, message = "Booking horizon can be at most 180 days.")
     int bookingHorizonDays,
 
-    @NotNull(message = "Podaj godzinę rozpoczęcia pracy.")
+    @NotNull(message = "Enter workday start time.")
     LocalTime workdayStart,
 
-    @NotNull(message = "Podaj godzinę zakończenia pracy.")
+    @NotNull(message = "Enter workday end time.")
     LocalTime workdayEnd
 ) {}

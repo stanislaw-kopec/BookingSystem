@@ -89,7 +89,8 @@ export async function downloadRepairInvoice(vehicleId: number, appointmentId: nu
     const message = isRecord(payload) && typeof payload.message === 'string'
       ? payload.message
       : 'Nie udało się pobrać faktury.'
-    throw new ApiError(response.status, message)
+    const code = isRecord(payload) && typeof payload.code === 'string' ? payload.code : null
+    throw new ApiError(response.status, message, {}, code)
   }
   return response.blob()
 }

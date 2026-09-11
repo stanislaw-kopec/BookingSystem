@@ -68,18 +68,18 @@ public class WorkshopScheduleConfigService {
     public WorkshopScheduleConfigResponse saveOverride(ScheduleDayOverrideRequest request) {
         if (request.closed() && request.capacity() != 0) {
             throw new AppointmentValidationException(Map.of("capacity",
-                "Dzień zamknięty musi mieć 0 miejsc."));
+                "A closed day must have 0 places."));
         }
         if (!request.closed() && request.capacity() < 1) {
             throw new AppointmentValidationException(Map.of("capacity",
-                "Otwarty dzień musi mieć co najmniej 1 miejsce."));
+                "An open day must have at least 1 place."));
         }
         LocalDate date = request.date();
         int targetCapacity = request.closed() ? 0 : request.capacity();
         long occupied = occupiedPlaces(date);
         if (occupied > targetCapacity) {
             throw new AppointmentConflictException("capacity",
-                "Nie można ustawić mniej miejsc niż liczba aktywnych zgłoszeń w tym dniu.");
+                "Capacity cannot be lower than active appointment requests on this day.");
         }
         ScheduleDayOverride override = overridesRepository.findByDate(date)
             .orElseGet(() -> new ScheduleDayOverride(date, targetCapacity, request.closed(), request.note()));
@@ -103,7 +103,7 @@ public class WorkshopScheduleConfigService {
     private void validateHours(LocalTime start, LocalTime end) {
         if (start == null || end == null || !start.isBefore(end)) {
             throw new AppointmentValidationException(Map.of("workdayEnd",
-                "Godzina zakończenia musi być późniejsza niż rozpoczęcia."));
+                "Workday end time must be later than start time."));
         }
     }
 

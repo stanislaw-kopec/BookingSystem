@@ -252,7 +252,8 @@ class RegistrationIntegrationTest {
                 .content(registrationJson(
                     "mismatch-client", "mismatch@example.com", "password-one", "password-two")))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.fieldErrors.passwordConfirmation").value("Hasła nie są takie same."));
+            .andExpect(jsonPath("$.code").value("REGISTRATION_VALIDATION_FAILED"))
+            .andExpect(jsonPath("$.fieldErrors.passwordConfirmation").value("Passwords do not match."));
     }
 
     @Test
@@ -264,7 +265,8 @@ class RegistrationIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson("long-password", "long-password@example.com", password, password)))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.fieldErrors.password").value("Hasło jest zbyt długie po zakodowaniu."));
+            .andExpect(jsonPath("$.code").value("REGISTRATION_VALIDATION_FAILED"))
+            .andExpect(jsonPath("$.fieldErrors.password").value("Password is too long after encoding."));
     }
 
     @Test
@@ -278,7 +280,8 @@ class RegistrationIntegrationTest {
                 .content(registrationJson(
                     "EXISTING-CLIENT", "free@example.com", "new-password", "new-password")))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.fieldErrors.username").value("Ten login jest już zajęty."));
+            .andExpect(jsonPath("$.code").value("REGISTRATION_CONFLICT"))
+            .andExpect(jsonPath("$.fieldErrors.username").value("This username is already taken."));
 
         mockMvc.perform(post("/api/auth/register")
                 .with(csrf())
@@ -286,7 +289,8 @@ class RegistrationIntegrationTest {
                 .content(registrationJson(
                     "free-client", "EXISTING@EXAMPLE.COM", "new-password", "new-password")))
             .andExpect(status().isConflict())
-            .andExpect(jsonPath("$.fieldErrors.email").value("Konto z tym adresem e-mail już istnieje."));
+            .andExpect(jsonPath("$.code").value("REGISTRATION_CONFLICT"))
+            .andExpect(jsonPath("$.fieldErrors.email").value("An account with this email already exists."));
     }
 
     @Test

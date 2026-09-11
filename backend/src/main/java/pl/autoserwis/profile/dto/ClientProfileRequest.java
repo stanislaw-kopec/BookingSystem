@@ -6,38 +6,38 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public record ClientProfileRequest(
-    @NotBlank(message = "Podaj imię.")
-    @Size(max = 60, message = "Imię może mieć maksymalnie 60 znaków.")
+    @NotBlank(message = "Enter a first name.")
+    @Size(max = 60, message = "First name can have at most 60 characters.")
     String firstName,
-    @NotBlank(message = "Podaj nazwisko.")
-    @Size(max = 80, message = "Nazwisko może mieć maksymalnie 80 znaków.")
+    @NotBlank(message = "Enter a last name.")
+    @Size(max = 80, message = "Last name can have at most 80 characters.")
     String lastName,
-    @NotBlank(message = "Podaj numer telefonu.")
-    @Size(max = 30, message = "Numer telefonu może mieć maksymalnie 30 znaków.")
-    @Pattern(regexp = "^[0-9+() .-]{7,30}$", message = "Podaj prawidłowy numer telefonu.")
+    @NotBlank(message = "Enter a phone number.")
+    @Size(max = 30, message = "Phone number can have at most 30 characters.")
+    @Pattern(regexp = "^[0-9+() .-]{7,30}$", message = "Enter a valid phone number.")
     String phoneNumber,
-    @NotBlank(message = "Podaj kontaktowy adres e-mail.")
-    @Size(max = 254, message = "Adres e-mail może mieć maksymalnie 254 znaki.")
-    @Email(message = "Podaj prawidłowy adres e-mail.")
+    @NotBlank(message = "Enter a contact email address.")
+    @Size(max = 254, message = "Email address can have at most 254 characters.")
+    @Email(message = "Enter a valid email address.")
     String contactEmail,
-    @NotBlank(message = "Podaj ulicę i numer.")
-    @Size(max = 150, message = "Adres może mieć maksymalnie 150 znaków.")
+    @NotBlank(message = "Enter street and building number.")
+    @Size(max = 150, message = "Address can have at most 150 characters.")
     String addressLine,
-    @NotBlank(message = "Podaj kod pocztowy.")
-    @Size(max = 20, message = "Kod pocztowy może mieć maksymalnie 20 znaków.")
+    @NotBlank(message = "Enter a postal code.")
+    @Size(max = 20, message = "Postal code can have at most 20 characters.")
     String postalCode,
-    @NotBlank(message = "Podaj miejscowość.")
-    @Size(max = 80, message = "Miejscowość może mieć maksymalnie 80 znaków.")
+    @NotBlank(message = "Enter a city.")
+    @Size(max = 80, message = "City can have at most 80 characters.")
     String city,
     boolean hasCompanyData,
-    @Size(max = 150, message = "Nazwa firmy może mieć maksymalnie 150 znaków.")
+    @Size(max = 150, message = "Company name can have at most 150 characters.")
     String companyName,
-    @Size(max = 32, message = "NIP może mieć maksymalnie 32 znaki.")
+    @Size(max = 32, message = "Tax ID can have at most 32 characters.")
     String taxId,
-    @Size(max = 150, message = "Adres rozliczeniowy może mieć maksymalnie 150 znaków.")
+    @Size(max = 150, message = "Billing address can have at most 150 characters.")
     String billingAddressLine,
-    @Size(max = 20, message = "Kod pocztowy może mieć maksymalnie 20 znaków.")
+    @Size(max = 20, message = "Postal code can have at most 20 characters.")
     String billingPostalCode,
-    @Size(max = 80, message = "Miejscowość może mieć maksymalnie 80 znaków.")
+    @Size(max = 80, message = "City can have at most 80 characters.")
     String billingCity
 ) {}

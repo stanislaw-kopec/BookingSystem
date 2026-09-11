@@ -196,7 +196,8 @@ class AppointmentIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(otherVehicle.getId(), visitDate, "Samochód nie chce odpalić.")))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.message").value("Nie znaleziono pojazdu."));
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
+            .andExpect(jsonPath("$.message").value("Vehicle not found."));
     }
 
     @Test

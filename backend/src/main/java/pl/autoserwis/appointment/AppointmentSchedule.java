@@ -63,15 +63,15 @@ public class AppointmentSchedule {
         LocalDate today = now.toLocalDate();
 
         if (!visitDate.isAfter(today)) {
-            throw invalidVisitDate("Dzień wizyty musi przypadać w przyszłości.");
+            throw invalidVisitDate("Visit day must be in the future.");
         }
         WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
         if (visitDate.isAfter(today.plusDays(settings.getBookingHorizonDays()))) {
-            throw invalidVisitDate("Dzień wizyty musi mieścić się w aktualnym horyzoncie rezerwacji.");
+            throw invalidVisitDate("Visit day must fit within the current booking horizon.");
         }
         ScheduleDayOverride override = scheduleConfig.overridesByDate(visitDate, visitDate).get(visitDate);
         if (capacityFor(visitDate, settings, override) <= 0) {
-            throw invalidVisitDate("Ten dzień jest niedostępny w grafiku warsztatu.");
+            throw invalidVisitDate("This day is unavailable in the workshop schedule.");
         }
         return dayStart(visitDate, settings).truncatedTo(ChronoUnit.SECONDS).toInstant();
     }

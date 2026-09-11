@@ -48,7 +48,7 @@ public class InvoicePdfGenerator {
             document.close();
             return new InvoiceFile(filename(appointment), output.toByteArray());
         } catch (Exception exception) {
-            throw new InvoiceGenerationException("Nie udało się wygenerować faktury PDF.", exception);
+            throw new InvoiceGenerationException("Could not generate invoice PDF.", exception);
         }
     }
 

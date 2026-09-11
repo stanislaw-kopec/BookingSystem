@@ -10,20 +10,20 @@ import pl.autoserwis.appointment.RepairItemType;
 import java.math.BigDecimal;
 
 public record RepairItemRequest(
-    @NotNull(message = "Wybierz typ pozycji.")
+    @NotNull(message = "Select an item type.")
     RepairItemType type,
 
-    @NotBlank(message = "Podaj nazwę pozycji.")
-    @Size(max = 160, message = "Nazwa pozycji może mieć maksymalnie 160 znaków.")
+    @NotBlank(message = "Enter an item name.")
+    @Size(max = 160, message = "Item name can have at most 160 characters.")
     String name,
 
-    @NotNull(message = "Podaj ilość.")
-    @DecimalMin(value = "0.01", message = "Ilość musi być większa od 0.")
-    @Digits(integer = 6, fraction = 2, message = "Ilość może mieć maksymalnie 6 cyfr przed przecinkiem i 2 po przecinku.")
+    @NotNull(message = "Enter a quantity.")
+    @DecimalMin(value = "0.01", message = "Quantity must be greater than 0.")
+    @Digits(integer = 6, fraction = 2, message = "Quantity can have at most 6 integer digits and 2 decimal places.")
     BigDecimal quantity,
 
-    @NotNull(message = "Podaj cenę brutto pozycji.")
-    @DecimalMin(value = "0.01", message = "Cena brutto musi być większa od 0.")
-    @Digits(integer = 8, fraction = 2, message = "Cena brutto może mieć maksymalnie 8 cyfr przed przecinkiem i 2 po przecinku.")
+    @NotNull(message = "Enter an item gross price.")
+    @DecimalMin(value = "0.01", message = "Gross price must be greater than 0.")
+    @Digits(integer = 8, fraction = 2, message = "Gross price can have at most 8 integer digits and 2 decimal places.")
     BigDecimal unitGrossAmount
 ) {}

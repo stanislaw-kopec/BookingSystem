@@ -7,13 +7,13 @@ import jakarta.validation.constraints.Size;
 import java.time.LocalDate;
 
 public record ClientAppointmentRequest(
-    @NotNull(message = "Wybierz pojazd.")
+    @NotNull(message = "Select a vehicle.")
     Long vehicleId,
 
-    @NotNull(message = "Wybierz dzień wizyty.")
+    @NotNull(message = "Select an appointment day.")
     LocalDate visitDate,
 
-    @NotBlank(message = "Opisz problem z pojazdem.")
-    @Size(min = 10, max = 2000, message = "Opis problemu musi mieć od 10 do 2000 znaków.")
+    @NotBlank(message = "Describe the vehicle problem.")
+    @Size(min = 10, max = 2000, message = "Problem description must be between 10 and 2000 characters.")
     String problemDescription
 ) {}

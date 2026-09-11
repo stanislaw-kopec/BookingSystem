@@ -6,6 +6,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.dto.*;
+import pl.autoserwis.exception.ApiErrorCode;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.invoice.InvoiceFile;
 import pl.autoserwis.invoice.InvoicePdfGenerator;
@@ -104,11 +105,11 @@ public class AppointmentService {
     }
     public AppointmentResponse getStaffAppointment(Long appointmentId) {
         return response(appointments.findById(appointmentId)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty.")));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found.")));
     }
     public List<RepairHistoryEntryResponse> getStaffAppointmentRepairHistory(Long appointmentId) {
         AppointmentRequest appointment = appointments.findById(appointmentId)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
         if (appointment.getVehicle() == null) return List.of();
         return appointments.findByVehicle_IdAndStatusOrderByVehiclePickedUpAtDesc(
                 appointment.getVehicle().getId(), AppointmentStatus.COMPLETED).stream()
@@ -118,14 +119,14 @@ public class AppointmentService {
     public InvoiceFile getStaffRepairInvoice(Long appointmentId) {
         AppointmentRequest appointment = appointments.findById(appointmentId)
             .filter(request -> request.getStatus() == AppointmentStatus.COMPLETED)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zakończonej naprawy."));
+            .orElseThrow(() -> new ResourceNotFoundException("Completed repair not found."));
         if (appointment.getRequesterType() != AppointmentRequesterType.CLIENT
                 || appointment.getClient() == null
                 || appointment.getVehicle() == null) {
-            throw new ResourceNotFoundException("Faktura jest dostępna tylko dla zakończonej naprawy klienta z kontem.");
+            throw new ResourceNotFoundException("Invoice is available only for a completed repair of a registered client.");
         }
         ClientProfile profile = profiles.findByUser_Id(appointment.getClient().getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono profilu klienta."));
+            .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
         return invoicePdfGenerator.generate(appointment, appointment.getVehicle(), profile);
     }
     @Transactional
@@ -133,9 +134,9 @@ public class AppointmentService {
         AppUser client = user(username);
         ClientProfile profile = profiles.findByUser_Id(client.getId())
             .orElseThrow(() -> new AppointmentConflictException("profile",
-                "Uzupełnij profil przed umówieniem wizyty."));
+                "Complete your profile before booking an appointment."));
         Vehicle vehicle = vehicles.findByIdAndOwner_Id(request.vehicleId(), client.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono pojazdu."));
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String description = normalizedDescription(request.problemDescription());
         AppointmentRequest appointment = new AppointmentRequest(UUID.randomUUID(),
@@ -164,7 +165,7 @@ public class AppointmentService {
     public AppointmentResponse accept(String staffUsername, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.PENDING,
-            "Można przyjąć wyłącznie oczekujące zgłoszenie.");
+            "Only a pending appointment request can be accepted.");
         appointment.accept(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
@@ -175,7 +176,7 @@ public class AppointmentService {
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
             throw new AppointmentConflictException(
-                "Można odrzucić wyłącznie oczekujące zgłoszenie lub propozycję dnia.");
+                "Only a pending request or a day proposal can be rejected.");
         }
         appointment.reject(user(staffUsername), optional(request.message()), Instant.now());
         return response(appointments.save(appointment));
@@ -187,12 +188,12 @@ public class AppointmentService {
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
             throw new AppointmentConflictException(
-                "Nowy dzień można zaproponować tylko dla oczekującego zgłoszenia.");
+                "A new day can be proposed only for a pending request.");
         }
         Instant proposedStartAt = schedule.validateAndNormalize(request.visitDate());
         if (proposedStartAt.equals(appointment.getCurrentStartAt())) {
             throw new AppointmentValidationException(Map.of("visitDate",
-                "Zaproponuj dzień inny niż obecny."));
+                "Propose a day different from the current one."));
         }
         appointments.lockAppointmentDay(schedule.visitDate(proposedStartAt));
         if (schedule.isFull(proposedStartAt)) {
@@ -211,9 +212,9 @@ public class AppointmentService {
         AppUser client = user(username);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
-            "To zgłoszenie nie oczekuje na potwierdzenie nowego dnia.");
+            "This request is not waiting for a proposed day confirmation.");
         appointment.confirmProposedTime(Instant.now());
         return response(appointments.save(appointment));
     }
@@ -222,12 +223,12 @@ public class AppointmentService {
         AppUser client = user(username);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED
                 && appointment.getStatus() != AppointmentStatus.CONFIRMED) {
             throw new AppointmentConflictException(
-                "Można odwołać wyłącznie aktywną wizytę.");
+                "Only an active appointment can be cancelled.");
         }
         appointment.cancel(Instant.now());
         return response(appointments.save(appointment));
@@ -237,10 +238,10 @@ public class AppointmentService {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getRequesterType() != AppointmentRequesterType.GUEST) {
             throw new AppointmentConflictException(
-                "Klient posiadający konto sam potwierdza zaproponowany dzień.");
+                "A registered client confirms the proposed day personally.");
         }
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
-            "To zgłoszenie nie oczekuje na potwierdzenie nowego dnia.");
+            "This request is not waiting for a proposed day confirmation.");
         appointment.confirmGuestProposedTime(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
@@ -249,7 +250,7 @@ public class AppointmentService {
             CompleteRepairRequest request) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.CONFIRMED,
-            "Naprawę można zakończyć tylko dla potwierdzonej wizyty.");
+            "Repair can be completed only for a confirmed appointment.");
         appointment.completeRepair(user(staffUsername),
             normalizedRepairDescription(request.repairDescription()),
             normalizedRepairItems(request.repairItems()),
@@ -260,7 +261,7 @@ public class AppointmentService {
     public AppointmentResponse markPickedUp(String staffUsername, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
-            "Odbior samochodu mozna potwierdzic tylko dla auta oczekujacego na odbior.");
+            "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");
         appointment.markPickedUp(user(staffUsername), Instant.now());
         return response(appointments.save(appointment));
     }
@@ -277,7 +278,7 @@ public class AppointmentService {
     }
     private AppointmentRequest appointmentForStaffUpdate(Long appointmentId) {
         return appointments.findByIdForUpdate(appointmentId)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono zgłoszenia wizyty."));
+            .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
     }
     private void requireStatus(AppointmentRequest appointment, AppointmentStatus expected,
             String message) {
@@ -288,19 +289,19 @@ public class AppointmentService {
     private void validateGuest(GuestAppointmentRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (blank(request.phoneNumber()) && blank(request.contactEmail())) {
-            String message = "Podaj numer telefonu lub adres e-mail.";
+            String message = "Enter a phone number or an email address.";
             errors.put("phoneNumber", message);
             errors.put("contactEmail", message);
         }
         int latestAllowedYear = Year.now().getValue() + 1;
         if (request.vehicleProductionYear() > latestAllowedYear) {
             errors.put("vehicleProductionYear",
-                "Rok produkcji nie może być późniejszy niż " + latestAllowedYear + ".");
+                "Production year cannot be later than " + latestAllowedYear + ".");
         }
         String registrationNumber = request.vehicleRegistrationNumber().replaceAll("\\s+", "");
         if (registrationNumber.length() < 2) {
             errors.put("vehicleRegistrationNumber",
-                "Numer rejestracyjny musi mieć co najmniej 2 znaki.");
+                "Registration number must have at least 2 characters.");
         }
         validateNormalizedDescription(errors, request.problemDescription());
         if (!errors.isEmpty()) {
@@ -311,7 +312,7 @@ public class AppointmentService {
         String normalized = value.strip();
         if (normalized.length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
             throw new AppointmentValidationException(Map.of("problemDescription",
-                "Opis problemu musi mieć co najmniej 10 znaków."));
+                "Problem description must have at least 10 characters."));
         }
         return normalized;
     }
@@ -319,14 +320,14 @@ public class AppointmentService {
         String normalized = value.strip();
         if (normalized.length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
             throw new AppointmentValidationException(Map.of("repairDescription",
-                "Opis wykonanych prac musi mieć co najmniej 10 znaków."));
+                "Completed work description must have at least 10 characters."));
         }
         return normalized;
     }
     private List<RepairItemDraft> normalizedRepairItems(List<RepairItemRequest> items) {
         if (items == null || items.isEmpty()) {
             throw new AppointmentValidationException(Map.of("repairItems",
-                "Dodaj co najmniej jedną pozycję naprawy."));
+                "Add at least one repair item."));
         }
         List<RepairItemDraft> normalized = new ArrayList<>();
         Map<String, String> errors = new LinkedHashMap<>();
@@ -334,14 +335,14 @@ public class AppointmentService {
             RepairItemRequest item = items.get(index);
             String prefix = "repairItems[" + index + "].";
             if (item == null) {
-                errors.put("repairItems[" + index + "]", "Uzupełnij pozycję naprawy.");
+                errors.put("repairItems[" + index + "]", "Complete the repair item.");
                 continue;
             }
             String name = item.name() == null ? "" : item.name().strip();
-            if (name.isBlank()) errors.put(prefix + "name", "Podaj nazwę pozycji.");
-            if (item.type() == null) errors.put(prefix + "type", "Wybierz typ pozycji.");
-            BigDecimal quantity = normalizedDecimal(item.quantity(), prefix + "quantity", errors, "Ilość musi mieć maksymalnie 2 miejsca po przecinku.");
-            BigDecimal unitGrossAmount = normalizedDecimal(item.unitGrossAmount(), prefix + "unitGrossAmount", errors, "Cena brutto musi mieć maksymalnie 2 miejsca po przecinku.");
+            if (name.isBlank()) errors.put(prefix + "name", "Enter an item name.");
+            if (item.type() == null) errors.put(prefix + "type", "Select an item type.");
+            BigDecimal quantity = normalizedDecimal(item.quantity(), prefix + "quantity", errors, "Quantity can have at most 2 decimal places.");
+            BigDecimal unitGrossAmount = normalizedDecimal(item.unitGrossAmount(), prefix + "unitGrossAmount", errors, "Gross price can have at most 2 decimal places.");
             if (item.type() != null && !name.isBlank() && quantity != null && unitGrossAmount != null) {
                 normalized.add(new RepairItemDraft(item.type(), name, quantity, unitGrossAmount));
             }
@@ -364,7 +365,7 @@ public class AppointmentService {
     }
     private void validateNormalizedDescription(Map<String, String> errors, String value) {
         if (value != null && value.strip().length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
-            errors.put("problemDescription", "Opis problemu musi mieć co najmniej 10 znaków.");
+            errors.put("problemDescription", "Problem description must have at least 10 characters.");
         }
     }
     private String normalizedRegistration(String value) {
@@ -372,11 +373,11 @@ public class AppointmentService {
     }
     private AppUser user(String username) {
         return users.findByUsernameIgnoreCase(username)
-            .orElseThrow(() -> new ResourceNotFoundException("Nie znaleziono użytkownika."));
+            .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
     private AppointmentConflictException unavailableDay() {
-        return new AppointmentConflictException("visitDate",
-            "Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.");
+        return new AppointmentConflictException(ApiErrorCode.APPOINTMENT_DAY_FULL, "visitDate",
+            "This day has no available places. Select another day.");
     }
     private boolean blank(String value) {
         return value == null || value.isBlank();

@@ -4,11 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 public record StaffPasswordResetRequest(
-    @NotBlank(message = "Podaj nowe hasło.")
-    @Size(min = 8, max = 64, message = "Hasło musi mieć od 8 do 64 znaków.")
+    @NotBlank(message = "Enter a new password.")
+    @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters.")
     String password,
 
-    @NotBlank(message = "Powtórz nowe hasło.")
-    @Size(max = 64, message = "Powtórzone hasło może mieć maksymalnie 64 znaki.")
+    @NotBlank(message = "Repeat the new password.")
+    @Size(max = 64, message = "Repeated password can have at most 64 characters.")
     String passwordConfirmation
 ) {}

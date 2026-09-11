@@ -5,47 +5,47 @@ import jakarta.validation.constraints.*;
 import java.time.LocalDate;
 
 public record GuestAppointmentRequest(
-    @NotBlank(message = "Podaj imię.")
-    @Size(max = 60, message = "Imię może mieć maksymalnie 60 znaków.")
+    @NotBlank(message = "Enter a first name.")
+    @Size(max = 60, message = "First name can have at most 60 characters.")
     String firstName,
 
-    @NotBlank(message = "Podaj nazwisko.")
-    @Size(max = 80, message = "Nazwisko może mieć maksymalnie 80 znaków.")
+    @NotBlank(message = "Enter a last name.")
+    @Size(max = 80, message = "Last name can have at most 80 characters.")
     String lastName,
 
-    @Size(max = 30, message = "Numer telefonu może mieć maksymalnie 30 znaków.")
-    @Pattern(regexp = "^(?:\\s*|[0-9+() .-]{7,30})$", message = "Podaj prawidłowy numer telefonu.")
+    @Size(max = 30, message = "Phone number can have at most 30 characters.")
+    @Pattern(regexp = "^(?:\\s*|[0-9+() .-]{7,30})$", message = "Enter a valid phone number.")
     String phoneNumber,
 
-    @Size(max = 254, message = "Adres e-mail może mieć maksymalnie 254 znaki.")
-    @Email(message = "Podaj prawidłowy adres e-mail.")
+    @Size(max = 254, message = "Email address can have at most 254 characters.")
+    @Email(message = "Enter a valid email address.")
     String contactEmail,
 
-    @NotBlank(message = "Podaj markę.")
-    @Size(max = 80, message = "Marka może mieć maksymalnie 80 znaków.")
+    @NotBlank(message = "Enter a make.")
+    @Size(max = 80, message = "Make can have at most 80 characters.")
     String vehicleMake,
 
-    @NotBlank(message = "Podaj model.")
-    @Size(max = 80, message = "Model może mieć maksymalnie 80 znaków.")
+    @NotBlank(message = "Enter a model.")
+    @Size(max = 80, message = "Model can have at most 80 characters.")
     String vehicleModel,
 
-    @NotNull(message = "Podaj rok produkcji.")
-    @Min(value = 1886, message = "Rok produkcji nie może być wcześniejszy niż 1886.")
+    @NotNull(message = "Enter a production year.")
+    @Min(value = 1886, message = "Production year cannot be earlier than 1886.")
     Integer vehicleProductionYear,
 
-    @NotBlank(message = "Podaj numer rejestracyjny.")
-    @Size(min = 2, max = 20, message = "Numer rejestracyjny musi mieć od 2 do 20 znaków.")
-    @Pattern(regexp = "^[A-Za-z0-9 -]+$", message = "Numer rejestracyjny zawiera niedozwolone znaki.")
+    @NotBlank(message = "Enter a registration number.")
+    @Size(min = 2, max = 20, message = "Registration number must be between 2 and 20 characters.")
+    @Pattern(regexp = "^[A-Za-z0-9 -]+$", message = "Registration number contains invalid characters.")
     String vehicleRegistrationNumber,
 
     @Pattern(regexp = "^(?:\\s*|[A-HJ-NPR-Za-hj-npr-z0-9]{17})$",
-        message = "VIN musi mieć 17 znaków i nie może zawierać liter I, O ani Q.")
+        message = "VIN must have 17 characters and cannot contain I, O or Q.")
     String vehicleVin,
 
-    @NotNull(message = "Wybierz dzień wizyty.")
+    @NotNull(message = "Select an appointment day.")
     LocalDate visitDate,
 
-    @NotBlank(message = "Opisz problem z pojazdem.")
-    @Size(min = 10, max = 2000, message = "Opis problemu musi mieć od 10 do 2000 znaków.")
+    @NotBlank(message = "Describe the vehicle problem.")
+    @Size(min = 10, max = 2000, message = "Problem description must be between 10 and 2000 characters.")
     String problemDescription
 ) {}
