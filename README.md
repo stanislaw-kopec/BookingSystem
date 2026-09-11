@@ -285,6 +285,25 @@ Spring Security utrzymuje sesję przez ciasteczko HttpOnly. Operacje zapisu
 wymagają właściwej roli oraz tokenu CSRF. Ukrywanie panelu we frontendzie
 uzupełnia kontrolę uprawnień backendu.
 
+## Dokumentacja API Swagger / OpenAPI
+
+Backend udostępnia automatyczną dokumentację API przez `springdoc-openapi`.
+Po uruchomieniu aplikacji Swagger UI jest dostępny pod adresem:
+
+```text
+http://localhost:8080/swagger-ui.html
+```
+
+Specyfikację OpenAPI w formacie JSON można pobrać tutaj:
+
+```text
+http://localhost:8080/v3/api-docs/booking-system
+```
+
+Dokumentacja opisuje endpointy z prefiksem `/api`. Endpointy Swaggera są publiczne,
+ale właściwe endpointy aplikacji nadal wymagają takich samych ról i tokenu CSRF jak
+przy normalnym użyciu frontendu.
+
 ## Dostępne API
 
 | Metoda i ścieżka | Działanie | Dostęp |

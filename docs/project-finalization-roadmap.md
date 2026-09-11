@@ -6,17 +6,16 @@ Ten plik zbiera rzeczy, które warto zrobić przed uznaniem projektu za gotowy d
 
 Projekt jest już funkcjonalnie mocny: ma role, logowanie, profil klienta, pojazdy, umawianie wizyt, panel personelu, konfigurację grafiku, konta mechaników, historię napraw, faktury PDF, migracje bazy, Docker Compose i testy integracyjne. Największy zysk przed zakończeniem projektu dadzą teraz elementy jakościowe i prezentacyjne, a nie kolejny duży moduł biznesowy.
 
-## Priorytet 1: OpenAPI / Swagger
+## Priorytet 1: OpenAPI / Swagger — wdrożone
 
-Brakuje automatycznej dokumentacji API. To bardzo dobry punkt do portfolio, bo pokazuje, że backend jest przygotowany do współpracy z frontendem albo innym zespołem.
+Automatyczna dokumentacja API została dodana przez `springdoc-openapi`. Swagger UI jest dostępny po uruchomieniu backendu pod `/swagger-ui.html`, a specyfikacja OpenAPI pod `/v3/api-docs/booking-system`.
 
-Zakres:
+Obecny zakres:
 
-- dodać Swagger UI przez `springdoc-openapi`,
-- opisać główne endpointy,
-- pokazać przykładowe requesty i response,
-- dopisać informacje o rolach dostępu,
-- upewnić się, że Swagger nie sugeruje publicznego dostępu do endpointów chronionych.
+- dodano Swagger UI przez `springdoc-openapi`,
+- dodano podstawowe informacje OpenAPI o aplikacji, sesji i CSRF,
+- dokumentacja obejmuje endpointy z prefiksem `/api`,
+- dodano testy sprawdzające publiczny dostęp do OpenAPI i Swagger UI.
 
 Dlaczego warto:
 

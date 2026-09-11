@@ -136,7 +136,7 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   zakończone naprawy i pozwala pobrać prostą fakturę PDF klientowi oraz personelowi. Działają publiczna dostępność,
   zgłoszenia wizyt klienta i gościa, panel własnych zgłoszeń, grafik MECHANIC/ADMIN
   oraz decyzje personelu z proponowaniem nowego dnia. Administrator zarządza
-  podstawową konfiguracją grafiku, wyjątkami dni oraz kontami mechaników. Pełny moduł faktur pozostaje do rozbudowy.
+  podstawową konfiguracją grafiku, wyjątkami dni oraz kontami mechaników. Swagger UI dokumentuje API backendu. Pełny moduł faktur pozostaje do rozbudowy.
 - Twórz pakiety i katalogi przy wdrażaniu funkcji. Unikaj pustych szkieletów całego
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
@@ -150,8 +150,8 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,
   spójna obsługa błędów, testy jednostkowe i integracyjne, dokumentacja oraz CI.
-  Testcontainers jest skonfigurowany; OpenAPI i GitHub Actions wdrażaj w etapach,
-  które ich potrzebują.
+  Testcontainers, OpenAPI i GitHub Actions są skonfigurowane; rozwijaj je dalej
+  tylko przy konkretnych potrzebach.
 - Dobieraj sprawdzenia do zmian. Dla samych instrukcji wystarcza przegląd treści
   i różnic; nie uruchamiaj całego środowiska ani nie dodawaj testów dokumentacji.
 - Po implementacji opisz, co działa, jak to sprawdzono i co pozostaje niegotowe.

@@ -30,6 +30,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(HttpMethod.GET,
+                    "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml",
+                    "/swagger-ui.html", "/swagger-ui/**").permitAll()
+                .requestMatchers(HttpMethod.GET,
                     "/api/health", "/api/services", "/api/services/*",
                     "/api/service-categories/*", "/api/auth/me", "/api/auth/csrf",
                     "/api/appointments/availability").permitAll()

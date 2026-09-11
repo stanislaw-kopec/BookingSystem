@@ -12,7 +12,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   Dodawaj je wraz z implementacją, bez tworzenia wszystkich modułów z wyprzedzeniem.
 - Kontrolery obsługują HTTP i DTO, serwisy reguły biznesowe oraz transakcje,
   a repozytoria dostęp do danych. Nie zwracaj encji JPA bezpośrednio z API.
-- Zachowaj prefiks `/api`, działanie `/api/health` i istniejącą konfigurację Compose.
+- Zachowaj prefiks `/api`, działanie `/api/health`, publiczne endpointy Swaggera `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**` i istniejącą konfigurację Compose.
   Lokalny Spring zarządza tylko usługą `postgres`; w kontenerze integracja Springa
   z Compose jest wyłączona i używane są ustawienia połączenia ze zmiennych środowiska.
 
