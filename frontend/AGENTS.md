@@ -18,6 +18,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   wtedy, gdy wdrażany etap ich potrzebuje; nie są jeszcze uzgodnionym zestawem narzędzi.
 - Unikaj `any` i rzutowań maskujących błędy. Typy TypeScript nie weryfikują danych
   przychodzących w trakcie działania; obsługuj brakujące dane i błędne odpowiedzi API.
+- Docelowo frontend obsługuje dwa języki interfejsu: polski i angielski. Nowe teksty
+  UI umieszczaj w centralnej warstwie tłumaczeń, a nie bezpośrednio w komponentach.
+  Domyślny język to polski. Dane przychodzące z API, np. nazwy usług zapisane w bazie,
+  pozostają danymi biznesowymi i nie są automatycznie tłumaczone bez osobnego modelu.
 
 ## Widoki wymagane przez użytkownika
 
@@ -102,11 +106,11 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   zapobiegaj ponownemu wysłaniu; błędy walidacji wiąż z odpowiednimi polami.
 - Ukrywanie panelu lub zabezpieczenie trasy nie zastępuje autoryzacji backendu.
   Po wylogowaniu usuwaj z widoku i pamięci klienta dane poprzedniej sesji.
-- Statusy przedstawiaj po polsku: `PENDING` jako „Oczekujące”, `TIME_PROPOSED` jako
-  „Zaproponowano nowy dzień”, `CONFIRMED` jako „Potwierdzone”, `READY_FOR_PICKUP`
-  jako „Czeka na odbiór”, `CANCELLED` jako „Odwołane”, a `REJECTED` jako „Odrzucone”.
-  Pokazuj pierwotny i proponowany dzień
-  bez sugerowania wykonanej naprawy.
+- Statusy przedstawiaj przez warstwę tłumaczeń. W polskiej wersji `PENDING` to
+  „Oczekujące”, `TIME_PROPOSED` to „Zaproponowano nowy dzień”, `CONFIRMED` to
+  „Potwierdzone”, `READY_FOR_PICKUP` to „Czeka na odbiór”, `COMPLETED` to
+  „Zakończone”, `CANCELLED` to „Odwołane”, a `REJECTED` to „Odrzucone”. Pokazuj
+  pierwotny i proponowany dzień bez sugerowania wykonanej naprawy.
 - Historia napraw i dane dokumentów pochodzą z API. Przy zakończonej naprawie pokaż
   przycisk „Pobierz fakturę” w historii pojazdu, w „Moich wizytach” oraz w panelu personelu przy zakończonym zgłoszeniu klienta z kontem. Przycisk
   pobiera PDF z backendu. Nie twórz lokalnych faktur ani wpisów udających trwale
@@ -119,6 +123,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Używaj `src/api/apiClient.ts`: obsługuje błędy i pobiera aktualny token CSRF
   przed zmianami danych, także po logowaniu lub wylogowaniu. Sesję utrzymuje
   ciasteczko HttpOnly; nie zapisuj hasła ani tokenu sesji w localStorage.
+- Znane błędy API tłumacz po stronie frontendu na podstawie stabilnych kodów błędów,
+  gdy backend je udostępni. Do czasu pełnej migracji zachowaj obsługę starszego pola
+  `message`, żeby aplikacja nadal działała podczas etapowego wdrażania i18n.
 - `useServiceCatalog` w `HomePage` jest wspólnym źródłem katalogu dla oferty i panelu.
   Po zapisie odśwież dane z API. Przewodnik po tej strukturze jest w
   `docs/service-catalog-walkthrough.md` w głównym folderze repozytorium.

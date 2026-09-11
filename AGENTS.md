@@ -18,8 +18,10 @@ Pliki z podkatalogów uzupełniają wspólne zasady o wymagania swojej części 
   podejmuj samodzielnie; nie rozszerzaj bieżącego zadania na wszystkie opisane funkcje.
 - Po angielsku nazywaj foldery, pliki, klasy, funkcje, zmienne, trasy frontendu,
   techniczne identyfikatory HTML/CSS, elementy bazy danych i komunikaty commitów.
-  Interfejs oraz objaśnienia dla użytkownika mają być po polsku. Zachowuj kod
-  napisany samodzielnie przez użytkownika.
+  Objaśnienia dla użytkownika mają być po polsku. Interfejs domyślnie działa po
+  polsku, ale docelowo ma obsługiwać polski i angielski przez warstwę tłumaczeń,
+  bez rozrzucania tekstów UI bezpośrednio po komponentach. Zachowuj kod napisany
+  samodzielnie przez użytkownika.
 
 ## Uzgodnione wymagania funkcjonalne
 
@@ -42,6 +44,7 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
 | R13 | Profil Springa `local` przygotowuje dane pokazowe do prezentacji aplikacji: klientów indywidualnych i firmowych, ich profile, pojazdy oraz zgłoszenia w różnych statusach, w tym naprawy gotowe do odbioru i zakończone z możliwością pobrania faktury PDF. Seed działa idempotentnie: tworzy brakujące rekordy demonstracyjne, ale nie nadpisuje istniejących kont, haseł, profili, pojazdów ani zgłoszeń. |
 | R14 | Administrator ma dedykowany panel `/admin/schedule-settings` do konfiguracji grafiku warsztatu. Może ustawić domyślną liczbę miejsc dziennie, horyzont rezerwacji, godziny pracy oraz wyjątki dla konkretnych dat: dzień zamknięty albo niestandardową liczbę miejsc. Mechanik może oglądać grafik i obsługiwać zgłoszenia, ale nie zarządza konfiguracją dostępności. Publiczny kalendarz i propozycje terminów korzystają z konfiguracji zapisanej w backendzie. |
 | R15 | Administrator ma dedykowany panel `/admin/staff-accounts` do zarządzania kontami mechaników: tworzenia kont, edycji loginu i e-maila, resetowania hasła oraz aktywowania albo dezaktywowania dostępu. Publiczna rejestracja tworzy wyłącznie konta klientów, a rola `MECHANIC` nie może zostać nadana przez formularz publiczny. Konto mechanika zawiera login, e-mail, hasło ustawione przez admina oraz status aktywności; backend zawsze nadaje rolę `MECHANIC` samodzielnie. Mechanik nie może tworzyć ani zarządzać kontami personelu. |
+| R16 | Aplikacja ma zostać przygotowana do dwóch wersji językowych interfejsu: polskiej i angielskiej. Frontend powinien używać centralnej warstwy tłumaczeń zamiast tekstów wpisanych bezpośrednio w komponentach. Domyślnym językiem pozostaje polski, ale użytkownik ma móc przełączyć język UI na angielski. Backend powinien zwracać stabilne kody błędów i techniczne komunikaty angielskie, a frontend powinien tłumaczyć znane błędy na język aktualnie wybrany w interfejsie. Dane biznesowe z bazy, takie jak nazwy usług, mogą pozostać w jednym języku do czasu osobnej decyzji o tłumaczeniu treści zapisanych w bazie. |
 
 ## Reguły biznesowe i granice dostępu
 
@@ -114,6 +117,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Odzyskiwanie haseł klientów i administratorów oraz samoobsługowa zmiana hasła. Rejestracja klienta i zarządzanie kontami mechaników przez admina są dostępne;
   obecne uwierzytelnianie używa sesji Spring Security i ochrony CSRF. Ewentualna zmiana mechanizmu
   uwierzytelniania wymaga konkretnej potrzeby, JWT nie jest wymaganiem.
+- Tłumaczenie danych zapisanych w bazie, np. nazw i opisów usług, historii warsztatu
+  oraz treści faktur PDF, wymaga osobnej decyzji. Pierwszy etap i18n obejmuje przede
+  wszystkim teksty interfejsu i mapowanie błędów API.
 
 ## Architektura i stan techniczny
 

@@ -5,31 +5,12 @@ import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
 import type { Appointment, AppointmentPage, AppointmentStatus } from '../types'
+import { appointmentStatusTranslationKeys } from '../../../i18n/translations'
+import { useTranslation } from '../../../i18n/useTranslation'
 import { AppointmentDetails } from './AppointmentDetails'
 import '../appointments.css'
 
 const pageSize = 5
-
-const statusLabels: Record<AppointmentStatus, string> = {
-  PENDING: 'Oczekuje na decyzję',
-  TIME_PROPOSED: 'Zaproponowano inny dzień',
-  CONFIRMED: 'Potwierdzona',
-  READY_FOR_PICKUP: 'Czeka na odbiór',
-  COMPLETED: 'Zakończona',
-  CANCELLED: 'Odwołana',
-  REJECTED: 'Odrzucona',
-}
-
-const statusFilterOptions: Array<{ value: AppointmentStatus | 'ALL', label: string }> = [
-  { value: 'ALL', label: 'Wszystkie statusy' },
-  { value: 'PENDING', label: statusLabels.PENDING },
-  { value: 'TIME_PROPOSED', label: statusLabels.TIME_PROPOSED },
-  { value: 'CONFIRMED', label: statusLabels.CONFIRMED },
-  { value: 'READY_FOR_PICKUP', label: statusLabels.READY_FOR_PICKUP },
-  { value: 'COMPLETED', label: statusLabels.COMPLETED },
-  { value: 'CANCELLED', label: statusLabels.CANCELLED },
-  { value: 'REJECTED', label: statusLabels.REJECTED },
-]
 
 type StatusFilter = AppointmentStatus | 'ALL'
 type DateSortDirection = 'DESC' | 'ASC'
@@ -41,6 +22,7 @@ const cancellableStatuses = new Set<Appointment['status']>([
 ])
 
 export function ClientAppointmentsSection() {
+  const { t } = useTranslation()
   const [appointmentPage, setAppointmentPage] = useState<AppointmentPage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -82,6 +64,16 @@ export function ClientAppointmentsSection() {
   const totalPages = appointmentPage?.totalPages ?? 0
   const firstVisibleIndex = totalElements === 0 ? 0 : currentPage * pageSize + 1
   const lastVisibleIndex = Math.min((currentPage * pageSize) + appointments.length, totalElements)
+  const statusFilterOptions: Array<{ value: StatusFilter, label: string }> = [
+    { value: 'ALL', label: t('status.all') },
+    { value: 'PENDING', label: t(appointmentStatusTranslationKeys.PENDING) },
+    { value: 'TIME_PROPOSED', label: t(appointmentStatusTranslationKeys.TIME_PROPOSED) },
+    { value: 'CONFIRMED', label: t(appointmentStatusTranslationKeys.CONFIRMED) },
+    { value: 'READY_FOR_PICKUP', label: t(appointmentStatusTranslationKeys.READY_FOR_PICKUP) },
+    { value: 'COMPLETED', label: t(appointmentStatusTranslationKeys.COMPLETED) },
+    { value: 'CANCELLED', label: t(appointmentStatusTranslationKeys.CANCELLED) },
+    { value: 'REJECTED', label: t(appointmentStatusTranslationKeys.REJECTED) },
+  ]
 
   function retry() {
     setIsLoading(true)
@@ -192,8 +184,8 @@ export function ClientAppointmentsSection() {
                 <span>Sortowanie po dacie</span>
                 <CustomSelect id="client-appointment-date-sort" value={dateSortDirection}
                   options={[
-                    { value: 'DESC', label: 'Od najnowszych' },
-                    { value: 'ASC', label: 'Od najstarszych' },
+                    { value: 'DESC', label: t('sort.dateDesc') },
+                    { value: 'ASC', label: t('sort.dateAsc') },
                   ]}
                   onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
               </label>

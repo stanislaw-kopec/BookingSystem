@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ApiError, errorMessage } from '../../../api/apiClient'
 import { CustomSelect } from '../../../components/ui/CustomSelect'
+import { appointmentStatusTranslationKeys, repairItemTypeTranslationKeys } from '../../../i18n/translations'
+import { useTranslation } from '../../../i18n/useTranslation'
 import * as appointmentsApi from '../api/appointmentsApi'
 import { formatAppointmentDay } from '../dateTime'
 import { useAppointmentAvailability } from '../hooks/useAppointmentAvailability'
@@ -32,28 +34,8 @@ function emptyRepairItem(): RepairItemForm {
   return { type: 'LABOR', name: '', quantity: '1', unitGrossAmount: '' }
 }
 
-const statusLabels: Record<AppointmentStatus, string> = {
-  PENDING: 'Oczekuje na decyzję',
-  TIME_PROPOSED: 'Zaproponowano inny dzień',
-  CONFIRMED: 'Potwierdzona',
-  READY_FOR_PICKUP: 'Czeka na odbiór',
-  COMPLETED: 'Zakończona',
-  CANCELLED: 'Odwołana',
-  REJECTED: 'Odrzucona',
-}
-
-const statusFilterOptions: Array<{ value: StatusFilter, label: string }> = [
-  { value: 'ALL', label: 'Wszystkie statusy' },
-  { value: 'PENDING', label: statusLabels.PENDING },
-  { value: 'TIME_PROPOSED', label: statusLabels.TIME_PROPOSED },
-  { value: 'CONFIRMED', label: statusLabels.CONFIRMED },
-  { value: 'READY_FOR_PICKUP', label: statusLabels.READY_FOR_PICKUP },
-  { value: 'COMPLETED', label: statusLabels.COMPLETED },
-  { value: 'CANCELLED', label: statusLabels.CANCELLED },
-  { value: 'REJECTED', label: statusLabels.REJECTED },
-]
-
 export function StaffAppointmentsSection() {
+  const { t } = useTranslation()
   const [appointmentPage, setAppointmentPage] = useState<AppointmentPage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -101,6 +83,16 @@ export function StaffAppointmentsSection() {
   const totalPages = appointmentPage?.totalPages ?? 0
   const firstVisibleIndex = totalElements === 0 ? 0 : currentPage * pageSize + 1
   const lastVisibleIndex = Math.min((currentPage * pageSize) + appointments.length, totalElements)
+  const statusFilterOptions: Array<{ value: StatusFilter, label: string }> = [
+    { value: 'ALL', label: t('status.all') },
+    { value: 'PENDING', label: t(appointmentStatusTranslationKeys.PENDING) },
+    { value: 'TIME_PROPOSED', label: t(appointmentStatusTranslationKeys.TIME_PROPOSED) },
+    { value: 'CONFIRMED', label: t(appointmentStatusTranslationKeys.CONFIRMED) },
+    { value: 'READY_FOR_PICKUP', label: t(appointmentStatusTranslationKeys.READY_FOR_PICKUP) },
+    { value: 'COMPLETED', label: t(appointmentStatusTranslationKeys.COMPLETED) },
+    { value: 'CANCELLED', label: t(appointmentStatusTranslationKeys.CANCELLED) },
+    { value: 'REJECTED', label: t(appointmentStatusTranslationKeys.REJECTED) },
+  ]
 
   function retry() {
     setIsLoading(true)
@@ -295,8 +287,8 @@ export function StaffAppointmentsSection() {
               <span>Sortowanie po dacie</span>
               <CustomSelect id="staff-appointment-date-sort" value={dateSortDirection}
                 options={[
-                  { value: 'DESC', label: 'Od najnowszych' },
-                  { value: 'ASC', label: 'Od najstarszych' },
+                  { value: 'DESC', label: t('sort.dateDesc') },
+                  { value: 'ASC', label: t('sort.dateAsc') },
                 ]}
                 onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
             </label>
@@ -452,8 +444,8 @@ export function StaffAppointmentsSection() {
                                             <span>Typ</span>
                                             <CustomSelect id={`repair-item-type-${appointment.id}-${index}`} value={item.type}
                                               options={[
-                                                { value: 'LABOR', label: 'Robocizna' },
-                                                { value: 'PART', label: 'Część' },
+                                                { value: 'LABOR', label: t(repairItemTypeTranslationKeys.LABOR) },
+                                                { value: 'PART', label: t(repairItemTypeTranslationKeys.PART) },
                                               ]}
                                               onChange={(value) => changeRepairItem(index, { type: value as RepairItemType })} />
                                           </label>

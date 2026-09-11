@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R15. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R16. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -174,6 +174,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   do ustalenia. Nie deklaruj zgodności księgowej na podstawie samego modelu danych.
 - Stosuj Bean Validation dla wejścia oraz walidację biznesową w serwisach.
   Utrzymuj spójny format błędów API bez ujawniania szczegółów bazy lub danych innych klientów.
+  Docelowo błędy API powinny zawierać stabilny kod techniczny i angielski komunikat
+  techniczny, a frontend powinien tłumaczyć znane kody na język wybrany w UI.
+  Nie traktuj polskich tekstów z backendu jako docelowych komunikatów interfejsu.
 
 ## Sprawdzanie zmian
 

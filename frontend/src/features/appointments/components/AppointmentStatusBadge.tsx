@@ -1,15 +1,8 @@
 import type { AppointmentStatus } from '../types'
-
-const labels: Record<AppointmentStatus, string> = {
-  PENDING: 'Oczekujące',
-  TIME_PROPOSED: 'Zaproponowano nowy dzień',
-  CONFIRMED: 'Potwierdzone',
-  READY_FOR_PICKUP: 'Czeka na odbiór',
-  COMPLETED: 'Zakończone',
-  CANCELLED: 'Odwołane',
-  REJECTED: 'Odrzucone',
-}
+import { appointmentStatusTranslationKeys } from '../../../i18n/translations'
+import { useTranslation } from '../../../i18n/useTranslation'
 
 export function AppointmentStatusBadge({ status }: { status: AppointmentStatus }) {
-  return <span className={`appointment-status status-${status.toLowerCase()}`}>{labels[status]}</span>
+  const { t } = useTranslation()
+  return <span className={`appointment-status status-${status.toLowerCase()}`}>{t(appointmentStatusTranslationKeys[status])}</span>
 }

@@ -15,29 +15,32 @@ import { StaffAppointmentsPage } from './pages/StaffAppointmentsPage'
 import { StaffSchedulePage } from './pages/StaffSchedulePage'
 import { VehiclePage } from './pages/VehiclePage'
 import { VehiclesPage } from './pages/VehiclesPage'
+import { I18nProvider } from './i18n/I18nProvider'
 import './App.css'
 
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <Routes>
-          <Route element={<AppLayout />}>
-            <Route index element={<HomePage />} />
-            <Route path="appointments" element={<AppointmentsPage />} />
-            <Route path="my-appointments" element={<RequireClient><MyAppointmentsPage /></RequireClient>} />
-            <Route path="profile" element={<RequireClient><ProfilePage /></RequireClient>} />
-            <Route path="vehicles" element={<RequireClient><VehiclesPage /></RequireClient>} />
-            <Route path="vehicles/:vehicleId" element={<RequireClient><VehiclePage /></RequireClient>} />
-            <Route path="staff/schedule" element={<RequireStaff><StaffSchedulePage /></RequireStaff>} />
-            <Route path="staff/appointments" element={<RequireStaff><StaffAppointmentsPage /></RequireStaff>} />
-            <Route path="staff/appointments/:appointmentId" element={<RequireStaff><StaffAppointmentDetailsPage /></RequireStaff>} />
-            <Route path="admin/schedule-settings" element={<RequireAdmin><AdminScheduleSettingsPage /></RequireAdmin>} />
-            <Route path="admin/staff-accounts" element={<RequireAdmin><AdminStaffAccountsPage /></RequireAdmin>} />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Route>
-        </Routes>
-      </AuthProvider>
+      <I18nProvider>
+        <AuthProvider>
+          <Routes>
+            <Route element={<AppLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="appointments" element={<AppointmentsPage />} />
+              <Route path="my-appointments" element={<RequireClient><MyAppointmentsPage /></RequireClient>} />
+              <Route path="profile" element={<RequireClient><ProfilePage /></RequireClient>} />
+              <Route path="vehicles" element={<RequireClient><VehiclesPage /></RequireClient>} />
+              <Route path="vehicles/:vehicleId" element={<RequireClient><VehiclePage /></RequireClient>} />
+              <Route path="staff/schedule" element={<RequireStaff><StaffSchedulePage /></RequireStaff>} />
+              <Route path="staff/appointments" element={<RequireStaff><StaffAppointmentsPage /></RequireStaff>} />
+              <Route path="staff/appointments/:appointmentId" element={<RequireStaff><StaffAppointmentDetailsPage /></RequireStaff>} />
+              <Route path="admin/schedule-settings" element={<RequireAdmin><AdminScheduleSettingsPage /></RequireAdmin>} />
+              <Route path="admin/staff-accounts" element={<RequireAdmin><AdminStaffAccountsPage /></RequireAdmin>} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Route>
+          </Routes>
+        </AuthProvider>
+      </I18nProvider>
     </BrowserRouter>
   )
 }
