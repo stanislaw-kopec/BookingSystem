@@ -5,8 +5,7 @@ import { errorMessage } from '../../../api/apiClient'
 import * as appointmentsApi from '../api/appointmentsApi'
 import * as vehiclesApi from '../../vehicles/api/vehiclesApi'
 import type { Appointment, AppointmentPage, AppointmentStatus } from '../types'
-import { appointmentStatusTranslationKeys } from '../../../i18n/translations'
-import { useTranslation } from '../../../i18n/useTranslation'
+import { appointmentStatusLabel } from '../appointmentLabels'
 import { AppointmentDetails } from './AppointmentDetails'
 import '../appointments.css'
 
@@ -22,7 +21,6 @@ const cancellableStatuses = new Set<Appointment['status']>([
 ])
 
 export function ClientAppointmentsSection() {
-  const { t } = useTranslation()
   const [appointmentPage, setAppointmentPage] = useState<AppointmentPage | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -65,14 +63,14 @@ export function ClientAppointmentsSection() {
   const firstVisibleIndex = totalElements === 0 ? 0 : currentPage * pageSize + 1
   const lastVisibleIndex = Math.min((currentPage * pageSize) + appointments.length, totalElements)
   const statusFilterOptions: Array<{ value: StatusFilter, label: string }> = [
-    { value: 'ALL', label: t('status.all') },
-    { value: 'PENDING', label: t(appointmentStatusTranslationKeys.PENDING) },
-    { value: 'TIME_PROPOSED', label: t(appointmentStatusTranslationKeys.TIME_PROPOSED) },
-    { value: 'CONFIRMED', label: t(appointmentStatusTranslationKeys.CONFIRMED) },
-    { value: 'READY_FOR_PICKUP', label: t(appointmentStatusTranslationKeys.READY_FOR_PICKUP) },
-    { value: 'COMPLETED', label: t(appointmentStatusTranslationKeys.COMPLETED) },
-    { value: 'CANCELLED', label: t(appointmentStatusTranslationKeys.CANCELLED) },
-    { value: 'REJECTED', label: t(appointmentStatusTranslationKeys.REJECTED) },
+    { value: 'ALL', label: 'Wszystkie statusy' },
+    { value: 'PENDING', label: appointmentStatusLabel('PENDING') },
+    { value: 'TIME_PROPOSED', label: appointmentStatusLabel('TIME_PROPOSED') },
+    { value: 'CONFIRMED', label: appointmentStatusLabel('CONFIRMED') },
+    { value: 'READY_FOR_PICKUP', label: appointmentStatusLabel('READY_FOR_PICKUP') },
+    { value: 'COMPLETED', label: appointmentStatusLabel('COMPLETED') },
+    { value: 'CANCELLED', label: appointmentStatusLabel('CANCELLED') },
+    { value: 'REJECTED', label: appointmentStatusLabel('REJECTED') },
   ]
 
   function retry() {
@@ -184,8 +182,8 @@ export function ClientAppointmentsSection() {
                 <span>Sortowanie po dacie</span>
                 <CustomSelect id="client-appointment-date-sort" value={dateSortDirection}
                   options={[
-                    { value: 'DESC', label: t('sort.dateDesc') },
-                    { value: 'ASC', label: t('sort.dateAsc') },
+                    { value: 'DESC', label: 'Od najnowszych' },
+                    { value: 'ASC', label: 'Od najstarszych' },
                   ]}
                   onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
               </label>

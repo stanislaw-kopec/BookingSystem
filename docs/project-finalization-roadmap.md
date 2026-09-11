@@ -88,59 +88,31 @@ Dlaczego warto:
 - pokazuje rozumienie ról i autoryzacji,
 - wzmacnia backendową część portfolio.
 
-## Priorytet 5: uporządkowanie języków i komunikatów
+## Priorytet 5: uporządkowanie komunikatów
 
-Obecnie aplikacja ma polski interfejs i wiele polskich tekstów bezpośrednio w komponentach React oraz w wyjątkach backendu. Docelowo warto oddzielić teksty użytkownika od kodu.
-
-Najlepszy kierunek to dwie wersje językowe strony: polska i angielska.
+Aplikacja pozostaje z polskim interfejsem. Dwujęzyczność została wycofana, więc przed zakończeniem projektu warto utrzymać prosty kierunek: teksty widoczne dla użytkownika są po polsku, a techniczne nazwy klas, DTO, endpointów, enumów i pól pozostają po angielsku.
 
 ### Frontend
 
 Docelowy kierunek:
 
-- dodać warstwę tłumaczeń, np. `src/i18n`,
-- trzymać teksty w słownikach `pl` i `en`,
-- w komponentach używać kluczy tłumaczeń zamiast tekstów wpisanych bezpośrednio w JSX,
-- dodać przełącznik języka w nagłówku,
-- zapamiętywać język w `localStorage`,
-- domyślnie uruchamiać aplikację po polsku.
-
-Zakres pierwszego etapu:
-
-- przygotować prosty własny mechanizm tłumaczeń bez zewnętrznej biblioteki,
-- przenieść teksty nagłówka, menu, statusów i wspólnych przycisków,
-- potem etapami przenosić formularze i widoki funkcji.
-
-Późniejszy etap:
-
-- dodać tłumaczenia opisów walidacji,
-- rozważyć bibliotekę `react-i18next`, jeśli własny mechanizm zacznie być za prosty,
-- zdecydować, czy dane z bazy, np. nazwy usług, mają mieć osobne tłumaczenia.
+- nie dodawać mechanizmu wielojęzyczności ani przełącznika języka bez nowej decyzji,
+- utrzymywać czytelne polskie etykiety statusów i komunikatów,
+- mapować stabilne kody błędów API na przyjazne polskie komunikaty,
+- zachować obsługę `message` jako fallback dla nieznanych błędów backendu.
 
 ### Backend
 
 Docelowy kierunek:
 
-- backend nie powinien być źródłem tekstów UI,
 - błędy API powinny mieć stabilny kod techniczny, np. `VEHICLE_NOT_FOUND`, `APPOINTMENT_DAY_FULL`, `VALIDATION_FAILED`,
-- komunikat tekstowy może być angielski i techniczny,
-- frontend powinien mapować znane kody błędów na tekst w aktualnym języku użytkownika,
+- komunikat tekstowy może pozostać techniczny,
+- frontend powinien opierać czytelny komunikat głównie na kodzie błędu,
 - nie należy tłumaczyć nazw klas, pól DTO, endpointów ani enumów.
-
-Zakres pierwszego etapu, który warto mieć przed końcowym porządkowaniem:
-
-- utrzymać `ApiError.code` jako stabilny kontrakt odpowiedzi,
-- rozwijać enum kodów wraz z kolejnymi wyjątkami domenowymi,
-- mapować znane kody na teksty interfejsu po stronie frontendu,
-- zachować obsługę `message` jako fallback podczas dalszej migracji i18n.
 
 ### Faktury PDF i treści biznesowe
 
-Faktura jest dokumentem użytkownika, więc jej język trzeba potraktować osobno. Najprostsza decyzja na teraz:
-
-- faktura pozostaje po polsku,
-- po wprowadzeniu i18n można dodać parametr języka albo generować PDF zgodnie z językiem UI,
-- nie mieszać tego z technicznymi komunikatami backendu.
+Faktura pozostaje po polsku. Nazwy usług, opisy napraw i inne dane zapisane w bazie są wyświetlane tak, jak zostały zapisane.
 
 ## Opcjonalnie: edycja pojazdu
 
@@ -188,11 +160,10 @@ To jest dobre uzupełnienie, ale po OpenAPI, CI i README.
 3. Dodać GitHub Actions / CI.
 4. Dodać testy kont mechaników.
 5. Przerobić README pod portfolio.
-6. Zacząć i18n od frontendu: nagłówek, menu, statusy, wspólne przyciski.
-7. Dodać kody błędów w backendzie i mapowanie komunikatów w frontendzie.
-8. Opcjonalnie dodać edycję pojazdu.
-9. Opcjonalnie dodać samoobsługową zmianę hasła.
-10. Opcjonalnie przygotować produkcyjniejszy Docker frontendu.
+6. Utrzymać stabilne kody błędów API i mapowanie komunikatów w frontendzie.
+7. Opcjonalnie dodać edycję pojazdu.
+8. Opcjonalnie dodać samoobsługową zmianę hasła.
+9. Opcjonalnie przygotować produkcyjniejszy Docker frontendu.
 
 ## Czego nie rozbudowywać przed pierwszą prezentacją
 
@@ -214,4 +185,3 @@ Jeśli trzeba wybrać tylko trzy rzeczy przed końcem, najlepsze będą:
 2. GitHub Actions / CI.
 3. README ze screenami i scenariuszem demo.
 
-Jeśli chcesz dodać coś ciekawego do nauki Reacta, najlepszym kandydatem jest i18n z językiem polskim i angielskim.

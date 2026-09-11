@@ -1,6 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import type { KeyboardEvent } from 'react'
-import { useTranslation } from '../../i18n/useTranslation'
 
 export interface CustomSelectOption {
   value: string
@@ -52,7 +51,6 @@ export function CustomSelect({
   const listboxId = `${id || generatedId}-listbox`
   const wrapperRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
-  const { t } = useTranslation()
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(() => {
     const selectedIndex = options.findIndex((option) => option.value === value && !option.disabled)
@@ -139,7 +137,7 @@ export function CustomSelect({
         aria-invalid={invalid || undefined} aria-describedby={describedBy} disabled={disabled}
         onClick={() => isOpen ? setIsOpen(false) : openList()} onKeyDown={handleKeyDown}>
         <span className={selectedOption ? 'custom-select-value' : 'custom-select-value placeholder'}>
-          {selectedOption?.label ?? placeholder ?? t('select.defaultPlaceholder')}
+          {selectedOption?.label ?? placeholder ?? 'Wybierz opcję'}
         </span>
       </button>
       {isOpen && (

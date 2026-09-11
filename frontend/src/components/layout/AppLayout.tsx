@@ -5,11 +5,9 @@ import { AuthDialog } from '../../features/auth/components/AuthDialog'
 import { useAuth } from '../../features/auth/hooks/useAuth'
 import { SiteHeader } from './SiteHeader'
 import { workshopInfo } from '../../features/workshop/workshopInfo'
-import { useTranslation } from '../../i18n/useTranslation'
 
 export function AppLayout() {
   const auth = useAuth()
-  const { t } = useTranslation()
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState<string | null>(null)
@@ -40,7 +38,7 @@ export function AppLayout() {
         </div>
       )}
       <Outlet />
-      <footer className="site-footer">{workshopInfo.name} · {t('app.footerOffer')}</footer>
+      <footer className="site-footer">{workshopInfo.name} · Oferta warsztatu samochodowego</footer>
       {isLoginOpen && !auth.user && <AuthDialog onClose={() => setIsLoginOpen(false)} />}
     </div>
   )

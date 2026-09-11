@@ -187,30 +187,6 @@ fieldset > .actions, fieldset > .button { margin-top: 16px; }
 .primary-nav-link { padding: 8px 12px; color: var(--text); text-decoration: none; border: 1px solid transparent; border-radius: 999px; }
 .primary-nav-link:hover { text-decoration: none; color: var(--accent); background: rgb(246 201 14 / 8%); border-color: rgb(246 201 14 / 22%); }
 .primary-nav-link.active { color: #17120b; background: var(--accent); border-color: var(--accent); font-weight: 900; }
-.language-switcher {
-  display: inline-flex;
-  gap: 4px;
-  padding: 4px;
-  border: 1px solid rgb(246 201 14 / 20%);
-  border-radius: 999px;
-  background: rgb(15 14 13 / 46%);
-}
-.language-switcher-button {
-  min-width: 38px;
-  padding: 6px 9px;
-  color: var(--muted);
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  font-size: 0.8rem;
-  font-weight: 900;
-  transition: background 0.14s ease, color 0.14s ease;
-}
-.language-switcher-button:hover,
-.language-switcher-button.active {
-  color: #1c1305;
-  background: var(--accent);
-}
 .account-menu { margin-left: auto; font-size: 0.9rem; }
 .account-dropdown { position: relative; }
 .account-trigger { display: flex; align-items: center; gap: 10px; min-width: 170px; max-width: 240px; padding: 9px 13px; cursor: pointer; list-style: none; border: 1px solid var(--border-strong); border-radius: 999px; background: var(--surface); box-shadow: var(--shadow-soft); }
@@ -258,7 +234,6 @@ fieldset > .actions, fieldset > .button { margin-top: 16px; }
   .workshop-hero-logo { width: min(100%, 300px); justify-self: center; }
   .site-header { gap: 16px; padding: 16px; }
   .primary-nav { order: 3; width: 100%; gap: 6px; }
-  .language-switcher { margin-left: auto; }
   .account-menu { font-size: 0.82rem; }
   .account-trigger { min-width: 130px; }
   .page-content { padding: 0 18px; }
