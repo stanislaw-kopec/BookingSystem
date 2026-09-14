@@ -1,6 +1,125 @@
-# BookingSystem
+# Mietek Customs — system obsługi warsztatu samochodowego
 
-React z TypeScriptem, backend Spring Boot i baza PostgreSQL.
+<p align="center">
+  <img src="frontend/src/assets/branding/mietek-customs-logo.png" alt="Logo warsztatu Mietek Customs" width="260">
+</p>
+
+Pełnostackowa aplikacja portfolio do obsługi warsztatu samochodowego. Pozwala klientom
+zarządzać pojazdami i umawiać wizyty, a pracownikom prowadzić zgłoszenie od przyjęcia
+samochodu aż do zakończenia naprawy i wystawienia faktury PDF. Administrator konfiguruje
+grafik warsztatu oraz zarządza kontami użytkowników.
+
+Projekt powstał jako praktyczne ćwiczenie umiejętności potrzebnych na stanowisku
+Java Developera: projektowania REST API, modelowania domeny, bezpieczeństwa,
+transakcji, pracy z PostgreSQL, testów integracyjnych i uruchamiania aplikacji w Dockerze.
+
+## Najważniejsze funkcje
+
+| Obszar | Możliwości |
+| --- | --- |
+| Klient | Rejestracja, profil prywatny lub firmowy, własne pojazdy, edycja pojazdu, umawianie i odwoływanie wizyt, potwierdzanie proponowanego dnia, historia napraw i faktury PDF |
+| Gość | Wysłanie zgłoszenia bez tworzenia konta, z danymi kontaktowymi i pojazdem |
+| Mechanik | Tygodniowy grafik, kolejka zgłoszeń, decyzje o terminach, szczegóły pojazdu i historii, pozycje robocizny i części, zakończenie naprawy oraz potwierdzenie odbioru |
+| Administrator | Funkcje mechanika, konfiguracja godzin i pojemności grafiku, wyjątki dla konkretnych dni oraz zarządzanie kontami klientów i personelu |
+| Oferta warsztatu | Publiczny katalog usług podzielony na kategorie, edytowany przez mechanika lub administratora |
+
+## Stack technologiczny
+
+| Warstwa | Technologie |
+| --- | --- |
+| Backend | Java 25, Spring Boot 4.1.1, Spring Web MVC, Spring Data JPA, Spring Security, Bean Validation |
+| Baza danych | PostgreSQL 17, Flyway, Hibernate |
+| Frontend | React, TypeScript, Vite, React Router |
+| Dokumenty | OpenPDF — generowanie faktur PDF |
+| Testy | JUnit 5, Spring MockMvc, AssertJ, Testcontainers |
+| Narzędzia | Maven Wrapper, npm, Docker Compose, GitHub Actions, Swagger/OpenAPI |
+
+## Architektura
+
+```mermaid
+flowchart LR
+    U[Przeglądarka] --> R[React + TypeScript]
+    R -->|REST /api, sesja i CSRF| C[Kontrolery Spring MVC]
+    C --> S[Serwisy i reguły biznesowe]
+    S --> J[Spring Data JPA]
+    J --> P[(PostgreSQL)]
+    S --> F[Generator faktur PDF]
+    M[Flyway] --> P
+```
+
+Backend jest monolitem podzielonym na pakiety funkcjonalne. React komunikuje się
+z REST API przez względne adresy `/api`. Uwierzytelnianie korzysta z sesji Spring
+Security i ciasteczka HttpOnly, a operacje zmieniające dane wymagają tokenu CSRF.
+
+## Najciekawsze elementy techniczne
+
+- Backend ustala właściciela profilu, pojazdu i zgłoszenia z zalogowanej sesji,
+  zamiast ufać identyfikatorowi przesłanemu przez frontend.
+- Dostęp do funkcji jest sprawdzany na backendzie dla ról `CLIENT`, `MECHANIC`
+  i `ADMIN`; samo ukrycie elementu interfejsu nie stanowi zabezpieczenia.
+- Rezerwacja ponownie sprawdza pojemność dnia wewnątrz transakcji i blokuje
+  odpowiedni rekord, aby równoczesne żądania nie przekroczyły limitu warsztatu.
+- Listy wizyt i kont korzystają z backendowej paginacji, filtrowania i sortowania.
+- Flyway wersjonuje schemat bazy, a profil `local` tworzy idempotentne dane pokazowe.
+- Faktura PDF powstaje na podstawie zakończonej naprawy i zawiera osobne pozycje
+  robocizny oraz części, a także wartości netto i brutto.
+- API zwraca wspólny format błędów ze stabilnymi kodami technicznymi, które frontend
+  mapuje na polskie komunikaty.
+- Testy integracyjne uruchamiają odizolowany PostgreSQL przez Testcontainers.
+
+## Zrzuty ekranu
+
+Zrzuty zostaną uzupełnione przed publikacją repozytorium. Przygotowane nazwy plików
+i dokładna lista widoków znajdują się w [`docs/screenshots/README.md`](docs/screenshots/README.md).
+
+| Widok | Docelowy plik | Co powinien pokazywać |
+| --- | --- | --- |
+| Strona główna | `docs/screenshots/01-home-page.png` | Logo, opis warsztatu i ofertę usług |
+| Panel klienta | `docs/screenshots/02-client-appointments.png` | Wizyty w różnych statusach, filtry i paginację |
+| Grafik mechanika | `docs/screenshots/03-staff-schedule.png` | Tygodniowy układ zgłoszeń warsztatu |
+| Szczegóły naprawy | `docs/screenshots/04-repair-details.png` | Dane pojazdu, historię oraz pozycje naprawy |
+| Panel administratora | `docs/screenshots/05-admin-panel.png` | Zarządzanie grafikiem albo kontami użytkowników |
+| Faktura | `docs/screenshots/06-invoice-preview.png` | Przykładowy dokument PDF bez danych prywatnych |
+
+## Szybkie uruchomienie
+
+Wymagany jest Docker Desktop z kontenerami Linux oraz Docker Compose w wersji
+co najmniej 2.20.3. Z głównego folderu projektu uruchom:
+
+```powershell
+docker compose up --build -d --wait
+```
+
+Następnie otwórz:
+
+- aplikację: http://localhost:5173,
+- Swagger UI: http://localhost:8080/swagger-ui.html,
+- stan backendu: http://localhost:8080/api/health.
+
+Najwygodniejsze konto do pierwszej prezentacji to `anna.demo` z hasłem
+`client-local-2026`. Wszystkie konta demonstracyjne opisuje dalsza część README.
+
+## Scenariusz prezentacji
+
+1. Otwórz stronę główną bez logowania i pokaż publiczną ofertę oraz formularz zgłoszenia gościa.
+2. Zaloguj się jako `anna.demo` i pokaż profil, dwa pojazdy oraz wizyty w różnych statusach.
+3. Otwórz historię Hondy Civic i pobierz fakturę za zakończoną naprawę.
+4. Zaloguj się jako `mechanic`, otwórz tygodniowy grafik i przejdź do szczegółów zgłoszenia.
+5. Pokaż decyzję o terminie, formularz zakończenia naprawy z robocizną i częściami oraz potwierdzenie odbioru.
+6. Zaloguj się jako `admin`, zmień limit wybranego dnia w konfiguracji grafiku i pokaż panel kont.
+7. Na końcu otwórz Swagger UI oraz workflow GitHub Actions, aby pokazać kontrakt API i automatyczną weryfikację projektu.
+
+## Spis treści
+
+- [Cała aplikacja w Dockerze](#cała-aplikacja-w-dockerze)
+- [Praca nad kodem](#praca-nad-kodem)
+- [Spring i React uruchamiane lokalnie](#spring-i-react-uruchamiane-lokalnie)
+- [Główne moduły aplikacji](#katalog-usług)
+- [Lokalne konta demonstracyjne](#lokalne-konta-demonstracyjne)
+- [Dokumentacja API](#dokumentacja-api-swagger--openapi)
+- [Dostępne API](#dostępne-api)
+- [GitHub Actions](#automatyczne-sprawdzanie-w-github-actions)
+- [Nauka i sprawdzanie zmian](#nauka-i-sprawdzanie-zmian)
 
 ## Cała aplikacja w Dockerze
 
@@ -275,11 +394,11 @@ migracji — nowe zmiany schematu zapisuj w kolejnych plikach migracji.
 
 Compose włącza profil Springa `local`. Przy uruchomieniu powstają brakujące konta:
 
-| Login | Hasło | Dostęp do katalogu |
+| Login | Hasło | Rola i dane pokazowe |
 | --- | --- | --- |
-| `mechanic` | `mechanic-local-2026` | Odczyt i edycja |
-| `admin` | `admin-local-2026` | Odczyt i edycja |
-| `client` | `client-local-2026` | Odczyt |
+| `mechanic` | `mechanic-local-2026` | Mechanik: grafik, zgłoszenia i naprawy |
+| `admin` | `admin-local-2026` | Administrator: grafik, oferta i konta użytkowników |
+| `client` | `client-local-2026` | Klient bez rozbudowanych danych demonstracyjnych |
 | `anna.demo` | `client-local-2026` | Klient z profilem, pojazdami, wizytami i fakturami |
 | `firma.demo` | `client-local-2026` | Klient firmowy z profilem, pojazdem i fakturą na firmę |
 
@@ -351,6 +470,7 @@ przy normalnym użyciu frontendu.
 | `POST /api/auth/register` | Utworzenie konta klienta | Publiczny, CSRF |
 | `POST /api/auth/login` | Logowanie: formularz `username`, `password` | Publiczny, CSRF |
 | `POST /api/auth/logout` | Zakończenie sesji | CSRF |
+| `PUT /api/auth/password` | Zmiana własnego hasła po podaniu obecnego | Zalogowany użytkownik, CSRF |
 | `GET /api/profile/me` | Własny profil lub pusty formularz | CLIENT |
 | `PUT /api/profile/me` | Utworzenie albo aktualizacja własnego profilu | CLIENT, CSRF |
 | `GET /api/vehicles` | Lista własnych pojazdów | CLIENT |
@@ -358,6 +478,7 @@ przy normalnym użyciu frontendu.
 | `GET /api/vehicles/{vehicleId}/repair-history` | Historia zakończonych napraw własnego pojazdu | CLIENT |
 | `GET /api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice` | Pobranie faktury PDF za zakończoną naprawę | CLIENT |
 | `POST /api/vehicles` | Dodanie pojazdu do własnego konta | CLIENT, CSRF |
+| `PUT /api/vehicles/{vehicleId}` | Edycja własnego pojazdu | Właściciel CLIENT, CSRF |
 | `GET /api/appointments/availability` | Kalendarz dni na 30 dni | Publiczny |
 | `POST /api/appointments/guest` | Wysłanie zgłoszenia bez konta | Publiczny, CSRF |
 | `GET /api/appointments` | Strona własnych zgłoszeń; obsługuje `status`, `page`, `size`, `sortDirection` | CLIENT |
@@ -368,12 +489,23 @@ przy normalnym użyciu frontendu.
 | `GET /api/staff/appointments/all` | Pełna lista zgłoszeń używana przez grafik personelu | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/{id}` | Szczegóły pojedynczego zgłoszenia dla personelu | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/{id}/repair-history` | Historia napraw pojazdu z danego zgłoszenia | MECHANIC, ADMIN |
+| `GET /api/staff/appointments/{id}/invoice` | Pobranie faktury zakończonej naprawy przez personel | MECHANIC, ADMIN |
 | `POST /api/staff/appointments/{id}/accept` | Potwierdzenie zgłoszonego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/reject` | Odrzucenie zgłoszenia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/propose-time` | Propozycja innego dnia | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/confirm-proposed` | Potwierdzenie dnia gościa po kontakcie | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/complete-repair` | Zakończenie naprawy i ustawienie odbioru auta | MECHANIC, ADMIN, CSRF |
 | `POST /api/staff/appointments/{id}/mark-picked-up` | Potwierdzenie odbioru samochodu i zakończenie zgłoszenia | MECHANIC, ADMIN, CSRF |
+| `GET /api/admin/schedule` | Konfiguracja grafiku i wyjątki dni | ADMIN |
+| `PUT /api/admin/schedule/settings` | Zmiana godzin, horyzontu i domyślnej pojemności | ADMIN, CSRF |
+| `PUT /api/admin/schedule/overrides/{date}` | Zapis zamknięcia lub pojemności konkretnego dnia | ADMIN, CSRF |
+| `DELETE /api/admin/schedule/overrides/{date}` | Usunięcie wyjątku dnia | ADMIN, CSRF |
+| `GET /api/admin/accounts` | Stronicowana lista kont z wyszukiwaniem i filtrami | ADMIN |
+| `POST /api/admin/accounts/mechanics` | Utworzenie konta mechanika | ADMIN, CSRF |
+| `POST /api/admin/accounts/administrators` | Utworzenie chronionego konta administratora | ADMIN, CSRF |
+| `PUT /api/admin/accounts/{accountId}` | Edycja loginu i e-maila klienta lub mechanika | ADMIN, CSRF |
+| `PUT /api/admin/accounts/{accountId}/password` | Ustawienie nowego hasła klienta lub mechanika | ADMIN, CSRF |
+| `PUT /api/admin/accounts/{accountId}/status` | Aktywacja albo dezaktywacja klienta lub mechanika | ADMIN, CSRF |
 
 Zapis kategorii przyjmuje JSON z `name` i opcjonalnym `description`.
 Zapis usługi wymaga dodatkowo `categoryId`. Utworzenie zwraca 201 i nagłówek
@@ -482,7 +614,7 @@ npm run build
 npm run lint
 ```
 
-Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję, CSRF oraz administracyjne zarządzanie kontami mechaników.
+Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję, CSRF oraz administracyjne zarządzanie kontami użytkowników i tworzenie kont personelu.
 Budowa obrazu Docker pomija uruchomienie testów — sprawdzaj je osobno.
 
 Szczegóły mechanizmów: [gotowość usług w Compose](https://docs.docker.com/compose/how-tos/startup-order/),

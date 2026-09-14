@@ -39,19 +39,22 @@ Dlaczego warto:
 - ułatwia utrzymanie projektu,
 - na rozmowie można powiedzieć, że kod jest automatycznie weryfikowany.
 
-## Priorytet 3: README pod portfolio
+## Priorytet 3: README pod portfolio — przygotowane
 
-README jest już bogate technicznie, ale warto je ułożyć pod osobę, która pierwszy raz widzi repozytorium.
+README rozpoczyna się opisem biznesowym i prezentuje projekt osobie, która pierwszy raz widzi repozytorium.
 
-Dodać na początku:
+Obecny zakres:
 
 - krótki opis biznesowy aplikacji,
 - stack technologiczny,
 - listę głównych funkcji,
-- screeny aplikacji,
 - konta demonstracyjne,
 - krótki scenariusz demo,
-- sekcję „Najciekawsze technicznie elementy”.
+- sekcję „Najciekawsze elementy techniczne”,
+- diagram architektury,
+- placeholdery oraz instrukcję wykonania screenów aplikacji.
+
+Przed publikacją repozytorium pozostaje wykonać zrzuty i zastąpić nimi placeholdery.
 
 Mocne punkty do pokazania:
 
@@ -66,20 +69,19 @@ Mocne punkty do pokazania:
 - Testcontainers,
 - walidacja i spójny format błędów.
 
-## Priorytet 4: testy kont mechaników — wdrożone
+## Priorytet 4: testy zarządzania kontami — wdrożone
 
 Obszar zarządzania kontami personelu jest pokryty testami integracyjnymi.
 
 Obecny zakres testów:
 
-- admin może utworzyć konto mechanika,
-- mechanik nie może tworzyć kont mechaników,
-- klient nie może tworzyć kont mechaników,
+- admin może utworzyć konto mechanika i administratora,
+- mechanik i klient nie mogą tworzyć kont personelu,
 - użytkownik anonimowy nie ma dostępu do panelu admina,
 - publiczna rejestracja tworzy wyłącznie konto klienta,
 - dezaktywowany mechanik nie może się zalogować,
-- admin może zresetować hasło mechanika,
-- nie można edytować konta, które nie ma roli `MECHANIC`.
+- admin może edytować, dezaktywować i zresetować hasło klienta lub mechanika,
+- konta administratorów są widoczne, ale chronione przed edycją, resetem hasła i dezaktywacją.
 
 Dlaczego warto:
 
@@ -158,7 +160,7 @@ To jest dobre uzupełnienie, ale po OpenAPI, CI i README.
 2. Dodać OpenAPI / Swagger.
 3. Dodać GitHub Actions / CI.
 4. Dodać testy kont mechaników.
-5. Przerobić README pod portfolio.
+5. Przerobić README pod portfolio — przygotowane; pozostają zrzuty ekranu.
 6. Utrzymać stabilne kody błędów API i mapowanie komunikatów w frontendzie.
 7. Edycja pojazdu — wdrożona.
 8. Samoobsługowa zmiana hasła — wdrożona.
@@ -178,9 +180,9 @@ Na tym etapie nie warto robić zbyt dużych modułów, które mogą rozciągną�
 
 ## Krótka wersja
 
-Jeśli trzeba wybrać tylko trzy rzeczy przed końcem, najlepsze będą:
+Przed publikacją pierwszej wersji pozostają trzy główne kroki:
 
-1. OpenAPI / Swagger.
-2. GitHub Actions / CI.
-3. README ze screenami i scenariuszem demo.
+1. Dodać przygotowane zrzuty ekranu do README.
+2. Opcjonalnie przygotować produkcyjny wariant Dockera dla frontendu.
+3. Przejść końcowy scenariusz demonstracyjny i oznaczyć wersję tagiem.
 
