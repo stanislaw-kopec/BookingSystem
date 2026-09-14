@@ -245,6 +245,24 @@ Dla `COMPLETED` klient może pobrać PDF faktury z historii pojazdu.
 | `CANCELLED` | Klient odwołał wizytę, a miejsce zostało zwolnione |
 | `REJECTED` | Zgłoszenie zostało odrzucone, a miejsce zwolnione |
 
+## Zarządzanie kontami użytkowników
+
+Administrator otwiera z menu konta panel `http://localhost:5173/admin/accounts`.
+Lista obejmuje klientów, mechaników i administratorów, obsługuje wyszukiwanie po loginie lub e-mailu,
+filtrowanie po roli i aktywności oraz paginację wykonywaną przez backend.
+
+Administrator może poprawić login i e-mail, aktywować albo dezaktywować konto oraz
+ustawić nowe hasło klientowi lub mechanikowi. Reset hasła zakłada, że użytkownik
+wcześniej potwierdzi swoją tożsamość bezpośrednio w warsztacie. Warsztat przekazuje
+mu nowe hasło poza aplikacją, a użytkownik może później ustawić własne przez stronę
+„Zmień hasło”. Aplikacja nie wysyła wiadomości resetujących i nie udostępnia formularza
+„Nie pamiętam hasła”.
+
+Panel pozwala tworzyć konta mechaników i administratorów. Rola wynika z wybranej,
+dedykowanej operacji backendu i nie jest dostępna w publicznej rejestracji. Konta klientów
+powstają przez publiczną rejestrację. Konta administratorów są widoczne na liście, ale
+chronione przed edycją, resetem hasła i dezaktywacją w tym panelu.
+
 Migracje Flyway tworzą schemat i jednorazowo dodają ofertę startową: Elektryka,
 Mechanika i Wulkanizacja, łącznie sześć usług. Migracja V8 rozszerza ofertę
 o 15 propozycji usług w istniejących kategoriach,

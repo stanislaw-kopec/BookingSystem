@@ -40,6 +40,7 @@ public class SecurityConfig {
                     .permitAll()
                 .requestMatchers(HttpMethod.PUT, "/api/auth/password").authenticated()
                 .requestMatchers("/api/admin/schedule", "/api/admin/schedule/**",
+                    "/api/admin/accounts", "/api/admin/accounts/**",
                     "/api/admin/staff", "/api/admin/staff/**").hasRole("ADMIN")
                 .requestMatchers("/api/profile/**").hasRole("CLIENT")
                 .requestMatchers("/api/vehicles", "/api/vehicles/**").hasRole("CLIENT")

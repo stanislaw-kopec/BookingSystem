@@ -510,12 +510,12 @@ fieldset > .actions, fieldset > .button { margin-top: 16px; }
 }
 
 .staff-schedule-card-list,
-.staff-account-list,
+.admin-account-list,
 .schedule-overrides-list {
   gap: 1rem;
 }
 
-.staff-accounts-layout,
+.admin-accounts-layout,
 .schedule-settings-layout {
   gap: 1.25rem;
 }

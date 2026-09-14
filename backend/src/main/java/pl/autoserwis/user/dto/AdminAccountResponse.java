@@ -2,7 +2,7 @@ package pl.autoserwis.user.dto;
 
 import pl.autoserwis.user.UserRole;
 
-public record StaffAccountResponse(
+public record AdminAccountResponse(
     Long id,
     String username,
     String email,

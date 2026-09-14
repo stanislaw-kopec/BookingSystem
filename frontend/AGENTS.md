@@ -68,7 +68,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Po zapisie zgłoszenie ma status `READY_FOR_PICKUP`, a klient widzi opis prac i kwotę
   w swoich wizytach. Nie dodawaj jeszcze płatności online ani rozbicia netto/VAT.
 - R14: `/admin/schedule-settings` jest chronioną zakładką ADMIN do ustawiania domyślnej liczby miejsc, horyzontu rezerwacji, godzin pracy i wyjątków dni. Link pokazuj w menu konta tylko administratorowi.
-- R15: `/admin/staff-accounts` jest chronioną zakładką ADMIN do zarządzania kontami mechaników: tworzenia kont, edycji loginu i e-maila, resetowania hasła oraz aktywowania albo dezaktywowania dostępu. Formularze nie pozwalają wybrać roli; backend nadaje i utrzymuje MECHANIC. Link pokazuj w menu konta tylko administratorowi.
+- R15: `/admin/accounts` jest chronioną zakładką ADMIN do zarządzania kontami użytkowników. Lista ma wyszukiwanie, filtry roli i aktywności oraz paginację backendową. Administrator może edytować login i e-mail, ustawić nowe hasło, aktywować albo dezaktywować konto klienta lub mechanika oraz tworzyć konta MECHANIC i ADMIN. Konta administratorów pokazuj na liście jako chronione, bez przycisków edycji, resetu hasła i dezaktywacji. Link pokazuj w menu konta tylko administratorowi, a starą trasę `/admin/staff-accounts` przekierowuj do nowego panelu.
 - R09: oferta znajduje się pod opisem warsztatu na stronie głównej. Kategorie
   pokazuje `ServiceCategoryCard`, a formularze edycji `CatalogManager` dla MECHANIC/ADMIN.
   Link „Usługi” przewija do sekcji, nie wymaga osobnej trasy ani routera.

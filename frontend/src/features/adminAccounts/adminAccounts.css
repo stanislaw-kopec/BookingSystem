@@ -1,0 +1,48 @@
+.admin-accounts-section { max-width: 1100px; }
+.admin-accounts-layout { display: grid; grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.5fr); gap: 20px; align-items: start; }
+.admin-account-card { display: grid; gap: 16px; padding: 20px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.admin-account-card h3 { margin: 0; }
+.admin-account-help { margin: 0; }
+.admin-account-filters { display: grid; grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(130px, 0.5fr)); gap: 12px; align-items: end; }
+.admin-account-search { display: flex; gap: 8px; }
+.admin-account-search input { min-width: 0; }
+.admin-account-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.admin-account-list li { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--border); border-radius: 12px; background: var(--background); }
+.admin-account-list li.inactive { opacity: 0.76; }
+.admin-account-summary { display: flex; gap: 16px; align-items: flex-start; justify-content: space-between; }
+.admin-account-summary-main { display: grid; gap: 4px; min-width: 0; }
+.admin-account-summary-main span { overflow-wrap: anywhere; }
+.admin-account-meta { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.admin-account-role { color: var(--accent); font-size: 0.78rem; font-weight: 900; letter-spacing: 0.06em; text-transform: uppercase; }
+.admin-account-meta .status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 9px;
+  color: #edfff4;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  border: 1px solid #62d48f;
+  border-radius: 999px;
+  background: #175235;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 10%);
+}
+.admin-account-meta .status-pill.inactive {
+  color: #f8edf3;
+  border-color: #796472;
+  background: #463641;
+}
+.admin-account-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-account-inline-form { display: grid; gap: 12px; padding-top: 14px; border-top: 1px solid var(--border); }
+.admin-account-protected { margin: 0; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.86rem; }
+.admin-account-pagination { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+@media (max-width: 880px) {
+  .admin-accounts-layout, .admin-account-filters { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 560px) {
+  .admin-account-summary, .admin-account-pagination { align-items: stretch; flex-direction: column; }
+  .admin-account-search { flex-direction: column; }
+}

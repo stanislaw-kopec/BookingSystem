@@ -4,7 +4,7 @@ Ten plik zbiera rzeczy, które warto zrobić przed uznaniem projektu za gotowy d
 
 ## Najważniejszy wniosek
 
-Projekt jest już funkcjonalnie mocny: ma role, logowanie, profil klienta, pojazdy, umawianie wizyt, panel personelu, konfigurację grafiku, konta mechaników, historię napraw, faktury PDF, migracje bazy, Docker Compose i testy integracyjne. Największy zysk przed zakończeniem projektu dadzą teraz elementy jakościowe i prezentacyjne, a nie kolejny duży moduł biznesowy.
+Projekt jest już funkcjonalnie mocny: ma role, logowanie, profil klienta, pojazdy, umawianie wizyt, panel personelu, konfigurację grafiku, zarządzanie kontami użytkowników i tworzenie kont personelu, historię napraw, faktury PDF, migracje bazy, Docker Compose i testy integracyjne. Największy zysk przed zakończeniem projektu dadzą teraz elementy jakościowe i prezentacyjne, a nie kolejny duży moduł biznesowy.
 
 ## Priorytet 1: OpenAPI / Swagger — wdrożone
 

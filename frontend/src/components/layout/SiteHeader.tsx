@@ -112,8 +112,8 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdmini
                       <NavLink className={accountLinkClassName} to="/admin/schedule-settings" onClick={closeAccountMenu}>
                         Konfiguracja grafiku
                       </NavLink>
-                      <NavLink className={accountLinkClassName} to="/admin/staff-accounts" onClick={closeAccountMenu}>
-                        Konta mechaników
+                      <NavLink className={accountLinkClassName} to="/admin/accounts" onClick={closeAccountMenu}>
+                        Konta użytkowników
                       </NavLink>
                     </>
                   )}

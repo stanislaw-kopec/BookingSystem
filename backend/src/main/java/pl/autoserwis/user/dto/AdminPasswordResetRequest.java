@@ -3,7 +3,7 @@ package pl.autoserwis.user.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
-public record StaffPasswordResetRequest(
+public record AdminPasswordResetRequest(
     @NotBlank(message = "Enter a new password.")
     @Size(min = 8, max = 64, message = "Password must be between 8 and 64 characters.")
     String password,

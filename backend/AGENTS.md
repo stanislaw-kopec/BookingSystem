@@ -60,7 +60,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   zabezpieczają także indeksy bazy. Usunięcie niepustej kategorii zwraca 409;
   nie wprowadzaj kaskadowego usuwania usług.
 - Sesje obsługuje Spring Security. Zachowaj CSRF dla operacji zmieniających dane,
-  BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta. Konta mechaników tworzy wyłącznie ADMIN przez endpointy administracyjne.
+  BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta. Konta mechaników i administratorów tworzy wyłącznie ADMIN przez endpointy administracyjne.
 - `local` tworzy brakujące konta i dane demonstracyjne; nie zmienia haseł, profili,
   pojazdów ani zgłoszeń, które już istnieją. Nie stosuj demonstracyjnej bazy ani jej
   kont we wdrożeniu produkcyjnym.
@@ -74,8 +74,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   Login i e-mail są unikalne bez rozróżniania wielkości liter.
 - Backend ponownie sprawdza zgodność haseł. Nigdy nie przyjmuj roli z formularza rejestracji.
   Po rejestracji frontend loguje użytkownika istniejącym mechanizmem sesji.
-- `GET /api/admin/staff/mechanics`, `POST /api/admin/staff/mechanics`, `PUT /api/admin/staff/mechanics/{mechanicId}`, `PUT /api/admin/staff/mechanics/{mechanicId}/password` i `PUT /api/admin/staff/mechanics/{mechanicId}/status` są dostępne wyłącznie dla ADMIN.
-  POST tworzy konto z rolą MECHANIC, nawet jeśli przeglądarka spróbuje przesłać inną rolę. Edycja dotyczy tylko kont MECHANIC. Używaj tych samych reguł loginu, e-maila, hasła, unikalności i limitu BCrypt co przy rejestracji klienta. Dezaktywowane konto nie może się zalogować.
+- `GET /api/admin/accounts` zwraca stronicowaną listę kont CLIENT, MECHANIC i ADMIN z wyszukiwaniem po loginie lub e-mailu oraz filtrowaniem po roli i aktywności. Endpointy `POST /api/admin/accounts/mechanics`, `POST /api/admin/accounts/administrators`, `PUT /api/admin/accounts/{accountId}`, `PUT /api/admin/accounts/{accountId}/password` i `PUT /api/admin/accounts/{accountId}/status` są dostępne wyłącznie dla ADMIN.
+  Endpointy POST samodzielnie nadają odpowiednio rolę MECHANIC albo ADMIN i nie przyjmują roli w żądaniu. Edycja, reset hasła i zmiana aktywności dotyczą wyłącznie kont CLIENT i MECHANIC; konta ADMIN są widoczne, ale chronione przed tymi operacjami. Używaj tych samych reguł loginu, e-maila, hasła, unikalności i limitu BCrypt co przy rejestracji klienta. Dezaktywowane konto nie może się zalogować. Dotychczasowe endpointy `/api/admin/staff/mechanics` pozostają zgodnością wsteczną i nadal dotyczą tylko mechaników.
+- Reset hasła klienta lub mechanika zakłada wcześniejszą weryfikację tożsamości poza aplikacją, bez automatycznych wiadomości e-mail i tokenów odzyskiwania. Administrator ustawia nowe hasło i przekazuje je użytkownikowi, który może potem skorzystać z samoobsługowej zmiany hasła.
 - E-mail jest obecnie daną konta potrzebną do unikalności i przyszłego odzyskiwania
   dostępu. Pełne dane kontaktowe i rozliczeniowe powstaną w osobnym profilu klienta.
 - `PUT /api/auth/password` jest dostępny dla każdego zalogowanego użytkownika i wymaga CSRF.

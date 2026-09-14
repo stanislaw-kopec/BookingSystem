@@ -15,6 +15,7 @@ import pl.autoserwis.invoice.InvoiceGenerationException;
 import pl.autoserwis.profile.ProfileValidationException;
 import pl.autoserwis.vehicle.VehicleConflictException;
 import pl.autoserwis.vehicle.VehicleValidationException;
+import pl.autoserwis.user.AccountManagementValidationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -57,6 +58,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccountPasswordValidationException.class)
     ResponseEntity<ApiError> accountPasswordValidation(AccountPasswordValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(AccountManagementValidationException.class)
+    ResponseEntity<ApiError> accountManagementValidation(AccountManagementValidationException exception) {
         return ResponseEntity.badRequest()
             .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }

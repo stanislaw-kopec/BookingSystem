@@ -19,6 +19,7 @@ export class ApiError extends Error {
 
 const defaultErrorMessages: Record<string, string> = {
   ACCOUNT_PASSWORD_VALIDATION_FAILED: 'Sprawdź dane formularza zmiany hasła.',
+  ACCOUNT_MANAGEMENT_VALIDATION_FAILED: 'Sprawdź parametry listy kont.',
   ACCESS_DENIED: 'Nie masz uprawnień do wykonania tej operacji.',
   APPOINTMENT_CONFLICT: 'Nie można wykonać tej operacji dla aktualnego stanu wizyty.',
   APPOINTMENT_DAY_FULL: 'Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.',
