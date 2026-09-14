@@ -24,6 +24,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest(properties = "spring.docker.compose.enabled=false")
@@ -139,6 +140,87 @@ class VehicleIntegrationTest {
     }
 
     @Test
+    void updatesOwnVehicleAndNormalizesIdentifiers() throws Exception {
+        AppUser client = createUser("update-vehicle-client", UserRole.CLIENT);
+        Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(client, "Ford", "Focus", 2018,
+            "PO123", "WVWZZZ1JZXW000001"));
+
+        mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson(" Ford ", "Mondeo", 2021, " po 456 ", "wvwzzz1jzxw000002")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.make").value("Ford"))
+            .andExpect(jsonPath("$.model").value("Mondeo"))
+            .andExpect(jsonPath("$.registrationNumber").value("PO456"))
+            .andExpect(jsonPath("$.vin").value("WVWZZZ1JZXW000002"));
+
+        Vehicle updated = vehicles.findById(vehicle.getId()).orElseThrow();
+        assertThat(updated.getProductionYear()).isEqualTo(2021);
+        assertThat(updated.getRegistrationNumber()).isEqualTo("PO456");
+    }
+
+    @Test
+    void updateAllowsKeepingCurrentRegistrationNumberAndVin() throws Exception {
+        AppUser client = createUser("same-identifiers-client", UserRole.CLIENT);
+        Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(client, "Ford", "Focus", 2018,
+            "PO123", "WVWZZZ1JZXW000001"));
+
+        mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson("Ford", "Focus ST", 2018, " po 123 ", "wvwzzz1jzxw000001")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.model").value("Focus ST"));
+    }
+
+    @Test
+    void updateRejectsAnotherOwnedVehiclesRegistrationNumberAndVin() throws Exception {
+        AppUser client = createUser("update-conflict-client", UserRole.CLIENT);
+        Vehicle first = vehicles.save(new Vehicle(client, "Ford", "Focus", 2018,
+            "PO123", "WVWZZZ1JZXW000001"));
+        Vehicle second = vehicles.saveAndFlush(new Vehicle(client, "Toyota", "Corolla", 2020,
+            "PO456", "WVWZZZ1JZXW000002"));
+
+        mockMvc.perform(put("/api/vehicles/{id}", second.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson("Toyota", "Corolla", 2020,
+                    first.getRegistrationNumber(), "WVWZZZ1JZXW000003")))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.fieldErrors.registrationNumber").exists());
+
+        mockMvc.perform(put("/api/vehicles/{id}", second.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson("Toyota", "Corolla", 2020,
+                    "PO789", first.getVin())))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.fieldErrors.vin").exists());
+    }
+
+    @Test
+    void updateHidesAnotherClientsVehicle() throws Exception {
+        AppUser owner = createUser("update-owner", UserRole.CLIENT);
+        AppUser other = createUser("update-other", UserRole.CLIENT);
+        Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(owner, "Ford", "Focus", 2018, "PO123", null));
+
+        mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
+                .with(user(other.getUsername()).roles("CLIENT"))
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson("Ford", "Mondeo", 2020, "PO456", "")))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+
+        assertThat(vehicles.findById(vehicle.getId()).orElseThrow().getModel()).isEqualTo("Focus");
+    }
+
+    @Test
     void requiresAuthenticationAndCsrf() throws Exception {
         AppUser client = createUser("secured-vehicle-client", UserRole.CLIENT);
 
@@ -151,7 +233,14 @@ class VehicleIntegrationTest {
                 .content(vehicleJson("Ford", "Focus", 2020, "PO123", "")))
             .andExpect(status().isForbidden());
 
-        assertThat(vehicles.count()).isZero();
+        Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(client, "Ford", "Focus", 2020, "PO123", null));
+        mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
+                .with(user(client.getUsername()).roles("CLIENT"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(vehicleJson("Ford", "Mondeo", 2020, "PO456", "")))
+            .andExpect(status().isForbidden());
+
+        assertThat(vehicles.findById(vehicle.getId()).orElseThrow().getModel()).isEqualTo("Focus");
     }
 
     @ParameterizedTest

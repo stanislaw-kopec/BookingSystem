@@ -7,6 +7,7 @@ public enum ApiErrorCode {
     RESOURCE_CONFLICT("Resource conflict."),
     REGISTRATION_VALIDATION_FAILED("Registration validation failed."),
     REGISTRATION_CONFLICT("Registration conflict."),
+    ACCOUNT_PASSWORD_VALIDATION_FAILED("Account password validation failed."),
     PROFILE_VALIDATION_FAILED("Profile validation failed."),
     VEHICLE_VALIDATION_FAILED("Vehicle validation failed."),
     VEHICLE_CONFLICT("Vehicle conflict."),

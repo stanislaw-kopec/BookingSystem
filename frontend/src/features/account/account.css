@@ -1,0 +1,9 @@
+.account-security-section { max-width: 680px; }
+.account-security-form { padding: 24px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+.account-security-form .form-field + .form-field { margin-top: 18px; }
+.account-security-form .form-field small { display: block; margin-top: 4px; }
+.account-security-actions { justify-content: flex-end; margin-top: 24px; }
+
+@media (max-width: 650px) {
+  .account-security-form { padding: 18px; }
+}

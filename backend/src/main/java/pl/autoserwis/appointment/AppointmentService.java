@@ -127,7 +127,7 @@ public class AppointmentService {
         }
         ClientProfile profile = profiles.findByUser_Id(appointment.getClient().getId())
             .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
-        return invoicePdfGenerator.generate(appointment, appointment.getVehicle(), profile);
+        return invoicePdfGenerator.generate(appointment, profile);
     }
     @Transactional
     public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {

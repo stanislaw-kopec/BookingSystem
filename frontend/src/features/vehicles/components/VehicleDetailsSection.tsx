@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { errorMessage } from '../../../api/apiClient'
+import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as vehiclesApi from '../api/vehiclesApi'
-import type { RepairHistoryEntry, Vehicle } from '../types'
+import type { RepairHistoryEntry, Vehicle, VehicleInput } from '../types'
+import { VehicleForm } from './VehicleForm'
+import { vehicleFieldErrors } from '../vehicleFieldErrors'
 import '../vehicles.css'
 
 export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
@@ -10,6 +12,11 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
   const [repairHistory, setRepairHistory] = useState<RepairHistoryEntry[] | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [invoiceError, setInvoiceError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [notice, setNotice] = useState<string | null>(null)
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const [downloadingInvoiceId, setDownloadingInvoiceId] = useState<number | null>(null)
   const [revision, setRevision] = useState(0)
 
@@ -58,6 +65,36 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
     }
   }
 
+  function startEditing() {
+    setSaveError(null)
+    setFieldErrors({})
+    setNotice(null)
+    setIsEditing(true)
+  }
+
+  function cancelEditing() {
+    setSaveError(null)
+    setFieldErrors({})
+    setIsEditing(false)
+  }
+
+  async function saveVehicle(input: VehicleInput) {
+    setIsSaving(true)
+    setSaveError(null)
+    setFieldErrors({})
+    setNotice(null)
+    try {
+      setVehicle(await vehiclesApi.updateVehicle(vehicleId, input))
+      setIsEditing(false)
+      setNotice('Dane pojazdu zostały zapisane.')
+    } catch (cause) {
+      setSaveError(errorMessage(cause))
+      if (cause instanceof ApiError) setFieldErrors(vehicleFieldErrors(cause.fieldErrors))
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   return (
     <section id="vehicle-details" className="page-section vehicle-details-section" aria-labelledby="vehicle-heading">
       <Link className="back-link" to="/vehicles">← Wróć do moich pojazdów</Link>
@@ -72,18 +109,32 @@ export function VehicleDetailsSection({ vehicleId }: { vehicleId: number }) {
       )}
       {vehicle && (
         <>
-          <div className="vehicle-title">
-            <p className="eyebrow">Szczegóły pojazdu</p>
-            <h2 id="vehicle-heading">{vehicle.make} {vehicle.model}</h2>
-            <p className="vehicle-registration">{vehicle.registrationNumber}</p>
+          <div className="vehicle-title vehicle-title-header">
+            <div>
+              <p className="eyebrow">Szczegóły pojazdu</p>
+              <h2 id="vehicle-heading">{vehicle.make} {vehicle.model}</h2>
+              <p className="vehicle-registration">{vehicle.registrationNumber}</p>
+            </div>
+            {!isEditing && (
+              <button type="button" className="button secondary" onClick={startEditing}>
+                Edytuj pojazd
+              </button>
+            )}
           </div>
-          <dl className="vehicle-details-card">
-            <div><dt>Marka</dt><dd>{vehicle.make}</dd></div>
-            <div><dt>Model</dt><dd>{vehicle.model}</dd></div>
-            <div><dt>Rok produkcji</dt><dd>{vehicle.productionYear}</dd></div>
-            <div><dt>Numer rejestracyjny</dt><dd>{vehicle.registrationNumber}</dd></div>
-            <div><dt>VIN</dt><dd>{vehicle.vin || 'Nie podano'}</dd></div>
-          </dl>
+          {notice && <p className="message success" role="status">{notice}</p>}
+          {saveError && <p className="message error" role="alert">{saveError}</p>}
+          {isEditing ? (
+            <VehicleForm key={vehicle.id} mode="edit" initialValue={vehicle}
+              isSaving={isSaving} fieldErrors={fieldErrors} onSave={saveVehicle} onCancel={cancelEditing} />
+          ) : (
+            <dl className="vehicle-details-card">
+              <div><dt>Marka</dt><dd>{vehicle.make}</dd></div>
+              <div><dt>Model</dt><dd>{vehicle.model}</dd></div>
+              <div><dt>Rok produkcji</dt><dd>{vehicle.productionYear}</dd></div>
+              <div><dt>Numer rejestracyjny</dt><dd>{vehicle.registrationNumber}</dd></div>
+              <div><dt>VIN</dt><dd>{vehicle.vin || 'Nie podano'}</dd></div>
+            </dl>
+          )}
           <section className="repair-history" aria-labelledby="repair-history-heading">
             <div className="repair-history-heading">
               <h3 id="repair-history-heading">Historia napraw</h3>

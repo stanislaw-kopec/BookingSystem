@@ -79,6 +79,14 @@ export async function createVehicle(input: VehicleInput): Promise<Vehicle> {
   }))
 }
 
+export async function updateVehicle(vehicleId: number, input: VehicleInput): Promise<Vehicle> {
+  return vehicleFrom(await apiRequest(`/api/vehicles/${vehicleId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  }))
+}
+
 export async function downloadRepairInvoice(vehicleId: number, appointmentId: number): Promise<Blob> {
   const response = await fetch(`/api/vehicles/${vehicleId}/repair-history/${appointmentId}/invoice`, {
     credentials: 'same-origin',

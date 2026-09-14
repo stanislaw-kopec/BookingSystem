@@ -42,7 +42,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   wymagane pola rozliczeniowe. Zapisane dane pokazuj najpierw w trybie podglądu,
   a formularz dopiero po wybraniu edycji. Nie umieszczaj formularza na stronie startowej.
 - R04–R05: „Moje pojazdy” w menu konta prowadzi do `/vehicles` z listą i formularzem
-  dodawania. Szczegóły `/vehicles/:vehicleId` pokazują dane pojazdu i historię napraw
+  dodawania. Szczegóły `/vehicles/:vehicleId` pokazują dane pojazdu, formularz ich edycji i historię napraw
   wynikającą z faktur, z odniesieniem do właściwego dokumentu. Do czasu wdrożenia faktur
   pokazuj uczciwy pusty stan i nie twórz fikcyjnych napraw.
 - R06–R07: publiczna trasa `/appointments` otwiera umawianie wizyty. CLIENT wybiera
@@ -80,6 +80,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Wspólny przycisk otwiera okno przełączające działające formularze logowania
   i rejestracji. Rejestracja wymaga loginu, e-maila, hasła i powtórzenia hasła,
   pokazuje błędy przy polach i po sukcesie automatycznie loguje klienta.
+- Każdy zalogowany użytkownik ma w menu konta link „Zmień hasło” do chronionej podstrony
+  `/account/security`. Formularz wymaga obecnego hasła, nowego hasła i jego powtórzenia;
+  po sukcesie czyści pola i pokazuje potwierdzenie.
 - Na tym etapie stosuj prosty CSS. Kolory są w zmiennych `src/index.css`,
   a opis i dane warsztatu w `features/workshop/workshopInfo.ts`.
   Historia jest fikcyjnym tekstem demonstracyjnym w trzech akapitach, napisanym na
@@ -138,7 +141,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Backend pozostaje źródłem rzeczywistych uprawnień. Wylogowanie przekierowuje ze strony
   profilu i odmontowuje sekcję, usuwając jej dane ze stanu Reacta.
 - Funkcja pojazdów znajduje się w `features/vehicles`: `vehiclesApi` odpowiada za HTTP,
-  `VehicleForm` za dodawanie, `VehiclesSection` za listę, a `VehicleDetailsSection`
+  `VehicleForm` za dodawanie i edycję, `VehiclesSection` za listę, a `VehicleDetailsSection`
   za dane wybranego pojazdu i stan historii. `VehiclesPage` i `VehiclePage` składają trasy.
 - Funkcja wizyt znajduje się w `features/appointments`: `appointmentsApi` sprawdza
   kontrakt HTTP, `useAppointmentAvailability` pobiera kalendarz, a osobne komponenty

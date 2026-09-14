@@ -61,4 +61,10 @@ public class VehicleController {
         VehicleResponse result = vehicleService.create(authentication.getName(), request);
         return ResponseEntity.created(URI.create("/api/vehicles/" + result.id())).body(result);
     }
+
+    @PutMapping("/{vehicleId}")
+    public VehicleResponse updateVehicle(Authentication authentication, @PathVariable Long vehicleId,
+            @Valid @RequestBody VehicleRequest request) {
+        return vehicleService.update(authentication.getName(), vehicleId, request);
+    }
 }

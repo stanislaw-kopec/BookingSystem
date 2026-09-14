@@ -2,9 +2,11 @@ import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AppLayout } from './components/layout/AppLayout'
 import { AuthProvider } from './features/auth/AuthProvider'
 import { RequireAdmin } from './features/auth/components/RequireAdmin'
+import { RequireAuthenticated } from './features/auth/components/RequireAuthenticated'
 import { RequireClient } from './features/auth/components/RequireClient'
 import { RequireStaff } from './features/auth/components/RequireStaff'
 import { AdminScheduleSettingsPage } from './pages/AdminScheduleSettingsPage'
+import { AccountSecurityPage } from './pages/AccountSecurityPage'
 import { AdminStaffAccountsPage } from './pages/AdminStaffAccountsPage'
 import { AppointmentsPage } from './pages/AppointmentsPage'
 import { HomePage } from './pages/HomePage'
@@ -27,6 +29,7 @@ export default function App() {
             <Route path="appointments" element={<AppointmentsPage />} />
             <Route path="my-appointments" element={<RequireClient><MyAppointmentsPage /></RequireClient>} />
             <Route path="profile" element={<RequireClient><ProfilePage /></RequireClient>} />
+            <Route path="account/security" element={<RequireAuthenticated><AccountSecurityPage /></RequireAuthenticated>} />
             <Route path="vehicles" element={<RequireClient><VehiclesPage /></RequireClient>} />
             <Route path="vehicles/:vehicleId" element={<RequireClient><VehiclePage /></RequireClient>} />
             <Route path="staff/schedule" element={<RequireStaff><StaffSchedulePage /></RequireStaff>} />

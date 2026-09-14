@@ -38,6 +38,7 @@ public class SecurityConfig {
                     "/api/appointments/availability").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/appointments/guest")
                     .permitAll()
+                .requestMatchers(HttpMethod.PUT, "/api/auth/password").authenticated()
                 .requestMatchers("/api/admin/schedule", "/api/admin/schedule/**",
                     "/api/admin/staff", "/api/admin/staff/**").hasRole("ADMIN")
                 .requestMatchers("/api/profile/**").hasRole("CLIENT")

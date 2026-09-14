@@ -4,6 +4,7 @@ import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as vehiclesApi from '../api/vehiclesApi'
 import type { Vehicle, VehicleInput } from '../types'
 import { VehicleForm } from './VehicleForm'
+import { vehicleFieldErrors } from '../vehicleFieldErrors'
 import '../vehicles.css'
 
 function sortVehicles(vehicles: Vehicle[]) {
@@ -64,7 +65,7 @@ export function VehiclesSection() {
       setNotice('Pojazd został dodany.')
     } catch (cause) {
       setError(errorMessage(cause))
-      if (cause instanceof ApiError) setFieldErrors(cause.fieldErrors)
+      if (cause instanceof ApiError) setFieldErrors(vehicleFieldErrors(cause.fieldErrors))
     } finally {
       setIsSaving(false)
     }

@@ -18,7 +18,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Model domeny i przepływy
 
-- Odwzoruj wymagania R01–R16. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
+- Odwzoruj wymagania R01–R17. Użytkownik, pojazd, usługa warsztatu, zgłoszenie,
   wizyta, zlecenie naprawy i faktura mają różne odpowiedzialności.
   Szczegółowe encje i relacje dobieraj przy implementacji konkretnego etapu.
 - Zgłoszenie zalogowanego klienta obejmuje właściciela, jego pojazd, kopię danych
@@ -78,6 +78,9 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   POST tworzy konto z rolą MECHANIC, nawet jeśli przeglądarka spróbuje przesłać inną rolę. Edycja dotyczy tylko kont MECHANIC. Używaj tych samych reguł loginu, e-maila, hasła, unikalności i limitu BCrypt co przy rejestracji klienta. Dezaktywowane konto nie może się zalogować.
 - E-mail jest obecnie daną konta potrzebną do unikalności i przyszłego odzyskiwania
   dostępu. Pełne dane kontaktowe i rozliczeniowe powstaną w osobnym profilu klienta.
+- `PUT /api/auth/password` jest dostępny dla każdego zalogowanego użytkownika i wymaga CSRF.
+  Żądanie zawiera obecne hasło, nowe hasło i jego powtórzenie. Sprawdzaj obecne hasło
+  przez `PasswordEncoder`, zgodność nowych haseł oraz limit 72 bajtów BCrypt.
 
 ## Profil klienta
 
@@ -93,8 +96,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 ## Pojazdy klienta
 
-- Pakiet `vehicle` obsługuje `GET /api/vehicles`, `GET /api/vehicles/{vehicleId}`
-  i `POST /api/vehicles`. Endpointy są dostępne wyłącznie dla CLIENT, a POST wymaga CSRF.
+- Pakiet `vehicle` obsługuje `GET /api/vehicles`, `GET /api/vehicles/{vehicleId}`,
+  `POST /api/vehicles` i `PUT /api/vehicles/{vehicleId}`. Endpointy są dostępne wyłącznie dla CLIENT, a POST i PUT wymagają CSRF.
 - Właściciela ustalaj przez nazwę użytkownika z `Authentication`. Żądanie nie zawiera
   `ownerId`; pobieraj listę i szczegóły zapytaniami repozytorium ograniczonymi do właściciela.
   Cudzy lub nieistniejący identyfikator pojazdu zwraca ten sam błąd 404.
@@ -103,6 +106,8 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Numer rejestracyjny normalizuj do wielkich liter bez spacji, a VIN do wielkich liter.
   Numer rejestracyjny i podany VIN są unikalne dla jednego właściciela bez rozróżniania
   wielkości liter. Sprawdzaj konflikt w serwisie i zachowaj indeksy bazy na wypadek wyścigu.
+- Edycja zmienia podstawowe dane wyłącznie pojazdu należącego do zalogowanego klienta.
+  Podczas kontroli unikalności pomijaj aktualizowany pojazd, aby można było pozostawić jego dotychczasową rejestrację i VIN.
 - Pierwszy zapis zakończonej naprawy znajduje się przy zgłoszeniu ze statusem
   `READY_FOR_PICKUP`. Docelowa historia napraw będzie mogła zostać połączona z fakturami.
   Nie uznawaj samego zgłoszenia albo potwierdzenia wizyty za wykonaną naprawę.

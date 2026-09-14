@@ -10,5 +10,8 @@ public interface VehicleRepository extends JpaRepository<Vehicle, Long> {
 
     Optional<Vehicle> findByOwner_IdAndRegistrationNumberIgnoreCase(Long ownerId, String registrationNumber);
     boolean existsByOwner_IdAndRegistrationNumberIgnoreCase(Long ownerId, String registrationNumber);
+    boolean existsByOwner_IdAndRegistrationNumberIgnoreCaseAndIdNot(
+        Long ownerId, String registrationNumber, Long id);
     boolean existsByOwner_IdAndVinIgnoreCase(Long ownerId, String vin);
+    boolean existsByOwner_IdAndVinIgnoreCaseAndIdNot(Long ownerId, String vin, Long id);
 }

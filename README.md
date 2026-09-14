@@ -173,9 +173,20 @@ Pojazd zawiera markę, model, rok produkcji, numer rejestracyjny i opcjonalny VI
 Numer rejestracyjny jest zapisywany wielkimi literami bez spacji.
 
 Kliknięcie pojazdu prowadzi do `http://localhost:5173/vehicles/{vehicleId}`.
-Podstrona pokazuje szczegóły i sekcję historii napraw. Historia pokazuje zakończone naprawy powiązane z tym pojazdem. Wpis pojawia się,
+Podstrona pokazuje szczegóły, przycisk „Edytuj pojazd” i sekcję historii napraw.
+Edycja pozwala poprawić markę, model, rocznik, numer rejestracyjny oraz VIN, ale tylko właścicielowi pojazdu.
+Historia pokazuje zakończone naprawy powiązane z tym pojazdem. Wpis pojawia się,
 gdy personel zakończy pracę, a potem oznaczy samochód jako odebrany przez klienta.
 Przy każdym wpisie można pobrać prostą fakturę PDF. Jeśli profil klienta ma uzupełnione dane firmy, PDF użyje danych firmowych; w przeciwnym razie użyje danych imiennych i adresowych klienta. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+
+## Zmiana własnego hasła
+
+Każdy zalogowany klient, mechanik i administrator może wybrać „Zmień hasło” w menu konta.
+Podstrona `http://localhost:5173/account/security` wymaga podania obecnego hasła,
+nowego hasła oraz jego powtórzenia. Backend sprawdza obecne hasło i zapisuje nowe
+w postaci skrótu BCrypt. Operacja wymaga aktywnej sesji oraz tokenu CSRF.
+
+Odzyskiwanie zapomnianego hasła przez e-mail nie jest częścią obecnej wersji.
 
 ## Umawianie wizyty
 

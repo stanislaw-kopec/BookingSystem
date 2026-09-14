@@ -7,16 +7,25 @@ interface Props {
   fieldErrors: Record<string, string>
   onSave: (input: VehicleInput) => Promise<void>
   onCancel?: () => void
+  initialValue?: VehicleInput
+  mode?: 'create' | 'edit'
 }
 
 const currentYear = new Date().getFullYear()
 
-export function VehicleForm({ isSaving, fieldErrors, onSave, onCancel }: Props) {
-  const [make, setMake] = useState('')
-  const [model, setModel] = useState('')
-  const [productionYear, setProductionYear] = useState(String(currentYear))
-  const [registrationNumber, setRegistrationNumber] = useState('')
-  const [vin, setVin] = useState('')
+export function VehicleForm({
+  isSaving,
+  fieldErrors,
+  onSave,
+  onCancel,
+  initialValue,
+  mode = 'create',
+}: Props) {
+  const [make, setMake] = useState(initialValue?.make ?? '')
+  const [model, setModel] = useState(initialValue?.model ?? '')
+  const [productionYear, setProductionYear] = useState(String(initialValue?.productionYear ?? currentYear))
+  const [registrationNumber, setRegistrationNumber] = useState(initialValue?.registrationNumber ?? '')
+  const [vin, setVin] = useState(initialValue?.vin ?? '')
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -32,7 +41,7 @@ export function VehicleForm({ isSaving, fieldErrors, onSave, onCancel }: Props) 
   return (
     <form className="vehicle-form" onSubmit={handleSubmit}>
       <fieldset disabled={isSaving}>
-        <legend>Nowy pojazd</legend>
+        <legend>{mode === 'edit' ? 'Edytuj pojazd' : 'Nowy pojazd'}</legend>
         <div className="vehicle-form-grid">
           <div className="form-field">
             <label htmlFor="vehicle-make">Marka</label>
@@ -84,7 +93,9 @@ export function VehicleForm({ isSaving, fieldErrors, onSave, onCancel }: Props) 
         </div>
         <div className="actions vehicle-form-actions">
           {onCancel && <button type="button" className="button secondary" onClick={onCancel}>Anuluj</button>}
-          <button type="submit" className="button">{isSaving ? 'Dodawanie…' : 'Dodaj pojazd'}</button>
+          <button type="submit" className="button">
+            {isSaving ? (mode === 'edit' ? 'Zapisywanie…' : 'Dodawanie…') : (mode === 'edit' ? 'Zapisz zmiany' : 'Dodaj pojazd')}
+          </button>
         </div>
       </fieldset>
     </form>

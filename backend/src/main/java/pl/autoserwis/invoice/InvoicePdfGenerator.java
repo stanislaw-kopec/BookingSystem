@@ -12,7 +12,6 @@ import pl.autoserwis.appointment.AppointmentRequest;
 import pl.autoserwis.appointment.RepairItemType;
 import pl.autoserwis.appointment.AppointmentSchedule;
 import pl.autoserwis.profile.ClientProfile;
-import pl.autoserwis.vehicle.Vehicle;
 
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
@@ -31,7 +30,7 @@ public class InvoicePdfGenerator {
     private static final Font NORMAL_FONT = FontFactory.getFont(FontFactory.HELVETICA, BaseFont.CP1250, 10);
     private static final Font SMALL_FONT = FontFactory.getFont(FontFactory.HELVETICA, BaseFont.CP1250, 8);
 
-    public InvoiceFile generate(AppointmentRequest appointment, Vehicle vehicle, ClientProfile profile) {
+    public InvoiceFile generate(AppointmentRequest appointment, ClientProfile profile) {
         try {
             ByteArrayOutputStream output = new ByteArrayOutputStream();
             Document document = new Document(PageSize.A4, 42, 42, 42, 42);
@@ -40,7 +39,7 @@ public class InvoicePdfGenerator {
 
             addHeader(document, appointment);
             addParties(document, profile);
-            addVehicle(document, vehicle, appointment);
+            addVehicle(document, appointment);
             addItems(document, appointment);
             addPaymentSummary(document, appointment);
             addFooter(document);
@@ -110,13 +109,15 @@ public class InvoicePdfGenerator {
         );
     }
 
-    private void addVehicle(Document document, Vehicle vehicle, AppointmentRequest appointment) throws DocumentException {
+    private void addVehicle(Document document, AppointmentRequest appointment) throws DocumentException {
         PdfPTable table = new PdfPTable(1);
         table.setWidthPercentage(100);
         table.addCell(section("Pojazd", List.of(
-            vehicle.getMake() + " " + vehicle.getModel() + ", rok " + vehicle.getProductionYear(),
-            "Numer rejestracyjny: " + vehicle.getRegistrationNumber(),
-            "VIN: " + (vehicle.getVin() == null || vehicle.getVin().isBlank() ? "nie podano" : vehicle.getVin()),
+            appointment.getVehicleMake() + " " + appointment.getVehicleModel()
+                + ", rok " + appointment.getVehicleProductionYear(),
+            "Numer rejestracyjny: " + appointment.getVehicleRegistrationNumber(),
+            "VIN: " + (appointment.getVehicleVin() == null || appointment.getVehicleVin().isBlank()
+                ? "nie podano" : appointment.getVehicleVin()),
             "Numer zgłoszenia: " + appointment.getReference()
         )));
         document.add(table);

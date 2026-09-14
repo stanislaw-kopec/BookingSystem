@@ -113,9 +113,9 @@ Docelowy kierunek:
 
 Faktura pozostaje po polsku. Nazwy usług, opisy napraw i inne dane zapisane w bazie są wyświetlane tak, jak zostały zapisane.
 
-## Opcjonalnie: edycja pojazdu
+## Opcjonalnie: edycja pojazdu — wdrożone
 
-Klient może dodać pojazd i zobaczyć szczegóły, ale nie ma jeszcze edycji pojazdu.
+Klient może edytować podstawowe dane własnego pojazdu z jego podstrony szczegółów.
 
 Minimalny zakres:
 
@@ -126,9 +126,9 @@ Minimalny zakres:
 
 To naturalna funkcja, ale mniej ważna niż OpenAPI, CI i README.
 
-## Opcjonalnie: zmiana hasła przez użytkownika
+## Opcjonalnie: zmiana hasła przez użytkownika — wdrożone
 
-Admin może resetować hasła mechaników, ale klient i mechanik nie mają samoobsługowej zmiany hasła.
+Każda zalogowana rola ma samoobsługową zmianę własnego hasła po podaniu obecnego hasła.
 
 Minimalny zakres:
 
@@ -160,8 +160,8 @@ To jest dobre uzupełnienie, ale po OpenAPI, CI i README.
 4. Dodać testy kont mechaników.
 5. Przerobić README pod portfolio.
 6. Utrzymać stabilne kody błędów API i mapowanie komunikatów w frontendzie.
-7. Opcjonalnie dodać edycję pojazdu.
-8. Opcjonalnie dodać samoobsługową zmianę hasła.
+7. Edycja pojazdu — wdrożona.
+8. Samoobsługowa zmiana hasła — wdrożona.
 9. Opcjonalnie przygotować produkcyjniejszy Docker frontendu.
 
 ## Czego nie rozbudowywać przed pierwszą prezentacją

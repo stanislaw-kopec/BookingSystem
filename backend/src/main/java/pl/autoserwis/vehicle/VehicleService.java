@@ -69,38 +69,67 @@ public class VehicleService {
 
     public InvoiceFile getCurrentClientRepairInvoice(String username, Long vehicleId, Long appointmentId) {
         AppUser owner = user(username);
-        Vehicle vehicle = vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
+        vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         AppointmentRequest appointment = appointments.findByIdAndVehicle_IdAndClient_IdAndStatus(
                 appointmentId, vehicleId, owner.getId(), AppointmentStatus.COMPLETED)
             .orElseThrow(() -> new ResourceNotFoundException("Completed repair not found."));
         ClientProfile profile = profiles.findByUser_Id(owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
-        return invoicePdfGenerator.generate(appointment, vehicle, profile);
+        return invoicePdfGenerator.generate(appointment, profile);
     }
 
     @Transactional
     public VehicleResponse create(String username, VehicleRequest request) {
-        validateProductionYear(request.productionYear());
         AppUser owner = user(username);
+        NormalizedVehicle normalized = normalize(request);
+        validateUniqueIdentifiers(owner.getId(), normalized, null);
+
+        Vehicle vehicle = new Vehicle(owner, normalized.make(), normalized.model(),
+            normalized.productionYear(), normalized.registrationNumber(), normalized.vin());
+        return response(vehicles.save(vehicle));
+    }
+
+    @Transactional
+    public VehicleResponse update(String username, Long vehicleId, VehicleRequest request) {
+        AppUser owner = user(username);
+        Vehicle vehicle = vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
+            .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
+        NormalizedVehicle normalized = normalize(request);
+        validateUniqueIdentifiers(owner.getId(), normalized, vehicle.getId());
+        vehicle.update(normalized.make(), normalized.model(), normalized.productionYear(),
+            normalized.registrationNumber(), normalized.vin());
+        return response(vehicle);
+    }
+
+    private NormalizedVehicle normalize(VehicleRequest request) {
+        validateProductionYear(request.productionYear());
         String registrationNumber = request.registrationNumber().replaceAll("\\s+", "")
             .toUpperCase(Locale.ROOT);
-        String vin = optionalVin(request.vin());
-
         if (registrationNumber.length() < 2) {
             throw new VehicleValidationException(Map.of("registrationNumber",
                 "Registration number must have at least 2 characters."));
         }
-        if (vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCase(owner.getId(), registrationNumber)) {
-            throw new VehicleConflictException("registrationNumber", "You already have a vehicle with this registration number.");
+        return new NormalizedVehicle(request.make().strip(), request.model().strip(),
+            request.productionYear(), registrationNumber, optionalVin(request.vin()));
+    }
+
+    private void validateUniqueIdentifiers(Long ownerId, NormalizedVehicle vehicle, Long currentVehicleId) {
+        boolean registrationExists = currentVehicleId == null
+            ? vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCase(ownerId, vehicle.registrationNumber())
+            : vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCaseAndIdNot(
+                ownerId, vehicle.registrationNumber(), currentVehicleId);
+        if (registrationExists) {
+            throw new VehicleConflictException("registrationNumber",
+                "You already have a vehicle with this registration number.");
         }
-        if (vin != null && vehicles.existsByOwner_IdAndVinIgnoreCase(owner.getId(), vin)) {
+        if (vehicle.vin() == null) return;
+        boolean vinExists = currentVehicleId == null
+            ? vehicles.existsByOwner_IdAndVinIgnoreCase(ownerId, vehicle.vin())
+            : vehicles.existsByOwner_IdAndVinIgnoreCaseAndIdNot(ownerId, vehicle.vin(), currentVehicleId);
+        if (vinExists) {
             throw new VehicleConflictException("vin", "You already have a vehicle with this VIN.");
         }
-
-        Vehicle vehicle = new Vehicle(owner, request.make().strip(), request.model().strip(),
-            request.productionYear(), registrationNumber, vin);
-        return response(vehicles.save(vehicle));
     }
 
     private void validateProductionYear(int productionYear) {
@@ -144,4 +173,12 @@ public class VehicleService {
     private OffsetDateTime offset(Instant value) {
         return value.atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
     }
+
+    private record NormalizedVehicle(
+        String make,
+        String model,
+        int productionYear,
+        String registrationNumber,
+        String vin
+    ) {}
 }

@@ -10,6 +10,7 @@ import pl.autoserwis.appointment.AppointmentConflictException;
 import pl.autoserwis.appointment.AppointmentValidationException;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
+import pl.autoserwis.auth.AccountPasswordValidationException;
 import pl.autoserwis.invoice.InvoiceGenerationException;
 import pl.autoserwis.profile.ProfileValidationException;
 import pl.autoserwis.vehicle.VehicleConflictException;
@@ -52,6 +53,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> registrationConflict(RegistrationConflictException exception) {
         return ResponseEntity.status(409)
             .body(new ApiError(409, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
+    }
+
+    @ExceptionHandler(AccountPasswordValidationException.class)
+    ResponseEntity<ApiError> accountPasswordValidation(AccountPasswordValidationException exception) {
+        return ResponseEntity.badRequest()
+            .body(new ApiError(400, exception.getCode(), exception.getMessage(), exception.getFieldErrors()));
     }
 
     @ExceptionHandler(ProfileValidationException.class)

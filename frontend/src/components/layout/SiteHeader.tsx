@@ -119,6 +119,10 @@ export function SiteHeader({ user, isLoading, isLoggingOut, canManage, canAdmini
                   )}
                 </>
               )}
+              <p className="account-dropdown-section">Ustawienia konta</p>
+              <NavLink className={accountLinkClassName} to="/account/security" onClick={closeAccountMenu}>
+                Zmień hasło
+              </NavLink>
               <button type="button" className="account-dropdown-item logout" disabled={isLoggingOut} onClick={() => { accountMenuRef.current?.removeAttribute('open'); onLogout() }}>
                 {isLoggingOut ? 'Wylogowywanie…' : 'Wyloguj'}
               </button>

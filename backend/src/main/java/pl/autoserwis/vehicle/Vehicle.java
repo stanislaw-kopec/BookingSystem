@@ -43,4 +43,13 @@ public class Vehicle {
         this.registrationNumber = registrationNumber;
         this.vin = vin;
     }
+
+    public void update(String make, String model, int productionYear,
+            String registrationNumber, String vin) {
+        this.make = make;
+        this.model = model;
+        this.productionYear = productionYear;
+        this.registrationNumber = registrationNumber;
+        this.vin = vin;
+    }
 }
