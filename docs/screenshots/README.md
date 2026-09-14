@@ -7,6 +7,18 @@ w formularzach.
 
 ## Lista zrzutów
 
+Do głównego README przygotuj cztery obrazy pokazujące tę samą naprawę od zgłoszenia
+do faktury. Pozostałe widoki z tabeli poniżej są uzupełnieniem do `docs/README.md`.
+
+| Etap w głównym README | Plik | Widok i zawartość |
+| --- | --- | --- |
+| Zgłoszenie wizyty | `booking-request.png` | `/appointments`: wybrany pojazd, dostępny dzień i opis problemu z hamulcami |
+| Potwierdzenie terminu | `03-staff-schedule.png` | `/staff/schedule`: grafik zawierający zgłoszenie tego pojazdu |
+| Zakończenie naprawy | `repair-completion.png` | `/staff/appointments`: rozwinięty formularz „Praca zakończona”, opis prac oraz pozycje robocizny i części |
+| Odbiór i faktura | `06-invoice-preview.png` | PDF pobrany po oznaczeniu odbioru tego samego auta |
+
+## Dodatkowe widoki do dokumentacji technicznej
+
 | Plik | Widok | Zalecana zawartość |
 | --- | --- | --- |
 | `01-home-page.png` | Strona główna | Nagłówek z logo, sekcja o warsztacie i początek katalogu usług |
@@ -22,5 +34,9 @@ w formularzach.
 - Kadruj zawartość aplikacji bez paska zakładek, pulpitu i innych programów.
 - Zachowaj ten sam motyw na wszystkich obrazach.
 - Dla faktury użyj wyłącznie danych demonstracyjnych.
-- Po dodaniu obrazów zastąp tabelę placeholderów w głównym README osadzonymi obrazami,
-  na przykład: `![Panel klienta](docs/screenshots/02-client-appointments.png)`.
+- W głównym README pod każdym etapem znajduje się widoczny placeholder i komentarz
+  HTML z gotowym odnośnikiem do obrazu. Po zapisaniu pliku usuń placeholder oraz
+  znaczniki komentarza `<!--` i `-->`, pozostawiając sam odnośnik Markdown.
+- W rozszerzonej dokumentacji możesz zastąpić tabelę placeholderów dodatkowymi
+  obrazami. Stosuj tam ścieżki względem `docs`, np.
+  `![Panel klienta](screenshots/02-client-appointments.png)`.
