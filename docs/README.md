@@ -490,7 +490,7 @@ przy normalnym użyciu frontendu.
 | `POST /api/appointments/{id}/confirm-proposed` | Potwierdzenie nowego dnia | Właściciel CLIENT, CSRF |
 | `POST /api/appointments/{id}/cancel` | Odwołanie aktywnej wizyty | Właściciel CLIENT, CSRF |
 | `GET /api/staff/appointments` | Strona zgłoszeń personelu; obsługuje `status`, `page`, `size`, `sortDirection` | MECHANIC, ADMIN |
-| `GET /api/staff/appointments/all` | Pełna lista zgłoszeń używana przez grafik personelu | MECHANIC, ADMIN |
+| `GET /api/staff/appointments/schedule?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD` | Grafik dla 1–31 dni: aktywne zgłoszenia, limity i dni zamknięte | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/{id}` | Szczegóły pojedynczego zgłoszenia dla personelu | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/{id}/repair-history` | Historia napraw pojazdu z danego zgłoszenia | MECHANIC, ADMIN |
 | `GET /api/staff/appointments/{id}/invoice` | Pobranie faktury zakończonej naprawy przez personel | MECHANIC, ADMIN |

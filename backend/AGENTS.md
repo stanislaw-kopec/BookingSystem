@@ -37,7 +37,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   wynikającego z sesji i sortuje po dacie przyjęcia auta.
 - Lista zgłoszeń personelu również używa paginacji backendowej. `GET /api/staff/appointments`
   przyjmuje `status`, `page`, `size` i `sortDirection`, a grafik korzysta z osobnego
-  odczytu wszystkich zgłoszeń potrzebnych do widoku tygodniowego.
+  endpointu `GET /api/staff/appointments/schedule?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`.
+  Zakres ma 1–31 dni włącznie. Zwracaj lekkie DTO aktywnych zgłoszeń oraz limity,
+  wolne miejsca i oznaczenia zamknięcia każdego dnia, także weekendów. Odczyt ustawień,
+  wyjątków i zgłoszeń odbywa się w jednej transakcji `REPEATABLE_READ`.
 - Personel może pobrać szczegóły pojedynczego zgłoszenia oraz historię napraw pojazdu
   powiązanego z tym zgłoszeniem. Zgłoszenie gościa bez trwałego pojazdu w kartotece
   zwraca pustą historię napraw.
@@ -135,12 +138,19 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `CANCELLED` zwalniają miejsce, a propozycja nowego dnia atomowo zwalnia poprzedni
   dzień i zajmuje nowy.
 - Samo odczytanie wolnego dnia przed zapisem nie zabezpiecza przed wyścigiem.
+  Każdy zapis zgłoszenia najpierw pobiera współdzieloną blokadę konfiguracji przez
+  `ScheduleLocks`, zanim odczyta ustawienia. Zapis ustawień i wyjątków pobiera tę samą
+  blokadę wyłącznie. Kolejność blokad: konfiguracja → rekord zgłoszenia → docelowy dzień.
   Używaj transakcyjnej blokady dnia oraz ponownego zliczenia aktywnych zgłoszeń
   przed zapisem. Podczas decyzji blokuj aktualizowany rekord. Sprawdzaj własność,
   aktualny status i dostępność w tej samej transakcji.
 - Waliduj zakaz rezerwowania przeszłości, dostępność dnia i skonfigurowany horyzont również
   wtedy, gdy żądanie omija interfejs kalendarza. Wybrany dzień zapisuj wewnętrznie
-  jako 08:00 w strefie warsztatu, bez umawiania klienta na konkretną godzinę.
+  jako skonfigurowany początek pracy w strefie warsztatu, bez umawiania klienta na konkretną godzinę.
+- Zmiana domyślnego limitu sprawdza aktywne wizyty od dziś, również poza nowym
+  horyzontem rezerwacji, z uwzględnieniem wyjątków. Zapis i usunięcie wyjątku sprawdzają
+  zajętość tej daty. Nie dopuszczaj limitu niższego niż liczba aktywnych wizyt;
+  zwracaj HTTP 409 z kodem `SCHEDULE_CAPACITY_CONFLICT` i zachowuj poprzednią konfigurację.
 - Konflikt dostępności zwracaj jako HTTP 409 z komunikatem umożliwiającym ponowny
   wybór dnia. Nie zgłaszaj sukcesu po nieudanym zapisie lub konflikcie.
 

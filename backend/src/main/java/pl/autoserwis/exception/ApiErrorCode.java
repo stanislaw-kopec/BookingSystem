@@ -15,6 +15,7 @@ public enum ApiErrorCode {
     APPOINTMENT_VALIDATION_FAILED("Appointment validation failed."),
     APPOINTMENT_CONFLICT("Appointment conflict."),
     APPOINTMENT_DAY_FULL("Appointment day is full."),
+    SCHEDULE_CAPACITY_CONFLICT("Schedule capacity is lower than active appointments."),
     DATA_INTEGRITY_CONFLICT("Data integrity conflict."),
     INVOICE_GENERATION_FAILED("Invoice generation failed."),
     UNAUTHENTICATED("Authentication is required."),

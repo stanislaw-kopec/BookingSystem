@@ -87,8 +87,7 @@ public class AppointmentSchedule {
         WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
         ScheduleDayOverride override = scheduleConfig.overridesByDate(date, date).get(date);
         int capacity = capacityFor(date, settings, override);
-        return capacity <= 0 || appointments.findBlockingStarts(BLOCKING_STATUSES, rangeStart, rangeEnd)
-            .size() >= capacity;
+        return capacity <= 0 || appointments.countBlockingStarts(BLOCKING_STATUSES, rangeStart, rangeEnd) >= capacity;
     }
 
     private LocalDate dateOf(Instant startAt) {
@@ -112,7 +111,7 @@ public class AppointmentSchedule {
             capacity > 0 && remainingCapacity > 0);
     }
 
-    private int capacityFor(LocalDate date, WorkshopScheduleSettings settings, ScheduleDayOverride override) {
+    public static int capacityFor(LocalDate date, WorkshopScheduleSettings settings, ScheduleDayOverride override) {
         if (override != null) return override.isClosed() ? 0 : override.getCapacity();
         return isWorkingDay(date) ? settings.getDefaultDailyCapacity() : 0;
     }
@@ -125,7 +124,7 @@ public class AppointmentSchedule {
         return date.atTime(settings.getWorkdayEnd()).atZone(TIME_ZONE);
     }
 
-    private boolean isWorkingDay(LocalDate date) {
+    private static boolean isWorkingDay(LocalDate date) {
         return date.getDayOfWeek() != DayOfWeek.SATURDAY
             && date.getDayOfWeek() != DayOfWeek.SUNDAY;
     }

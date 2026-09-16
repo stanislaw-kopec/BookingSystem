@@ -54,13 +54,17 @@ których warsztat podejmował decyzję.
 ## 4. Dostępność dni
 
 [AppointmentSchedule.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentSchedule.java)
-jest jednym miejscem z zasadami pierwszej wersji:
+łączy ustawienia administratora i wyjątki dla konkretnych dat. Domyślnie są to:
 
 - strefa `Europe/Warsaw`,
 - poniedziałek–piątek,
 - dzienna pojemność 4 aktywnych zgłoszeń,
 - techniczny początek dnia roboczego 08:00,
 - 30-dniowy horyzont.
+
+Administrator może zmienić limity, godziny i horyzont oraz zamknąć pojedynczy dzień
+albo otworzyć weekend. Grafik personelu pokazuje wszystkie siedem dni tygodnia,
+więc nie ukrywa sobotnich ani niedzielnych wyjątków.
 
 API zwraca datę, dzienną pojemność, liczbę wolnych miejsc oraz techniczny początek
 i koniec dnia roboczego z przesunięciem strefy czasowej. Frontend tylko prezentuje
@@ -74,8 +78,21 @@ zobaczyć ostatnie wolne miejsce w danym dniu, zanim pierwsza z nich naciśnie
 
 Backend zakłada transakcyjną blokadę na wybrany dzień i ponownie liczy aktywne
 zgłoszenia ze statusami `PENDING`, `TIME_PROPOSED` albo `CONFIRMED`. Dzięki temu
-równoczesne zapisy nie powinny przekroczyć limitu 4 aut dziennie. Przegrane żądanie
+równoczesne zapisy nie przekraczają skonfigurowanego limitu. Przegrane żądanie
 otrzymuje HTTP 409, a frontend odświeża kalendarz bez usuwania opisu usterki.
+
+Przed odczytem ustawień zapis rezerwacji pobiera współdzieloną blokadę konfiguracji
+(`ScheduleLocks`). Zmiana ustawień lub wyjątku pobiera tę samą blokadę wyłącznie.
+Rezerwacje mogą działać równolegle, ale administrator czeka na ich zatwierdzenie,
+a następnie sprawdza zajętość. Nowa rezerwacja poczeka z kolei na trwającą zmianę
+konfiguracji. Blokady są transakcyjne i działają w PostgreSQL, także dla wielu
+instancji backendu.
+
+Obniżenie limitu lub usunięcie wyjątku jest odrzucane kodem
+`SCHEDULE_CAPACITY_CONFLICT`, jeżeli zabrakłoby miejsc na już zapisane wizyty.
+Zmiana domyślnej pojemności sprawdza dziś i przyszłość, także poza skróconym
+horyzontem. Nie przepisuje historii ustawień minionych dni; takiej historii system
+jeszcze nie przechowuje.
 
 Odrzucenie zmienia status na `REJECTED`, więc miejsce wraca do dostępnej pojemności.
 Propozycja personelu zmienia bieżący dzień w jednej transakcji: poprzedni zostaje
@@ -100,6 +117,7 @@ POST /api/appointments/{id}/confirm-proposed                potwierdzenie CLIENT
 POST /api/appointments/{id}/cancel                          odwołanie wizyty CLIENT
 
 GET  /api/staff/appointments                                kolejka personelu
+GET  /api/staff/appointments/schedule?startDate=...&endDate=... grafik zakresu dat
 POST /api/staff/appointments/{id}/accept                    przyjęcie
 POST /api/staff/appointments/{id}/reject                    odrzucenie
 POST /api/staff/appointments/{id}/propose-time              propozycja dnia
@@ -122,8 +140,8 @@ Trasę listy chroni `RequireClient`. Po wysłaniu formularza klient może przej�
 przez link w komunikacie sukcesu lub pozycję „Moje wizyty” w menu konta.
 
 `StaffSchedulePage` pod `/staff/schedule` składa zakładkę „Grafik” dla MECHANIC/ADMIN.
-Używa tej samej listy zgłoszeń personelu co kolejka, ale prezentuje aktywne zgłoszenia
-w tygodniowym widoku dni od poniedziałku do piątku. `StaffAppointmentsPage` pod
+Pobiera osobny, ograniczony do tygodnia zestaw danych: limity i aktywne zgłoszenia
+każdego dnia od poniedziałku do niedzieli. `StaffAppointmentsPage` pod
 `/staff/appointments` pozostaje miejscem podejmowania decyzji o zgłoszeniach.
 W tym samym panelu przy statusie `CONFIRMED` pojawia się akcja „Praca zakończona”,
 która zapisuje opis wykonanych prac i kwotę brutto do zapłaty. Przy statusie
@@ -134,6 +152,18 @@ Każdy wpis historii ma przycisk „Pobierz fakturę”, który pobiera PDF z
 `GET /api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice`. PDF używa
 danych firmowych klienta, jeśli profil ma je uzupełnione, albo danych imiennych
 w przeciwnym razie.
+
+W `types.ts` typ `StaffSchedule` opisuje odpowiedź grafiku. `appointmentsApi.ts`
+wysyła zakres dat i sprawdza otrzymany JSON. `StaffScheduleSection` przechowuje
+wybrany tydzień i prezentuje wynik; zmiana tygodnia uruchamia nowy odczyt,
+a `AbortController` chroni przed zastąpieniem nowego wyniku starszą odpowiedzią.
+Komponent nie wylicza limitu 4 miejsc ani dni zamkniętych samodzielnie.
+
+Backendowy `StaffScheduleService` pobiera ustawienia, wyjątki i krótkie DTO zgłoszeń
+w trzech zapytaniach. Projekcja DTO zawiera skrót usterki do 160 znaków, bez pozycji
+naprawy i kontaktowych danych klienta. Pełne informacje są pobierane po otwarciu
+szczegółów. Migracja V17 dodaje indeks `(status, current_start_at)` dla zapytań
+po zakresie czasu, zastępując indeks wyrażenia lokalnej daty.
 
 ```text
 appointments/

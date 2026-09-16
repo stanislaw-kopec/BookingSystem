@@ -107,7 +107,7 @@ wymagają tokenu CSRF.
 
 - Właściciel profilu, pojazdu i zgłoszenia wynika z uwierzytelnionej sesji.
 - Role `CLIENT`, `MECHANIC` i `ADMIN` są egzekwowane przez backend.
-- Transakcyjna blokada dnia chroni limit przyjęć przed równoczesnymi rezerwacjami.
+- Transakcyjne blokady chronią limit przyjęć przed równoczesnymi rezerwacjami i zmianami konfiguracji grafiku.
 - Listy wizyt i kont mają backendową paginację, filtrowanie i sortowanie.
 - Flyway wersjonuje bazę, a profil `local` idempotentnie tworzy dane demonstracyjne.
 - Faktura PDF zawiera pozycje robocizny i części oraz wartości netto i brutto.

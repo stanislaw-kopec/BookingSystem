@@ -151,7 +151,8 @@
 }
 .staff-schedule-toolbar h3 { margin: 0 0 2px; text-align: center; }
 .staff-schedule-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
-.staff-schedule-days { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.staff-schedule-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.daily-capacity.closed { color: var(--text); background: var(--surface); border: 1px solid var(--border); }
 .staff-schedule-day {
   min-width: 0;
   padding: 14px;

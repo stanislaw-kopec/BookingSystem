@@ -3,6 +3,7 @@ package pl.autoserwis.appointment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.dto.*;
+import pl.autoserwis.exception.ApiErrorCode;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,12 +22,14 @@ public class WorkshopScheduleConfigService {
     private final WorkshopScheduleSettingsRepository settingsRepository;
     private final ScheduleDayOverrideRepository overridesRepository;
     private final AppointmentRepository appointments;
+    private final ScheduleLocks locks;
 
     public WorkshopScheduleConfigService(WorkshopScheduleSettingsRepository settingsRepository,
-            ScheduleDayOverrideRepository overridesRepository, AppointmentRepository appointments) {
+            ScheduleDayOverrideRepository overridesRepository, AppointmentRepository appointments, ScheduleLocks locks) {
         this.settingsRepository = settingsRepository;
         this.overridesRepository = overridesRepository;
         this.appointments = appointments;
+        this.locks = locks;
     }
 
     public WorkshopScheduleSettings currentSettings() {
@@ -53,19 +56,32 @@ public class WorkshopScheduleConfigService {
 
     @Transactional
     public WorkshopScheduleConfigResponse updateSettings(ScheduleSettingsRequest request) {
+        locks.forConfiguration();
         validateHours(request.workdayStart(), request.workdayEnd());
+        LocalDate today = LocalDate.now(AppointmentSchedule.TIME_ZONE);
+        WorkshopScheduleSettings proposed = new WorkshopScheduleSettings(request.defaultDailyCapacity(),
+            request.bookingHorizonDays(), request.workdayStart(), request.workdayEnd());
+        // Include reservations beyond a newly shortened booking horizon.
+        List<DailyAppointmentCount> occupiedDays = appointments.countActiveDaysFrom(
+            today.atStartOfDay(AppointmentSchedule.TIME_ZONE).toInstant());
+        LocalDate lastOccupiedDate = occupiedDays.isEmpty() ? today : occupiedDays.getLast().getVisitDate();
+        Map<LocalDate, ScheduleDayOverride> overrides = overridesByDate(today, lastOccupiedDate);
+        for (DailyAppointmentCount day : occupiedDays) {
+            requireCapacity(day.getOccupied(), AppointmentSchedule.capacityFor(day.getVisitDate(), proposed,
+                overrides.get(day.getVisitDate())), "defaultDailyCapacity");
+        }
         WorkshopScheduleSettings settings = settingsRepository.findById(WorkshopScheduleSettings.SINGLETON_ID)
             .orElseGet(() -> new WorkshopScheduleSettings(DEFAULT_DAILY_CAPACITY,
                 DEFAULT_BOOKING_HORIZON_DAYS, DEFAULT_WORKDAY_START, DEFAULT_WORKDAY_END));
         settings.update(request.defaultDailyCapacity(), request.bookingHorizonDays(),
             request.workdayStart(), request.workdayEnd());
         settingsRepository.save(settings);
-        LocalDate today = LocalDate.now(AppointmentSchedule.TIME_ZONE);
         return response(settings, overrides(today, today.plusDays(settings.getBookingHorizonDays())));
     }
 
     @Transactional
     public WorkshopScheduleConfigResponse saveOverride(ScheduleDayOverrideRequest request) {
+        locks.forConfiguration();
         if (request.closed() && request.capacity() != 0) {
             throw new AppointmentValidationException(Map.of("capacity",
                 "A closed day must have 0 places."));
@@ -77,10 +93,7 @@ public class WorkshopScheduleConfigService {
         LocalDate date = request.date();
         int targetCapacity = request.closed() ? 0 : request.capacity();
         long occupied = occupiedPlaces(date);
-        if (occupied > targetCapacity) {
-            throw new AppointmentConflictException("capacity",
-                "Capacity cannot be lower than active appointment requests on this day.");
-        }
+        requireCapacity(occupied, targetCapacity, "capacity");
         ScheduleDayOverride override = overridesRepository.findByDate(date)
             .orElseGet(() -> new ScheduleDayOverride(date, targetCapacity, request.closed(), request.note()));
         override.update(targetCapacity, request.closed(), request.note());
@@ -90,8 +103,19 @@ public class WorkshopScheduleConfigService {
 
     @Transactional
     public WorkshopScheduleConfigResponse deleteOverride(LocalDate date) {
-        overridesRepository.findByDate(date).ifPresent(overridesRepository::delete);
+        locks.forConfiguration();
+        overridesRepository.findByDate(date).ifPresent(override -> {
+            requireCapacity(occupiedPlaces(date), AppointmentSchedule.capacityFor(date, currentSettings(), null), "capacity");
+            overridesRepository.delete(override);
+        });
         return config();
+    }
+
+    private void requireCapacity(long occupied, int capacity, String field) {
+        if (occupied > capacity) {
+            throw new AppointmentConflictException(ApiErrorCode.SCHEDULE_CAPACITY_CONFLICT, field,
+                "Capacity cannot be lower than active appointment requests. Reschedule or cancel them first.");
+        }
     }
 
     private long occupiedPlaces(LocalDate date) {

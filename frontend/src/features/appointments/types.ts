@@ -88,6 +88,32 @@ export interface AppointmentPage {
   totalPages: number
 }
 
+export interface ScheduleAppointment {
+  id: number
+  reference: string
+  status: 'PENDING' | 'TIME_PROPOSED' | 'CONFIRMED'
+  currentStartAt: string
+  vehicleMake: string
+  vehicleModel: string
+  vehicleRegistrationNumber: string
+  firstName: string
+  lastName: string
+  problemSummary: string
+}
+
+export interface StaffScheduleDay {
+  date: string
+  capacity: number
+  remainingCapacity: number
+  closed: boolean
+  appointments: ScheduleAppointment[]
+}
+
+export interface StaffSchedule {
+  timeZone: string
+  days: StaffScheduleDay[]
+}
+
 export interface RepairItemInput {
   type: RepairItemType
   name: string

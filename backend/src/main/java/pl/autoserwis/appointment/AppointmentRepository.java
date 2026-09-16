@@ -21,7 +21,25 @@ public interface AppointmentRepository extends JpaRepository<AppointmentRequest,
 
     Page<AppointmentRequest> findByStatus(AppointmentStatus status, Pageable pageable);
 
-    List<AppointmentRequest> findAllByOrderByCreatedAtDesc();
+    @Query("""
+        select new pl.autoserwis.appointment.dto.ScheduleAppointmentResponse(
+            a.id, a.reference, a.status, a.currentStartAt, a.vehicleMake, a.vehicleModel,
+            a.vehicleRegistrationNumber, a.firstName, a.lastName, substring(a.problemDescription, 1, 160))
+        from AppointmentRequest a
+        where a.status in :statuses and a.currentStartAt >= :rangeStart and a.currentStartAt < :rangeEnd
+        order by a.currentStartAt, a.createdAt, a.id
+        """)
+    List<pl.autoserwis.appointment.dto.ScheduleAppointmentResponse> findScheduleAppointments(
+        @Param("statuses") Collection<AppointmentStatus> statuses,
+        @Param("rangeStart") Instant rangeStart, @Param("rangeEnd") Instant rangeEnd);
+
+    @Query(value = """
+        select cast(current_start_at at time zone 'Europe/Warsaw' as date) as "visitDate", count(*) as occupied
+        from appointment_requests
+        where status in ('PENDING', 'TIME_PROPOSED', 'CONFIRMED') and current_start_at >= :since
+        group by 1 order by 1
+        """, nativeQuery = true)
+    List<DailyAppointmentCount> countActiveDaysFrom(@Param("since") Instant since);
 
     boolean existsByReference(UUID reference);
     List<AppointmentRequest> findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(

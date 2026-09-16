@@ -11,6 +11,9 @@ import type {
   RepairItemType,
   ClientAppointmentInput,
   GuestAppointmentInput,
+  ScheduleAppointment,
+  StaffScheduleDay,
+  StaffSchedule,
 } from '../types'
 import type { RepairHistoryEntry } from '../../vehicles/types'
 
@@ -117,9 +120,26 @@ function appointmentFrom(value: unknown): Appointment {
   throw new ApiError(502, 'Serwer zwrócił nieprawidłowe dane zgłoszenia.')
 }
 
-function appointmentsFrom(value: unknown): Appointment[] {
-  if (Array.isArray(value) && value.every(isAppointment)) return value
-  throw new ApiError(502, 'Serwer zwrócił nieprawidłową listę zgłoszeń.')
+function isScheduleAppointment(value: unknown): value is ScheduleAppointment {
+  return isRecord(value)
+    && typeof value.id === 'number' && Number.isSafeInteger(value.id)
+    && typeof value.reference === 'string'
+    && (value.status === 'PENDING' || value.status === 'TIME_PROPOSED' || value.status === 'CONFIRMED')
+    && isDateTime(value.currentStartAt)
+    && typeof value.vehicleMake === 'string' && typeof value.vehicleModel === 'string'
+    && typeof value.vehicleRegistrationNumber === 'string'
+    && typeof value.firstName === 'string' && typeof value.lastName === 'string'
+    && typeof value.problemSummary === 'string'
+}
+
+function isScheduleDay(value: unknown): value is StaffScheduleDay {
+  return isRecord(value)
+    && typeof value.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value.date)
+    && typeof value.capacity === 'number' && Number.isSafeInteger(value.capacity) && value.capacity >= 0
+    && typeof value.remainingCapacity === 'number' && Number.isSafeInteger(value.remainingCapacity)
+    && value.remainingCapacity >= 0 && value.remainingCapacity <= value.capacity
+    && typeof value.closed === 'boolean'
+    && Array.isArray(value.appointments) && value.appointments.every(isScheduleAppointment)
 }
 
 function isAppointmentPage(value: unknown): value is AppointmentPage {
@@ -226,8 +246,14 @@ export async function getStaffAppointments(
   return appointmentPageFrom(await apiRequest(`/api/staff/appointments?${params}`, { signal }))
 }
 
-export async function getAllStaffAppointments(signal?: AbortSignal): Promise<Appointment[]> {
-  return appointmentsFrom(await apiRequest('/api/staff/appointments/all', { signal }))
+export async function getStaffSchedule(startDate: string, endDate: string, signal?: AbortSignal): Promise<StaffSchedule> {
+  const params = new URLSearchParams({ startDate, endDate })
+  const result = await apiRequest(`/api/staff/appointments/schedule?${params}`, { signal })
+  if (isRecord(result) && typeof result.timeZone === 'string'
+      && Array.isArray(result.days) && result.days.every(isScheduleDay)) {
+    return { timeZone: result.timeZone, days: result.days }
+  }
+  throw new ApiError(502, 'Serwer zwrócił nieprawidłowe dane grafiku.')
 }
 
 export async function getStaffAppointment(appointmentId: number, signal?: AbortSignal): Promise<Appointment> {

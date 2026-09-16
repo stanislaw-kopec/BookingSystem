@@ -23,6 +23,7 @@ const defaultErrorMessages: Record<string, string> = {
   ACCESS_DENIED: 'Nie masz uprawnień do wykonania tej operacji.',
   APPOINTMENT_CONFLICT: 'Nie można wykonać tej operacji dla aktualnego stanu wizyty.',
   APPOINTMENT_DAY_FULL: 'Ten dzień nie ma już wolnych miejsc. Wybierz inny dzień.',
+  SCHEDULE_CAPACITY_CONFLICT: 'Zmiana pozostawiłaby mniej miejsc niż aktywnych wizyt. Najpierw przełóż lub odwołaj odpowiednie zgłoszenia.',
   APPOINTMENT_VALIDATION_FAILED: 'Sprawdź dane zgłoszenia wizyty.',
   CSRF_TOKEN_UNAVAILABLE: 'Nie udało się przygotować formularza. Odśwież stronę.',
   DATA_INTEGRITY_CONFLICT: 'Te dane są już używane albo naruszają ograniczenia systemu.',

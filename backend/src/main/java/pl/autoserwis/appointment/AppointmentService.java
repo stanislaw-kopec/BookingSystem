@@ -36,15 +36,17 @@ public class AppointmentService {
     private static final int MAXIMUM_PAGE_SIZE = 50;
     private final AppointmentRepository appointments;
     private final AppointmentSchedule schedule;
+    private final ScheduleLocks locks;
     private final UserRepository users;
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
     private final InvoicePdfGenerator invoicePdfGenerator;
     public AppointmentService(AppointmentRepository appointments, AppointmentSchedule schedule,
             UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles,
-            InvoicePdfGenerator invoicePdfGenerator) {
+            InvoicePdfGenerator invoicePdfGenerator, ScheduleLocks locks) {
         this.appointments = appointments;
         this.schedule = schedule;
+        this.locks = locks;
         this.users = users;
         this.profiles = profiles;
         this.vehicles = vehicles;
@@ -78,11 +80,6 @@ public class AppointmentService {
             result.getSize(),
             result.getTotalElements(),
             result.getTotalPages());
-    }
-    public List<AppointmentResponse> getStaffAppointments() {
-        return appointments.findAllByOrderByCreatedAtDesc().stream()
-            .map(this::response)
-            .toList();
     }
     public AppointmentPageResponse getStaffAppointments(AppointmentStatus status,
             int page, int size, String direction) {
@@ -131,6 +128,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse createForClient(Long userId, ClientAppointmentRequest request) {
+        locks.forBooking();
         AppUser client = user(userId);
         ClientProfile profile = profiles.findByUser_Id(client.getId())
             .orElseThrow(() -> new AppointmentConflictException("profile",
@@ -149,6 +147,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse createForGuest(GuestAppointmentRequest request) {
+        locks.forBooking();
         validateGuest(request);
         Instant startAt = schedule.validateAndNormalize(request.visitDate());
         String registrationNumber = normalizedRegistration(request.vehicleRegistrationNumber());
@@ -163,6 +162,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse accept(Long staffId, Long appointmentId) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.PENDING,
             "Only a pending appointment request can be accepted.");
@@ -172,6 +172,7 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse reject(Long staffId, Long appointmentId,
             StaffMessageRequest request) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
@@ -184,6 +185,7 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse proposeTime(Long staffId, Long appointmentId,
             ProposeAppointmentTimeRequest request) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getStatus() != AppointmentStatus.PENDING
                 && appointment.getStatus() != AppointmentStatus.TIME_PROPOSED) {
@@ -209,6 +211,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse confirmProposedTime(Long userId, Long appointmentId) {
+        locks.forBooking();
         AppUser client = user(userId);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
@@ -220,6 +223,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse cancelClientAppointment(Long userId, Long appointmentId) {
+        locks.forBooking();
         AppUser client = user(userId);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
@@ -235,6 +239,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse confirmGuestProposedTime(Long staffId, Long appointmentId) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getRequesterType() != AppointmentRequesterType.GUEST) {
             throw new AppointmentConflictException(
@@ -248,6 +253,7 @@ public class AppointmentService {
     @Transactional
     public AppointmentResponse completeRepair(Long staffId, Long appointmentId,
             CompleteRepairRequest request) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.CONFIRMED,
             "Repair can be completed only for a confirmed appointment.");
@@ -259,6 +265,7 @@ public class AppointmentService {
     }
     @Transactional
     public AppointmentResponse markPickedUp(Long staffId, Long appointmentId) {
+        locks.forBooking();
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
             "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");

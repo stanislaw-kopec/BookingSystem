@@ -80,7 +80,11 @@ export function ScheduleSettingsSection() {
       setNotice(successMessage)
     } catch (cause) {
       setError(errorMessage(cause))
-      if (cause instanceof ApiError) setFieldErrors(cause.fieldErrors)
+      if (cause instanceof ApiError) {
+        setFieldErrors(cause.code === 'SCHEDULE_CAPACITY_CONFLICT'
+          ? Object.fromEntries(Object.keys(cause.fieldErrors).map((field) => [field, errorMessage(cause)]))
+          : cause.fieldErrors)
+      }
     } finally {
       setIsSaving(false)
     }

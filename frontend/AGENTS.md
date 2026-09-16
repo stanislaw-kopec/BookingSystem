@@ -56,7 +56,9 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   Gość podaje dane kontaktowe, dane pojazdu, dzień przyjęcia auta i opis. Po wysłaniu widzi numer
   referencyjny oraz informację o oczekiwaniu, ale nie otrzymuje panelu ani podglądu statusu.
 - R08: `/staff/schedule` jest chronioną zakładką MECHANIC/ADMIN z graficznym,
-  tygodniowym grafikiem aktywnych zgłoszeń pogrupowanych według dni od poniedziałku do piątku. `/staff/appointments`
+  tygodniowym grafikiem aktywnych zgłoszeń od poniedziałku do niedzieli. Pobieraj tylko
+  wybrany tydzień z `/api/staff/appointments/schedule`, z limitami i oznaczeniami
+  dni zamkniętych z API; weekend może być otwarty wyjątkiem administratora. `/staff/appointments`
   jest chronionym panelem MECHANIC/ADMIN z kolejką klientów i gości, backendową
   paginacją, filtrowaniem po statusie, sortowaniem po dacie oraz akcjami
   potwierdzenia, odrzucenia i zaproponowania innego dnia. Kliknięcie zgłoszenia

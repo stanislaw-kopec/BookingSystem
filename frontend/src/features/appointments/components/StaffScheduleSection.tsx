@@ -1,28 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { errorMessage } from '../../../api/apiClient'
-import * as appointmentsApi from '../api/appointmentsApi'
+import { getStaffSchedule } from '../api/appointmentsApi'
 import { appointmentDateKey, mondayKey } from '../dateTime'
-import type { Appointment } from '../types'
+import type { StaffSchedule } from '../types'
 import { AppointmentStatusBadge } from './AppointmentStatusBadge'
 import '../appointments.css'
 
-const scheduleTimeZone = 'Europe/Warsaw'
-const activeStatuses = new Set<Appointment['status']>(['PENDING', 'TIME_PROPOSED', 'CONFIRMED'])
-const defaultDailyCapacity = 4
-
-const statusPriority = {
-  PENDING: 0,
-  TIME_PROPOSED: 1,
-  CONFIRMED: 2,
-  READY_FOR_PICKUP: 3,
-  COMPLETED: 4,
-  CANCELLED: 5,
-  REJECTED: 6,
-} as const
-
-function currentDateKey() {
-  return appointmentDateKey(new Date().toISOString(), scheduleTimeZone)
+function currentWeekStart() {
+  return mondayKey(appointmentDateKey(new Date().toISOString(), 'Europe/Warsaw'))
 }
 
 function addDays(dateKey: string, days: number) {
@@ -33,75 +19,29 @@ function addDays(dateKey: string, days: number) {
 
 function scheduleDayLabel(dateKey: string) {
   return new Intl.DateTimeFormat('pl-PL', {
-    weekday: 'long',
-    day: '2-digit',
-    month: '2-digit',
-    timeZone: 'UTC',
+    weekday: 'long', day: '2-digit', month: '2-digit', timeZone: 'UTC',
   }).format(new Date(`${dateKey}T00:00:00Z`))
 }
 
 function scheduleWeekLabel(firstDayKey: string) {
-  const lastDayKey = addDays(firstDayKey, 4)
   const formatter = new Intl.DateTimeFormat('pl-PL', {
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    timeZone: 'UTC',
+    day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC',
   })
-  return `${formatter.format(new Date(`${firstDayKey}T00:00:00Z`))} - ${formatter.format(new Date(`${lastDayKey}T00:00:00Z`))}`
-}
-
-function sortAppointments(appointments: Appointment[]) {
-  return [...appointments].sort((first, second) => {
-    const byDate = first.currentStartAt.localeCompare(second.currentStartAt)
-    const byStatus = statusPriority[first.status] - statusPriority[second.status]
-    return byDate || byStatus || first.createdAt.localeCompare(second.createdAt)
-  })
-}
-
-function shortReference(reference: string) {
-  return reference.slice(0, 8).toUpperCase()
+  return `${formatter.format(new Date(`${firstDayKey}T00:00:00Z`))} – ${formatter.format(new Date(`${addDays(firstDayKey, 6)}T00:00:00Z`))}`
 }
 
 export function StaffScheduleSection() {
-  const [appointments, setAppointments] = useState<Appointment[] | null>(null)
-  const [dailyCapacity, setDailyCapacity] = useState(defaultDailyCapacity)
+  const [schedule, setSchedule] = useState<StaffSchedule | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [revision, setRevision] = useState(0)
-  const [selectedWeekStart, setSelectedWeekStart] = useState(() => mondayKey(currentDateKey()))
-
-  const weekDayKeys = useMemo(() =>
-    [0, 1, 2, 3, 4].map((offset) => addDays(selectedWeekStart, offset)),
-  [selectedWeekStart])
-
-  const appointmentsByDay = useMemo(() => {
-    const grouped = new Map<string, Appointment[]>()
-    for (const appointment of appointments ?? []) {
-      if (!activeStatuses.has(appointment.status)) continue
-      const dayKey = appointmentDateKey(appointment.currentStartAt, scheduleTimeZone)
-      if (!weekDayKeys.includes(dayKey)) continue
-      grouped.set(dayKey, sortAppointments([...(grouped.get(dayKey) ?? []), appointment]))
-    }
-    return grouped
-  }, [appointments, weekDayKeys])
-
-  const visibleAppointments = useMemo(() =>
-    sortAppointments([...appointmentsByDay.values()].flat()),
-  [appointmentsByDay])
+  const [selectedWeekStart, setSelectedWeekStart] = useState(currentWeekStart)
 
   useEffect(() => {
     const controller = new AbortController()
-    Promise.all([
-      appointmentsApi.getAllStaffAppointments(controller.signal),
-      appointmentsApi.getAvailability(controller.signal),
-    ])
-      .then(([staffAppointments, availability]) => {
-        if (!controller.signal.aborted) {
-          setAppointments(sortAppointments(staffAppointments))
-          setDailyCapacity(availability.dailyCapacity)
-          setError(null)
-        }
+    getStaffSchedule(selectedWeekStart, addDays(selectedWeekStart, 6), controller.signal)
+      .then((result) => {
+        if (!controller.signal.aborted) setSchedule(result)
       })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setError(errorMessage(cause))
@@ -110,13 +50,17 @@ export function StaffScheduleSection() {
         if (!controller.signal.aborted) setIsLoading(false)
       })
     return () => controller.abort()
-  }, [revision])
+  }, [selectedWeekStart, revision])
 
-  function retry() {
-    setIsLoading(true)
+  function reload(weekStart = selectedWeekStart) {
+    setSchedule(null)
     setError(null)
+    setIsLoading(true)
+    setSelectedWeekStart(weekStart)
     setRevision((value) => value + 1)
   }
+
+  const appointmentCount = schedule?.days.reduce((total, day) => total + day.appointments.length, 0) ?? 0
 
   return (
     <section className="page-section appointments-section staff-schedule-section" aria-labelledby="staff-schedule-heading">
@@ -124,33 +68,31 @@ export function StaffScheduleSection() {
         <div>
           <p className="eyebrow">Panel warsztatu</p>
           <h2 id="staff-schedule-heading">Grafik</h2>
-          <p className="muted">Tygodniowy widok dni przyjęć samochodów i aktywnych zgłoszeń.</p>
+          <p className="muted">Tygodniowy widok przyjęć aut z uwzględnieniem dni zamkniętych i wyjątków.</p>
         </div>
         <Link className="button secondary" to="/staff/appointments">Przejdź do listy zgłoszeń</Link>
       </div>
-
       <div className="staff-schedule-toolbar" aria-label="Zmiana tygodnia">
-        <button type="button" className="button secondary" onClick={() => setSelectedWeekStart(addDays(selectedWeekStart, -7))}>
+        <button type="button" className="button secondary" onClick={() => reload(addDays(selectedWeekStart, -7))}>
           Poprzedni tydzień
         </button>
         <div>
           <h3>{scheduleWeekLabel(selectedWeekStart)}</h3>
-          <p className="muted">{visibleAppointments.length} aktywnych zgłoszeń w tym tygodniu</p>
+          {schedule && <p className="muted">{appointmentCount} aktywnych zgłoszeń w tym tygodniu</p>}
         </div>
-        <button type="button" className="button secondary" onClick={() => setSelectedWeekStart(addDays(selectedWeekStart, 7))}>
+        <button type="button" className="button secondary" onClick={() => reload(addDays(selectedWeekStart, 7))}>
           Następny tydzień
         </button>
+        <button type="button" className="button secondary" onClick={() => reload()} disabled={isLoading}>Odśwież</button>
       </div>
-
       {isLoading && <p role="status">Ładowanie grafiku…</p>}
-      {!isLoading && error && appointments === null && (
+      {error && (
         <div className="message error" role="alert">
           <p>{error}</p>
-          <button type="button" className="button secondary" onClick={retry}>Spróbuj ponownie</button>
+          <button type="button" className="button secondary" onClick={() => reload()}>Spróbuj ponownie</button>
         </div>
       )}
-
-      {appointments && (
+      {schedule && (
         <>
           <div className="staff-schedule-legend" aria-label="Legenda statusów">
             <AppointmentStatusBadge status="PENDING" />
@@ -158,50 +100,43 @@ export function StaffScheduleSection() {
             <AppointmentStatusBadge status="CONFIRMED" />
           </div>
           <div className="staff-schedule-days">
-            {weekDayKeys.map((dayKey) => {
-              const dayAppointments = appointmentsByDay.get(dayKey) ?? []
-              const remainingCapacity = Math.max(dailyCapacity - dayAppointments.length, 0)
-              return (
-                <section className="staff-schedule-day" key={dayKey}>
-                  <header className="staff-schedule-day-header">
-                    <div>
-                      <h3>{scheduleDayLabel(dayKey)}</h3>
-                      <p className="muted">{dayAppointments.length} z {dailyCapacity} miejsc zajęte</p>
-                    </div>
-                    <span className={remainingCapacity > 0 ? 'daily-capacity open' : 'daily-capacity full'}>
-                      {remainingCapacity > 0 ? `${remainingCapacity} wolne` : 'Brak miejsc'}
-                    </span>
-                  </header>
-
-                  {dayAppointments.length === 0 ? (
-                    <p className="free-day">Brak aktywnych zgłoszeń na ten dzień.</p>
-                  ) : (
-                    <div className="staff-schedule-card-list">
-                      {dayAppointments.map((appointment) => (
-                        <Link className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
-                          to={`/staff/appointments/${appointment.id}`} key={appointment.id}
-                          aria-label={`Otwórz zgłoszenie ${appointment.vehicleMake} ${appointment.vehicleModel}, ${appointment.vehicleRegistrationNumber}`}>
-                          <div className="staff-schedule-card-header">
-                            <strong>{appointment.vehicleMake} {appointment.vehicleModel}</strong>
-                            <span>{shortReference(appointment.reference)}</span>
-                          </div>
-                          <AppointmentStatusBadge status={appointment.status} />
-                          <p>{appointment.firstName} {appointment.lastName}</p>
-                          <p className="muted">{appointment.vehicleRegistrationNumber}</p>
-                          <p className="staff-schedule-problem">{appointment.problemDescription}</p>
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </section>
-              )
-            })}
+            {schedule.days.map((day) => (
+              <section className={`staff-schedule-day${day.closed ? ' closed' : ''}`} key={day.date}>
+                <header className="staff-schedule-day-header">
+                  <div>
+                    <h3>{scheduleDayLabel(day.date)}</h3>
+                    <p className="muted">{day.appointments.length} z {day.capacity} miejsc zajęte</p>
+                  </div>
+                  <span className={`daily-capacity ${day.closed ? 'closed' : day.remainingCapacity > 0 ? 'open' : 'full'}`}>
+                    {day.closed ? 'Zamknięte' : day.remainingCapacity > 0 ? `${day.remainingCapacity} wolne` : 'Brak miejsc'}
+                  </span>
+                </header>
+                {day.appointments.length === 0 ? (
+                  <p className="free-day">{day.closed ? 'Warsztat nie przyjmuje aut w tym dniu.' : 'Brak aktywnych zgłoszeń na ten dzień.'}</p>
+                ) : (
+                  <div className="staff-schedule-card-list">
+                    {day.appointments.map((appointment) => (
+                      <Link className={`staff-schedule-card schedule-status-${appointment.status.toLowerCase()}`}
+                        to={`/staff/appointments/${appointment.id}`} key={appointment.id}
+                        aria-label={`Otwórz zgłoszenie ${appointment.vehicleMake} ${appointment.vehicleModel}, ${appointment.vehicleRegistrationNumber}`}>
+                        <div className="staff-schedule-card-header">
+                          <strong>{appointment.vehicleMake} {appointment.vehicleModel}</strong>
+                          <span>{appointment.reference.slice(0, 8).toUpperCase()}</span>
+                        </div>
+                        <AppointmentStatusBadge status={appointment.status} />
+                        <p>{appointment.firstName} {appointment.lastName}</p>
+                        <p className="muted">{appointment.vehicleRegistrationNumber}</p>
+                        <p className="staff-schedule-problem">{appointment.problemSummary}</p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            ))}
           </div>
-          {visibleAppointments.length === 0 && (
-            <p className="empty-state">W wybranym tygodniu nie ma aktywnych zgłoszeń w grafiku.</p>
-          )}
+          {appointmentCount === 0 && <p className="empty-state">W wybranym tygodniu nie ma aktywnych zgłoszeń w grafiku.</p>}
           <p className="muted staff-schedule-note">
-            Grafik pokazuje dni przyjęcia auta. Odrzucone i odwołane zgłoszenia są dostępne na liście zgłoszeń.
+            Grafik pokazuje dni przyjęcia auta w strefie {schedule.timeZone}. Pozostałe zgłoszenia są dostępne na liście zgłoszeń.
           </p>
         </>
       )}
