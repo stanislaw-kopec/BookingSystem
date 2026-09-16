@@ -11,6 +11,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import pl.autoserwis.exception.ApiErrorCode;
+import pl.autoserwis.user.UserRepository;
+import org.springframework.security.web.context.DelegatingSecurityContextRepository;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.csrf.CsrfFilter;
+import org.springframework.security.web.context.SecurityContextRepository;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,8 +29,17 @@ public class SecurityConfig {
     }
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityContextRepository securityContextRepository() {
+        return new DelegatingSecurityContextRepository(
+            new RequestAttributeSecurityContextRepository(), new HttpSessionSecurityContextRepository());
+    }
+
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository users,
+            SessionAuthentication sessions, SecurityContextRepository contexts) throws Exception {
         return http
+            .securityContext(context -> context.securityContextRepository(contexts))
+            .addFilterBefore(new AccountSessionFilter(users, sessions), CsrfFilter.class)
             .csrf(Customizer.withDefaults())
             .requestCache(cache -> cache.disable())
             .authorizeHttpRequests(authorize -> authorize
@@ -72,7 +87,7 @@ public class SecurityConfig {
             .build();
     }
 
-    private static void writeError(HttpServletResponse response, int status,
+    static void writeError(HttpServletResponse response, int status,
             ApiErrorCode code, String message) throws IOException {
         response.setStatus(status);
         response.setContentType("application/json");

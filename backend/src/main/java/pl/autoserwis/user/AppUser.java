@@ -30,6 +30,9 @@ public class AppUser {
     @Column(nullable = false)
     private boolean enabled = true;
 
+    @Column(name = "session_version", nullable = false)
+    private long sessionVersion;
+
     public AppUser(String username, String email, String passwordHash, UserRole role) {
         this.username = username;
         this.email = email;
@@ -45,9 +48,11 @@ public class AppUser {
 
     public void changePassword(String passwordHash) {
         this.passwordHash = passwordHash;
+        this.sessionVersion++;
     }
 
     public void setEnabled(boolean enabled) {
+        if (this.enabled != enabled) this.sessionVersion++;
         this.enabled = enabled;
     }
 }

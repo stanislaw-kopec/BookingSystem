@@ -2,7 +2,8 @@ package pl.autoserwis.appointment;
 
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import pl.autoserwis.security.AccountPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.appointment.dto.*;
 
@@ -21,20 +22,20 @@ public class AppointmentController {
     }
 
     @GetMapping
-    public AppointmentPageResponse getCurrentClientAppointments(Authentication authentication,
+    public AppointmentPageResponse getCurrentClientAppointments(@AuthenticationPrincipal AccountPrincipal principal,
             @RequestParam(required = false) AppointmentStatus status,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "5") int size,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
-        return appointmentService.getCurrentClientAppointments(authentication.getName(),
+        return appointmentService.getCurrentClientAppointments(principal.getUserId(),
             status, page, size, sortDirection);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public AppointmentResponse createForClient(Authentication authentication,
+    public AppointmentResponse createForClient(@AuthenticationPrincipal AccountPrincipal principal,
             @Valid @RequestBody ClientAppointmentRequest request) {
-        return appointmentService.createForClient(authentication.getName(), request);
+        return appointmentService.createForClient(principal.getUserId(), request);
     }
 
     @PostMapping("/guest")
@@ -45,14 +46,14 @@ public class AppointmentController {
     }
 
     @PostMapping("/{appointmentId}/confirm-proposed")
-    public AppointmentResponse confirmProposedTime(Authentication authentication,
+    public AppointmentResponse confirmProposedTime(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long appointmentId) {
-        return appointmentService.confirmProposedTime(authentication.getName(), appointmentId);
+        return appointmentService.confirmProposedTime(principal.getUserId(), appointmentId);
     }
 
     @PostMapping("/{appointmentId}/cancel")
-    public AppointmentResponse cancelClientAppointment(Authentication authentication,
+    public AppointmentResponse cancelClientAppointment(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long appointmentId) {
-        return appointmentService.cancelClientAppointment(authentication.getName(), appointmentId);
+        return appointmentService.cancelClientAppointment(principal.getUserId(), appointmentId);
     }
 }

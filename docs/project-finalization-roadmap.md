@@ -1,5 +1,9 @@
 # Roadmapa domykania projektu BookingSystem
 
+> Aktualna kolejność napraw i status ich wykonania znajdują się w
+> [checkliście poprawek po audycie](audit-remediation-checklist.md).
+> Poniżej zachowano wcześniejszy plan funkcji i materiały do nauki.
+
 Ten plik zbiera rzeczy, które warto zrobić przed uznaniem projektu za gotowy do pokazania w portfolio. Celem nie jest dokładanie wielu nowych funkcji warsztatu, tylko doprowadzenie aplikacji do stanu, w którym dobrze pokazuje umiejętności Java Developera: czytelne API, testy, dokumentację, bezpieczeństwo, Docker i sensowny frontend.
 
 ## Najważniejszy wniosek

@@ -18,7 +18,7 @@ import pl.autoserwis.user.UserRole;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.hasItem;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -90,7 +90,7 @@ class RegistrationIntegrationTest {
     @Test
     void adminCreatesMechanicAccount() throws Exception {
         mockMvc.perform(post("/api/admin/staff/mechanics")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson(
@@ -106,7 +106,7 @@ class RegistrationIntegrationTest {
         assertThat(passwords.matches("mechanic-password-2026", saved.getPasswordHash())).isTrue();
 
         mockMvc.perform(get("/api/admin/staff/mechanics")
-                .with(user("admin").roles("ADMIN")))
+                .with(databaseUser("admin").roles("ADMIN")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[*].username", hasItem("new-mechanic")));
     }
@@ -114,7 +114,7 @@ class RegistrationIntegrationTest {
     @Test
     void onlyAdminCreatesMechanicAccounts() throws Exception {
         mockMvc.perform(post("/api/admin/staff/mechanics")
-                .with(user("mechanic").roles("MECHANIC"))
+                .with(databaseUser("mechanic").roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson(
@@ -122,7 +122,7 @@ class RegistrationIntegrationTest {
             .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/api/admin/staff/mechanics")
-                .with(user("client").roles("CLIENT")))
+                .with(databaseUser("client").roles("CLIENT")))
             .andExpect(status().isForbidden());
 
         assertThat(users.findByUsernameIgnoreCase("blocked-mechanic")).isEmpty();
@@ -174,11 +174,11 @@ class RegistrationIntegrationTest {
 
         for (String role : new String[] {"CLIENT", "MECHANIC"}) {
             mockMvc.perform(get("/api/admin/staff/mechanics")
-                    .with(user("blocked-" + role.toLowerCase()).roles(role)))
+                    .with(databaseUser("role-check-" + role.toLowerCase()).roles(role)))
                 .andExpect(status().isForbidden());
 
             mockMvc.perform(post("/api/admin/staff/mechanics")
-                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(databaseUser("role-check-" + role.toLowerCase()).roles(role))
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(registrationJson(
@@ -188,7 +188,7 @@ class RegistrationIntegrationTest {
                 .andExpect(status().isForbidden());
 
             mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
-                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(databaseUser("role-check-" + role.toLowerCase()).roles(role))
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(staffUpdateJson("blocked-update-" + role.toLowerCase(),
@@ -196,14 +196,14 @@ class RegistrationIntegrationTest {
                 .andExpect(status().isForbidden());
 
             mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
-                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(databaseUser("role-check-" + role.toLowerCase()).roles(role))
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(passwordResetJson("new-password-2026", "new-password-2026")))
                 .andExpect(status().isForbidden());
 
             mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
-                    .with(user("blocked-" + role.toLowerCase()).roles(role))
+                    .with(databaseUser("role-check-" + role.toLowerCase()).roles(role))
                     .with(csrf())
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(statusJson(false)))
@@ -225,7 +225,7 @@ class RegistrationIntegrationTest {
             passwords.encode("old-password"), UserRole.MECHANIC));
 
         mockMvc.perform(post("/api/admin/staff/mechanics")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson(
                     "csrf-created-mechanic", "csrf-created@example.com",
@@ -233,19 +233,19 @@ class RegistrationIntegrationTest {
             .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(staffUpdateJson("csrf-updated-mechanic", "csrf-updated@example.com")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordResetJson("new-password-2026", "new-password-2026")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(statusJson(false)))
             .andExpect(status().isForbidden());
@@ -263,7 +263,7 @@ class RegistrationIntegrationTest {
             "existing-mechanic", "existing-mechanic@example.com", passwords.encode("existing-password"), UserRole.MECHANIC));
 
         mockMvc.perform(post("/api/admin/staff/mechanics")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson(
@@ -272,7 +272,7 @@ class RegistrationIntegrationTest {
             .andExpect(jsonPath("$.fieldErrors.passwordConfirmation").exists());
 
         mockMvc.perform(post("/api/admin/staff/mechanics")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(registrationJson(
@@ -287,7 +287,7 @@ class RegistrationIntegrationTest {
             "editable-mechanic", "editable-mechanic@example.com", passwords.encode("old-password"), UserRole.MECHANIC));
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -312,7 +312,7 @@ class RegistrationIntegrationTest {
             "password-mechanic", "password-mechanic@example.com", passwords.encode("old-password"), UserRole.MECHANIC));
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -334,7 +334,7 @@ class RegistrationIntegrationTest {
             "disabled-mechanic", "disabled-mechanic@example.com", passwords.encode("mechanic-password"), UserRole.MECHANIC));
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -350,7 +350,7 @@ class RegistrationIntegrationTest {
             .andExpect(status().isUnauthorized());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", mechanic.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -372,7 +372,7 @@ class RegistrationIntegrationTest {
             "staff-panel-client", "staff-panel-client@example.com", passwords.encode("client-password"), UserRole.CLIENT));
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -384,14 +384,14 @@ class RegistrationIntegrationTest {
             .andExpect(status().isNotFound());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/password", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordResetJson("new-password-2026", "new-password-2026")))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(put("/api/admin/staff/mechanics/{mechanicId}/status", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(statusJson(false)))

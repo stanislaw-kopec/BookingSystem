@@ -53,15 +53,15 @@ public class AppointmentService {
     public AppointmentAvailabilityResponse getAvailability() {
         return schedule.availability();
     }
-    public List<AppointmentResponse> getCurrentClientAppointments(String username) {
-        AppUser client = user(username);
+    public List<AppointmentResponse> getCurrentClientAppointments(Long userId) {
+        AppUser client = user(userId);
         return appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).stream()
             .map(this::response)
             .toList();
     }
-    public AppointmentPageResponse getCurrentClientAppointments(String username,
+    public AppointmentPageResponse getCurrentClientAppointments(Long userId,
             AppointmentStatus status, int page, int size, String direction) {
-        AppUser client = user(username);
+        AppUser client = user(userId);
         int pageNumber = Math.max(page, 0);
         int pageSize = normalizedPageSize(size);
         Sort.Direction sortDirection = "ASC".equalsIgnoreCase(direction)
@@ -130,8 +130,8 @@ public class AppointmentService {
         return invoicePdfGenerator.generate(appointment, profile);
     }
     @Transactional
-    public AppointmentResponse createForClient(String username, ClientAppointmentRequest request) {
-        AppUser client = user(username);
+    public AppointmentResponse createForClient(Long userId, ClientAppointmentRequest request) {
+        AppUser client = user(userId);
         ClientProfile profile = profiles.findByUser_Id(client.getId())
             .orElseThrow(() -> new AppointmentConflictException("profile",
                 "Complete your profile before booking an appointment."));
@@ -162,15 +162,15 @@ public class AppointmentService {
         return saveInAvailableDay(appointment);
     }
     @Transactional
-    public AppointmentResponse accept(String staffUsername, Long appointmentId) {
+    public AppointmentResponse accept(Long staffId, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.PENDING,
             "Only a pending appointment request can be accepted.");
-        appointment.accept(user(staffUsername), Instant.now());
+        appointment.accept(user(staffId), Instant.now());
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse reject(String staffUsername, Long appointmentId,
+    public AppointmentResponse reject(Long staffId, Long appointmentId,
             StaffMessageRequest request) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getStatus() != AppointmentStatus.PENDING
@@ -178,11 +178,11 @@ public class AppointmentService {
             throw new AppointmentConflictException(
                 "Only a pending request or a day proposal can be rejected.");
         }
-        appointment.reject(user(staffUsername), optional(request.message()), Instant.now());
+        appointment.reject(user(staffId), optional(request.message()), Instant.now());
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse proposeTime(String staffUsername, Long appointmentId,
+    public AppointmentResponse proposeTime(Long staffId, Long appointmentId,
             ProposeAppointmentTimeRequest request) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getStatus() != AppointmentStatus.PENDING
@@ -199,7 +199,7 @@ public class AppointmentService {
         if (schedule.isFull(proposedStartAt)) {
             throw unavailableDay();
         }
-        appointment.proposeTime(user(staffUsername), proposedStartAt,
+        appointment.proposeTime(user(staffId), proposedStartAt,
             optional(request.message()), Instant.now());
         try {
             return response(appointments.saveAndFlush(appointment));
@@ -208,8 +208,8 @@ public class AppointmentService {
         }
     }
     @Transactional
-    public AppointmentResponse confirmProposedTime(String username, Long appointmentId) {
-        AppUser client = user(username);
+    public AppointmentResponse confirmProposedTime(Long userId, Long appointmentId) {
+        AppUser client = user(userId);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
@@ -219,8 +219,8 @@ public class AppointmentService {
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse cancelClientAppointment(String username, Long appointmentId) {
-        AppUser client = user(username);
+    public AppointmentResponse cancelClientAppointment(Long userId, Long appointmentId) {
+        AppUser client = user(userId);
         AppointmentRequest appointment = appointments.findByIdAndClientIdForUpdate(
                 appointmentId, client.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
@@ -234,7 +234,7 @@ public class AppointmentService {
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse confirmGuestProposedTime(String staffUsername, Long appointmentId) {
+    public AppointmentResponse confirmGuestProposedTime(Long staffId, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         if (appointment.getRequesterType() != AppointmentRequesterType.GUEST) {
             throw new AppointmentConflictException(
@@ -242,27 +242,27 @@ public class AppointmentService {
         }
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
             "This request is not waiting for a proposed day confirmation.");
-        appointment.confirmGuestProposedTime(user(staffUsername), Instant.now());
+        appointment.confirmGuestProposedTime(user(staffId), Instant.now());
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse completeRepair(String staffUsername, Long appointmentId,
+    public AppointmentResponse completeRepair(Long staffId, Long appointmentId,
             CompleteRepairRequest request) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.CONFIRMED,
             "Repair can be completed only for a confirmed appointment.");
-        appointment.completeRepair(user(staffUsername),
+        appointment.completeRepair(user(staffId),
             normalizedRepairDescription(request.repairDescription()),
             normalizedRepairItems(request.repairItems()),
             Instant.now());
         return response(appointments.save(appointment));
     }
     @Transactional
-    public AppointmentResponse markPickedUp(String staffUsername, Long appointmentId) {
+    public AppointmentResponse markPickedUp(Long staffId, Long appointmentId) {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
             "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");
-        appointment.markPickedUp(user(staffUsername), Instant.now());
+        appointment.markPickedUp(user(staffId), Instant.now());
         return response(appointments.save(appointment));
     }
     private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {
@@ -371,8 +371,8 @@ public class AppointmentService {
     private String normalizedRegistration(String value) {
         return value.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
     }
-    private AppUser user(String username) {
-        return users.findByUsernameIgnoreCase(username)
+    private AppUser user(Long userId) {
+        return users.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
     private AppointmentConflictException unavailableDay() {

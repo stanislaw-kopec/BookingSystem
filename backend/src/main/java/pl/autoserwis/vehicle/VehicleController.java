@@ -5,7 +5,8 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import pl.autoserwis.security.AccountPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.invoice.InvoiceFile;
 import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
@@ -26,26 +27,26 @@ public class VehicleController {
     }
 
     @GetMapping
-    public List<VehicleResponse> getVehicles(Authentication authentication) {
-        return vehicleService.getCurrentClientVehicles(authentication.getName());
+    public List<VehicleResponse> getVehicles(@AuthenticationPrincipal AccountPrincipal principal) {
+        return vehicleService.getCurrentClientVehicles(principal.getUserId());
     }
 
     @GetMapping("/{vehicleId}")
-    public VehicleResponse getVehicle(Authentication authentication, @PathVariable Long vehicleId) {
-        return vehicleService.getCurrentClientVehicle(authentication.getName(), vehicleId);
+    public VehicleResponse getVehicle(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long vehicleId) {
+        return vehicleService.getCurrentClientVehicle(principal.getUserId(), vehicleId);
     }
 
     @GetMapping("/{vehicleId}/repair-history")
-    public List<RepairHistoryEntryResponse> getRepairHistory(Authentication authentication,
+    public List<RepairHistoryEntryResponse> getRepairHistory(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long vehicleId) {
-        return vehicleService.getCurrentClientVehicleRepairHistory(authentication.getName(), vehicleId);
+        return vehicleService.getCurrentClientVehicleRepairHistory(principal.getUserId(), vehicleId);
     }
 
     @GetMapping("/{vehicleId}/repair-history/{appointmentId}/invoice")
-    public ResponseEntity<byte[]> getRepairInvoice(Authentication authentication,
+    public ResponseEntity<byte[]> getRepairInvoice(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long vehicleId, @PathVariable Long appointmentId) {
         InvoiceFile invoice = vehicleService.getCurrentClientRepairInvoice(
-            authentication.getName(), vehicleId, appointmentId);
+            principal.getUserId(), vehicleId, appointmentId);
         ContentDisposition disposition = ContentDisposition.attachment()
             .filename(invoice.filename(), StandardCharsets.UTF_8)
             .build();
@@ -56,15 +57,15 @@ public class VehicleController {
     }
 
     @PostMapping
-    public ResponseEntity<VehicleResponse> createVehicle(Authentication authentication,
+    public ResponseEntity<VehicleResponse> createVehicle(@AuthenticationPrincipal AccountPrincipal principal,
             @Valid @RequestBody VehicleRequest request) {
-        VehicleResponse result = vehicleService.create(authentication.getName(), request);
+        VehicleResponse result = vehicleService.create(principal.getUserId(), request);
         return ResponseEntity.created(URI.create("/api/vehicles/" + result.id())).body(result);
     }
 
     @PutMapping("/{vehicleId}")
-    public VehicleResponse updateVehicle(Authentication authentication, @PathVariable Long vehicleId,
+    public VehicleResponse updateVehicle(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long vehicleId,
             @Valid @RequestBody VehicleRequest request) {
-        return vehicleService.update(authentication.getName(), vehicleId, request);
+        return vehicleService.update(principal.getUserId(), vehicleId, request);
     }
 }

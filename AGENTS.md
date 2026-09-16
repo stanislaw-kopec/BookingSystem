@@ -63,6 +63,11 @@ Poniższy zakres opisuje docelowe zachowanie. Nie oznacza, że funkcje już istn
   Personel korzysta z danych w zakresie przyznanych uprawnień. Konta mechaników i administratorów tworzy wyłącznie administrator.
 - Identyfikator właściciela profilu wynika z zalogowanej sesji. API klienta nie
   przyjmuje identyfikatora użytkownika, którego profil ma zostać odczytany lub zapisany.
+- Tożsamość sesji opiera się na niezmiennym ID konta, a nie loginie. Zmiana i ponowne
+  wykorzystanie loginu nie mogą zmieniać właściciela danych dostępnych w istniejącej sesji.
+  Dezaktywacja i reset hasła przez admina odbierają dostęp wszystkim wcześniejszym sesjom
+  przy następnym żądaniu; ponowna aktywacja ich nie przywraca. Samodzielna zmiana hasła
+  zachowuje bieżącą sesję, ale unieważnia pozostałe.
 - Właściciel pojazdu również wynika z sesji. Lista i szczegóły używają zapytań
   ograniczonych do tego właściciela, a próba odczytu cudzego pojazdu zwraca 404.
   Numer rejestracyjny i podany VIN są unikalne wśród pojazdów jednego klienta,
@@ -142,6 +147,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   systemu, mikroserwisów oraz nowych narzędzi bez konkretnej potrzeby.
 
 ## Kolejność rozwoju i jakość
+
+- Poprawki po audycie realizujemy etapami według `docs/audit-remediation-checklist.md`.
+  Po implementacji i sprawdzeniu etapu aktualizuj jego checklistę oraz dziennik wykonania.
 
 - Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
   zgłoszenia wizyt z kalendarzem i decyzją personelu, zakończenie naprawy,

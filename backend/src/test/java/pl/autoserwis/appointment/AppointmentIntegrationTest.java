@@ -28,7 +28,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -69,7 +69,7 @@ class AppointmentIntegrationTest {
         LocalDate visitDate = workingDate(1);
 
         mockMvc.perform(put("/api/admin/schedule/settings")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -87,7 +87,7 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.settings.workdayEnd").value("15:30:00"));
 
         mockMvc.perform(put("/api/admin/schedule/overrides/{date}", visitDate)
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -110,7 +110,7 @@ class AppointmentIntegrationTest {
     void configuredDayCapacityLimitsNewAppointments() throws Exception {
         LocalDate visitDate = workingDate(2);
         mockMvc.perform(put("/api/admin/schedule/overrides/{date}", visitDate)
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -133,11 +133,11 @@ class AppointmentIntegrationTest {
     @Test
     void onlyAdminCanManageScheduleConfiguration() throws Exception {
         mockMvc.perform(get("/api/admin/schedule")
-                .with(user("mechanic").roles("MECHANIC")))
+                .with(databaseUser("mechanic").roles("MECHANIC")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/admin/schedule/settings")
-                .with(user("client").roles("CLIENT"))
+                .with(databaseUser("client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -153,7 +153,7 @@ class AppointmentIntegrationTest {
         LocalDate visitDate = workingDate(0);
 
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), visitDate, "Silnik nierówno pracuje.")))
@@ -182,7 +182,7 @@ class AppointmentIntegrationTest {
         LocalDate visitDate = workingDate(0);
 
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(otherVehicle.getId(), visitDate, "Samochód nie chce odpalić.")))
@@ -191,7 +191,7 @@ class AppointmentIntegrationTest {
 
         createProfile(client);
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(otherVehicle.getId(), visitDate, "Samochód nie chce odpalić.")))
@@ -243,7 +243,7 @@ class AppointmentIntegrationTest {
         LocalDate weekend = next(DayOfWeek.SATURDAY);
 
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), weekend, "Problem z układem kierowniczym.")))
@@ -252,7 +252,7 @@ class AppointmentIntegrationTest {
 
         LocalDate today = LocalDate.now(AppointmentSchedule.TIME_ZONE);
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), today, "Problem z układem kierowniczym.")))
@@ -279,7 +279,7 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.fieldErrors.visitDate").exists());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/reject", first.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"message\":\"Brak odpowiedniej części.\"}"))
@@ -306,7 +306,7 @@ class AppointmentIntegrationTest {
         AppointmentRequest appointment = appointments.findAll().getFirst();
 
         mockMvc.perform(post("/api/staff/appointments/{id}/propose-time", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -319,12 +319,12 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.staffActionBy").value(staff.getUsername()));
 
         mockMvc.perform(post("/api/appointments/{id}/confirm-proposed", appointment.getId())
-                .with(user(other.getUsername()).roles("CLIENT"))
+                .with(databaseUser(other.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/appointments/{id}/confirm-proposed", appointment.getId())
-                .with(user(owner.getUsername()).roles("CLIENT"))
+                .with(databaseUser(owner.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"))
@@ -343,12 +343,12 @@ class AppointmentIntegrationTest {
         propose(staff, appointment, proposed);
 
         mockMvc.perform(post("/api/appointments/{id}/confirm-proposed", appointment.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/confirm-proposed", appointment.getId())
-                .with(user(staff.getUsername()).roles("ADMIN"))
+                .with(databaseUser(staff.getUsername()).roles("ADMIN"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"))
@@ -366,26 +366,26 @@ class AppointmentIntegrationTest {
         AppointmentRequest appointment = appointments.findAll().getFirst();
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"))
             .andExpect(jsonPath("$.staffActionAt").exists());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isConflict());
 
         mockMvc.perform(get("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(1))
             .andExpect(jsonPath("$.totalElements").value(1))
             .andExpect(jsonPath("$.totalPages").value(1));
 
         mockMvc.perform(get("/api/appointments")
-                .with(user(other.getUsername()).roles("CLIENT")))
+                .with(databaseUser(other.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(0))
             .andExpect(jsonPath("$.totalElements").value(0));
@@ -403,7 +403,7 @@ class AppointmentIntegrationTest {
         AppointmentRequest confirmed = clientAppointments.get(1);
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", confirmed.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk());
 
@@ -411,7 +411,7 @@ class AppointmentIntegrationTest {
                 .param("page", "0")
                 .param("size", "2")
                 .param("sortDirection", "ASC")
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(2))
             .andExpect(jsonPath("$.page").value(0))
@@ -426,7 +426,7 @@ class AppointmentIntegrationTest {
                 .param("page", "0")
                 .param("size", "5")
                 .param("sortDirection", "DESC")
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(1))
             .andExpect(jsonPath("$.content[0].status").value("CONFIRMED"))
@@ -442,20 +442,20 @@ class AppointmentIntegrationTest {
         AppointmentRequest appointment = appointments.findAll().getFirst();
 
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Wymieniono tarcze i klocki hamulcowe.", "850.00")))
             .andExpect(status().isConflict());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CONFIRMED"));
 
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Wymieniono tarcze i klocki hamulcowe.", "850.00")))
@@ -470,12 +470,12 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.repairCompletedBy").value(staff.getUsername()));
 
         mockMvc.perform(get("/api/vehicles/{id}/repair-history", vehicle.getId())
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(0));
 
         mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("COMPLETED"))
@@ -483,7 +483,7 @@ class AppointmentIntegrationTest {
             .andExpect(jsonPath("$.vehiclePickedUpBy").value(staff.getUsername()));
 
         mockMvc.perform(get("/api/vehicles/{id}/repair-history", vehicle.getId())
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].appointmentId").value(appointment.getId()))
@@ -496,7 +496,7 @@ class AppointmentIntegrationTest {
 
         byte[] invoice = mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
                     vehicle.getId(), appointment.getId())
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(header().string("Content-Type", "application/pdf"))
             .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
@@ -505,7 +505,7 @@ class AppointmentIntegrationTest {
 
         byte[] staffInvoice = mockMvc.perform(get("/api/staff/appointments/{appointmentId}/invoice",
                     appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC")))
             .andExpect(status().isOk())
             .andExpect(header().string("Content-Type", "application/pdf"))
             .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
@@ -514,18 +514,18 @@ class AppointmentIntegrationTest {
 
         mockMvc.perform(get("/api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice",
                     vehicle.getId(), appointment.getId())
-                .with(user(otherClient().getUsername()).roles("CLIENT")))
+                .with(databaseUser(otherClient().getUsername()).roles("CLIENT")))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Ponowny opis wykonanych prac.", "100.00")))
             .andExpect(status().isConflict());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isConflict());
     }
@@ -539,12 +539,12 @@ class AppointmentIntegrationTest {
         AppointmentRequest appointment = appointments.findAll().getFirst();
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", appointment.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Za krótko", "0.00")))
@@ -567,7 +567,7 @@ class AppointmentIntegrationTest {
             .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), visitDate, "Problem z układem hamulcowym.")))
             .andExpect(status().isForbidden());
@@ -576,15 +576,15 @@ class AppointmentIntegrationTest {
             .andExpect(status().isUnauthorized());
 
         mockMvc.perform(get("/api/appointments")
-                .with(user(mechanic.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(mechanic.getUsername()).roles("MECHANIC")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/api/staff/appointments")
-                .with(user(client.getUsername()).roles("CLIENT")))
+                .with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", 999L)
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isForbidden());
     }
@@ -609,18 +609,18 @@ class AppointmentIntegrationTest {
             .andExpect(status().isConflict());
 
         mockMvc.perform(post("/api/appointments/{id}/cancel", appointment.getId())
-                .with(user(other.getUsername()).roles("CLIENT"))
+                .with(databaseUser(other.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/appointments/{id}/cancel", appointment.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.status").value("CANCELLED"));
 
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), visitDate, "Kontrolka silnika świeci się stale.")))
@@ -633,7 +633,7 @@ class AppointmentIntegrationTest {
         AppUser staff = createUser("list-" + role.toLowerCase(), UserRole.valueOf(role));
 
         mockMvc.perform(get("/api/staff/appointments")
-                .with(user(staff.getUsername()).roles(role)))
+                .with(databaseUser(staff.getUsername()).roles(role)))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content").isArray());
     }
@@ -647,7 +647,7 @@ class AppointmentIntegrationTest {
         AppointmentRequest confirmed = appointments.findAll().get(1);
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", confirmed.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk());
 
@@ -655,7 +655,7 @@ class AppointmentIntegrationTest {
                 .param("page", "0")
                 .param("size", "2")
                 .param("sortDirection", "ASC")
-                .with(user(staff.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(2))
             .andExpect(jsonPath("$.page").value(0))
@@ -669,7 +669,7 @@ class AppointmentIntegrationTest {
                 .param("status", "CONFIRMED")
                 .param("page", "0")
                 .param("size", "5")
-                .with(user(staff.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.content.length()").value(1))
             .andExpect(jsonPath("$.content[0].status").value("CONFIRMED"))
@@ -685,17 +685,17 @@ class AppointmentIntegrationTest {
         AppointmentRequest completed = appointments.findAll().getFirst();
 
         mockMvc.perform(post("/api/staff/appointments/{id}/accept", completed.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk());
         mockMvc.perform(post("/api/staff/appointments/{id}/complete-repair", completed.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(repairJson("Wymieniono olej i komplet filtrów.", "520.00")))
             .andExpect(status().isOk());
         mockMvc.perform(post("/api/staff/appointments/{id}/mark-picked-up", completed.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC"))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC"))
                 .with(csrf()))
             .andExpect(status().isOk());
 
@@ -703,14 +703,14 @@ class AppointmentIntegrationTest {
         AppointmentRequest current = appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).getFirst();
 
         mockMvc.perform(get("/api/staff/appointments/{id}", current.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.id").value(current.getId()))
             .andExpect(jsonPath("$.vehicleRegistrationNumber").value("STAFF1"))
             .andExpect(jsonPath("$.problemDescription").value("Kolejne zgłoszenie do szczegółów mechanika."));
 
         mockMvc.perform(get("/api/staff/appointments/{id}/repair-history", current.getId())
-                .with(user(staff.getUsername()).roles("MECHANIC")))
+                .with(databaseUser(staff.getUsername()).roles("MECHANIC")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].appointmentId").value(completed.getId()))
@@ -726,7 +726,7 @@ class AppointmentIntegrationTest {
     private void createClientAppointment(AppUser client, Vehicle vehicle, LocalDate visitDate,
             String description) throws Exception {
         mockMvc.perform(post("/api/appointments")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(clientJson(vehicle.getId(), visitDate, description)))
@@ -744,7 +744,7 @@ class AppointmentIntegrationTest {
     private void propose(AppUser staff, AppointmentRequest appointment, LocalDate proposed)
             throws Exception {
         mockMvc.perform(post("/api/staff/appointments/{id}/propose-time", appointment.getId())
-                .with(user(staff.getUsername()).roles(staff.getRole().name()))
+                .with(databaseUser(staff.getUsername()).roles(staff.getRole().name()))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"visitDate\":\"%s\",\"message\":\"Nowy dzień po kontakcie.\"}"

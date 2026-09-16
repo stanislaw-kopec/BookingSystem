@@ -21,6 +21,7 @@ import pl.autoserwis.user.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.*;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,7 +43,7 @@ class ServiceCatalogIntegrationTest {
             .andExpect(jsonPath("$", hasSize(3)))
             .andExpect(jsonPath("$[*].name", hasItems("Elektryka", "Mechanika", "Wulkanizacja")))
             .andExpect(jsonPath("$[*].services[*].name", hasItems("Wymiana opon", "Wymiana cewek", "Wymiana rozrządu")));
-        mvc.perform(get("/api/services").with(user("client").roles("CLIENT")))
+        mvc.perform(get("/api/services").with(databaseUser("client").roles("CLIENT")))
             .andExpect(status().isOk());
         mvc.perform(get("/api/auth/me"))
             .andExpect(jsonPath("$.user").value(nullValue()));
@@ -58,13 +59,13 @@ class ServiceCatalogIntegrationTest {
     @Test
     void clientCannotUseAnyCatalogMutation() throws Exception {
         for (String resource : new String[]{"services", "service-categories"}) {
-            mvc.perform(post("/api/" + resource).with(user("client").roles("CLIENT")).with(csrf())
+            mvc.perform(post("/api/" + resource).with(databaseUser("client").roles("CLIENT")).with(csrf())
                     .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
-            mvc.perform(put("/api/" + resource + "/1").with(user("client").roles("CLIENT")).with(csrf())
+            mvc.perform(put("/api/" + resource + "/1").with(databaseUser("client").roles("CLIENT")).with(csrf())
                     .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
-            mvc.perform(delete("/api/" + resource + "/1").with(user("client").roles("CLIENT")).with(csrf()))
+            mvc.perform(delete("/api/" + resource + "/1").with(databaseUser("client").roles("CLIENT")).with(csrf()))
                 .andExpect(status().isForbidden());
         }
     }
@@ -74,19 +75,19 @@ class ServiceCatalogIntegrationTest {
     void staffCanManageCategoriesAndMoveServices(String role) throws Exception {
         long first = createCategory("Przeglądy", role);
         long second = createCategory("Kontrole", role);
-        MvcResult created = mvc.perform(post("/api/services").with(user("staff").roles(role)).with(csrf())
+        MvcResult created = mvc.perform(post("/api/services").with(databaseUser("staff").roles(role)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(serviceJson(first, "Kontrola hamulców")))
             .andExpect(status().isCreated()).andReturn();
         long serviceId = createdId(created);
 
-        mvc.perform(put("/api/service-categories/" + first).with(user("staff").roles(role)).with(csrf())
+        mvc.perform(put("/api/service-categories/" + first).with(databaseUser("staff").roles(role)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(categoryJson("Przeglądy okresowe")))
             .andExpect(status().isOk()).andExpect(jsonPath("$.name").value("Przeglądy okresowe"));
 
-        mvc.perform(delete("/api/service-categories/" + first).with(user("staff").roles(role)).with(csrf()))
+        mvc.perform(delete("/api/service-categories/" + first).with(databaseUser("staff").roles(role)).with(csrf()))
             .andExpect(status().isConflict());
 
-        mvc.perform(put("/api/services/" + serviceId).with(user("staff").roles(role)).with(csrf())
+        mvc.perform(put("/api/services/" + serviceId).with(databaseUser("staff").roles(role)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(serviceJson(second, "Kontrola układu hamulcowego")))
             .andExpect(status().isOk()).andExpect(jsonPath("$.categoryId").value(second));
         mvc.perform(get("/api/service-categories/" + first))
@@ -94,36 +95,36 @@ class ServiceCatalogIntegrationTest {
         mvc.perform(get("/api/service-categories/" + second))
             .andExpect(jsonPath("$.services[0].name").value("Kontrola układu hamulcowego"));
 
-        mvc.perform(delete("/api/service-categories/" + first).with(user("staff").roles(role)).with(csrf()))
+        mvc.perform(delete("/api/service-categories/" + first).with(databaseUser("staff").roles(role)).with(csrf()))
             .andExpect(status().isNoContent());
-        mvc.perform(delete("/api/services/" + serviceId).with(user("staff").roles(role)).with(csrf()))
+        mvc.perform(delete("/api/services/" + serviceId).with(databaseUser("staff").roles(role)).with(csrf()))
             .andExpect(status().isNoContent());
-        mvc.perform(delete("/api/service-categories/" + second).with(user("staff").roles(role)).with(csrf()))
+        mvc.perform(delete("/api/service-categories/" + second).with(databaseUser("staff").roles(role)).with(csrf()))
             .andExpect(status().isNoContent());
         mvc.perform(get("/api/services/" + serviceId)).andExpect(status().isNotFound());
     }
 
     @Test
     void validatesNamesAndRejectsCaseInsensitiveDuplicatesAndMissingCategories() throws Exception {
-        mvc.perform(post("/api/service-categories").with(user("staff").roles("ADMIN")).with(csrf())
+        mvc.perform(post("/api/service-categories").with(databaseUser("staff").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(categoryJson("   ")))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.fieldErrors.name").isString());
-        mvc.perform(post("/api/service-categories").with(user("staff").roles("ADMIN")).with(csrf())
+        mvc.perform(post("/api/service-categories").with(databaseUser("staff").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(categoryJson("  ELEKTRYKA  ")))
             .andExpect(status().isConflict());
         long categoryId = categories.findAll().stream()
             .filter(category -> category.getName().equals("Wulkanizacja")).findFirst().orElseThrow().getId();
-        mvc.perform(post("/api/services").with(user("staff").roles("ADMIN")).with(csrf())
+        mvc.perform(post("/api/services").with(databaseUser("staff").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(serviceJson(categoryId, "  WYMIANA OPON  ")))
             .andExpect(status().isConflict());
-        mvc.perform(post("/api/services").with(user("staff").roles("ADMIN")).with(csrf())
+        mvc.perform(post("/api/services").with(databaseUser("staff").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(serviceJson(Long.MAX_VALUE, "Nowa usługa")))
             .andExpect(status().isNotFound());
     }
 
     @Test
     void authenticatedWritesStillRequireCsrf() throws Exception {
-        mvc.perform(post("/api/service-categories").with(user("staff").roles("ADMIN"))
+        mvc.perform(post("/api/service-categories").with(databaseUser("staff").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON).content(categoryJson("Bez tokena")))
             .andExpect(status().isForbidden());
     }
@@ -164,7 +165,7 @@ class ServiceCatalogIntegrationTest {
     }
 
     private long createCategory(String name, String role) throws Exception {
-        return createdId(mvc.perform(post("/api/service-categories").with(user("staff").roles(role)).with(csrf())
+        return createdId(mvc.perform(post("/api/service-categories").with(databaseUser("staff").roles(role)).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(categoryJson(name)))
             .andExpect(status().isCreated()).andReturn());
     }

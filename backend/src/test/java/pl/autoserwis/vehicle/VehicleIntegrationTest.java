@@ -21,7 +21,7 @@ import java.time.Year;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -43,7 +43,7 @@ class VehicleIntegrationTest {
         AppUser client = createUser("vehicle-client", UserRole.CLIENT);
 
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Toyota", "Corolla", 2020, " kr 12 ab ", "wvwzzz1jzxw000001")))
@@ -65,7 +65,7 @@ class VehicleIntegrationTest {
         vehicles.save(new Vehicle(client, "Audi", "A4", 2018, "KR1", null));
         vehicles.save(new Vehicle(other, "BMW", "X3", 2022, "WX1", null));
 
-        mockMvc.perform(get("/api/vehicles").with(user(client.getUsername()).roles("CLIENT")))
+        mockMvc.perform(get("/api/vehicles").with(databaseUser(client.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2))
             .andExpect(jsonPath("$[0].make").value("Audi"))
@@ -79,12 +79,12 @@ class VehicleIntegrationTest {
         Vehicle vehicle = vehicles.save(new Vehicle(owner, "Ford", "Focus", 2017, "PO123", null));
 
         mockMvc.perform(get("/api/vehicles/{id}", vehicle.getId())
-                .with(user(owner.getUsername()).roles("CLIENT")))
+                .with(databaseUser(owner.getUsername()).roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.registrationNumber").value("PO123"));
 
         mockMvc.perform(get("/api/vehicles/{id}", vehicle.getId())
-                .with(user(other.getUsername()).roles("CLIENT")))
+                .with(databaseUser(other.getUsername()).roles("CLIENT")))
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"))
             .andExpect(jsonPath("$.message").value("Vehicle not found."));
@@ -95,7 +95,7 @@ class VehicleIntegrationTest {
         AppUser client = createUser("validation-vehicle-client", UserRole.CLIENT);
 
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson(" ", "", 1885, "!", "invalid")))
@@ -108,7 +108,7 @@ class VehicleIntegrationTest {
 
         int futureYear = Year.now().getValue() + 2;
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Focus", futureYear, "PO123", "")))
@@ -123,7 +123,7 @@ class VehicleIntegrationTest {
             "PO123", "WVWZZZ1JZXW000001"));
 
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Fiesta", 2019, " po 123 ", "")))
@@ -131,7 +131,7 @@ class VehicleIntegrationTest {
             .andExpect(jsonPath("$.fieldErrors.registrationNumber").exists());
 
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Volkswagen", "Golf", 2019, "PO456", "wvwzzz1jzxw000001")))
@@ -146,7 +146,7 @@ class VehicleIntegrationTest {
             "PO123", "WVWZZZ1JZXW000001"));
 
         mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson(" Ford ", "Mondeo", 2021, " po 456 ", "wvwzzz1jzxw000002")))
@@ -168,7 +168,7 @@ class VehicleIntegrationTest {
             "PO123", "WVWZZZ1JZXW000001"));
 
         mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Focus ST", 2018, " po 123 ", "wvwzzz1jzxw000001")))
@@ -185,7 +185,7 @@ class VehicleIntegrationTest {
             "PO456", "WVWZZZ1JZXW000002"));
 
         mockMvc.perform(put("/api/vehicles/{id}", second.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Toyota", "Corolla", 2020,
@@ -194,7 +194,7 @@ class VehicleIntegrationTest {
             .andExpect(jsonPath("$.fieldErrors.registrationNumber").exists());
 
         mockMvc.perform(put("/api/vehicles/{id}", second.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Toyota", "Corolla", 2020,
@@ -210,7 +210,7 @@ class VehicleIntegrationTest {
         Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(owner, "Ford", "Focus", 2018, "PO123", null));
 
         mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
-                .with(user(other.getUsername()).roles("CLIENT"))
+                .with(databaseUser(other.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Mondeo", 2020, "PO456", "")))
@@ -228,14 +228,14 @@ class VehicleIntegrationTest {
             .andExpect(status().isUnauthorized());
 
         mockMvc.perform(post("/api/vehicles")
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Focus", 2020, "PO123", "")))
             .andExpect(status().isForbidden());
 
         Vehicle vehicle = vehicles.saveAndFlush(new Vehicle(client, "Ford", "Focus", 2020, "PO123", null));
         mockMvc.perform(put("/api/vehicles/{id}", vehicle.getId())
-                .with(user(client.getUsername()).roles("CLIENT"))
+                .with(databaseUser(client.getUsername()).roles("CLIENT"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(vehicleJson("Ford", "Mondeo", 2020, "PO456", "")))
             .andExpect(status().isForbidden());
@@ -246,7 +246,7 @@ class VehicleIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"MECHANIC", "ADMIN"})
     void staffRolesCannotUseClientVehicleEndpoints(String role) throws Exception {
-        mockMvc.perform(get("/api/vehicles").with(user("staff").roles(role)))
+        mockMvc.perform(get("/api/vehicles").with(databaseUser("staff").roles(role)))
             .andExpect(status().isForbidden());
     }
 

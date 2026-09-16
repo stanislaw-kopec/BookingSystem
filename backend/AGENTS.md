@@ -61,6 +61,16 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   nie wprowadzaj kaskadowego usuwania usług.
 - Sesje obsługuje Spring Security. Zachowaj CSRF dla operacji zmieniających dane,
   BCrypt i ciasteczko sesji HttpOnly. Role wynikają z bazy, nie z formularza klienta. Konta mechaników i administratorów tworzy wyłącznie ADMIN przez endpointy administracyjne.
+- Principal sesji to `AccountPrincipal` z niezmiennym `userId` i `sessionVersion`.
+  Kontrolery przekazują ID z `@AuthenticationPrincipal` do serwisów; login służy do logowania
+  i prezentacji, nigdy do ustalania właściciela danych lub autora decyzji.
+  `AccountSessionFilter` sprawdza aktualną aktywność konta i wersję sesji przed CSRF/autoryzacją.
+  Zmiana loginu odświeża nazwę w sesji bez zmiany tożsamości. Sesje bez właściwego principala
+  są odrzucane; nie dodawaj awaryjnego wyszukiwania właściciela po loginie.
+- Zmiana hasła i aktywności zwiększa `sessionVersion` w tej samej transakcji co zapis konta.
+  Operacje administracyjne i zmiana własnego hasła blokują rekord konta, aby równoczesne zapisy
+  nie gubiły unieważnienia sesji. Reset administracyjny unieważnia wszystkie stare sesje;
+  samodzielna zmiana hasła po udanym zapisie aktualizuje wersję tylko bieżącej sesji.
 - `local` tworzy brakujące konta i dane demonstracyjne; nie zmienia haseł, profili,
   pojazdów ani zgłoszeń, które już istnieją. Nie stosuj demonstracyjnej bazy ani jej
   kont we wdrożeniu produkcyjnym.
@@ -86,7 +96,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 ## Profil klienta
 
 - `GET /api/profile/me` i `PUT /api/profile/me` są dostępne wyłącznie dla CLIENT.
-  Nazwę użytkownika pobieraj z `Authentication`; nie dodawaj identyfikatora właściciela do DTO.
+  ID użytkownika pobieraj z `AccountPrincipal`; nie dodawaj identyfikatora właściciela do DTO.
 - Brak zapisanego profilu zwraca pusty formularz z e-mailem konta i `configured=false`.
   PUT tworzy profil albo aktualizuje istniejący rekord jeden-do-jednego z `app_users`.
 - Wymagane dane to imię, nazwisko, telefon, kontaktowy e-mail, ulica i numer,
@@ -99,7 +109,7 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 
 - Pakiet `vehicle` obsługuje `GET /api/vehicles`, `GET /api/vehicles/{vehicleId}`,
   `POST /api/vehicles` i `PUT /api/vehicles/{vehicleId}`. Endpointy są dostępne wyłącznie dla CLIENT, a POST i PUT wymagają CSRF.
-- Właściciela ustalaj przez nazwę użytkownika z `Authentication`. Żądanie nie zawiera
+- Właściciela ustalaj przez niezmienne ID konta z `AccountPrincipal`. Żądanie nie zawiera
   `ownerId`; pobieraj listę i szczegóły zapytaniami repozytorium ograniczonymi do właściciela.
   Cudzy lub nieistniejący identyfikator pojazdu zwraca ten sam błąd 404.
 - Pojazd zawiera markę, model, rok produkcji, numer rejestracyjny i opcjonalny VIN.

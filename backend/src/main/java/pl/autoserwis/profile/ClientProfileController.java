@@ -1,7 +1,8 @@
 package pl.autoserwis.profile;
 
 import jakarta.validation.Valid;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import pl.autoserwis.security.AccountPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.profile.dto.ClientProfileRequest;
 import pl.autoserwis.profile.dto.ClientProfileResponse;
@@ -16,13 +17,13 @@ public class ClientProfileController {
     }
 
     @GetMapping
-    public ClientProfileResponse get(Authentication authentication) {
-        return profiles.getCurrent(authentication.getName());
+    public ClientProfileResponse get(@AuthenticationPrincipal AccountPrincipal principal) {
+        return profiles.getCurrent(principal.getUserId());
     }
 
     @PutMapping
-    public ClientProfileResponse save(Authentication authentication,
+    public ClientProfileResponse save(@AuthenticationPrincipal AccountPrincipal principal,
             @Valid @RequestBody ClientProfileRequest request) {
-        return profiles.saveCurrent(authentication.getName(), request);
+        return profiles.saveCurrent(principal.getUserId(), request);
     }
 }

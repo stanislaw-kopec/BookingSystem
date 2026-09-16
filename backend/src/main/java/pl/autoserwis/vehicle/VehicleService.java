@@ -44,21 +44,21 @@ public class VehicleService {
         this.invoicePdfGenerator = invoicePdfGenerator;
     }
 
-    public List<VehicleResponse> getCurrentClientVehicles(String username) {
-        AppUser owner = user(username);
+    public List<VehicleResponse> getCurrentClientVehicles(Long userId) {
+        AppUser owner = user(userId);
         return vehicles.findByOwner_IdOrderByMakeAscModelAscRegistrationNumberAsc(owner.getId()).stream()
             .map(this::response)
             .toList();
     }
 
-    public VehicleResponse getCurrentClientVehicle(String username, Long vehicleId) {
-        AppUser owner = user(username);
+    public VehicleResponse getCurrentClientVehicle(Long userId, Long vehicleId) {
+        AppUser owner = user(userId);
         return response(vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found.")));
     }
 
-    public List<RepairHistoryEntryResponse> getCurrentClientVehicleRepairHistory(String username, Long vehicleId) {
-        AppUser owner = user(username);
+    public List<RepairHistoryEntryResponse> getCurrentClientVehicleRepairHistory(Long userId, Long vehicleId) {
+        AppUser owner = user(userId);
         vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         return appointments.findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(
@@ -67,8 +67,8 @@ public class VehicleService {
             .toList();
     }
 
-    public InvoiceFile getCurrentClientRepairInvoice(String username, Long vehicleId, Long appointmentId) {
-        AppUser owner = user(username);
+    public InvoiceFile getCurrentClientRepairInvoice(Long userId, Long vehicleId, Long appointmentId) {
+        AppUser owner = user(userId);
         vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         AppointmentRequest appointment = appointments.findByIdAndVehicle_IdAndClient_IdAndStatus(
@@ -80,8 +80,8 @@ public class VehicleService {
     }
 
     @Transactional
-    public VehicleResponse create(String username, VehicleRequest request) {
-        AppUser owner = user(username);
+    public VehicleResponse create(Long userId, VehicleRequest request) {
+        AppUser owner = user(userId);
         NormalizedVehicle normalized = normalize(request);
         validateUniqueIdentifiers(owner.getId(), normalized, null);
 
@@ -91,8 +91,8 @@ public class VehicleService {
     }
 
     @Transactional
-    public VehicleResponse update(String username, Long vehicleId, VehicleRequest request) {
-        AppUser owner = user(username);
+    public VehicleResponse update(Long userId, Long vehicleId, VehicleRequest request) {
+        AppUser owner = user(userId);
         Vehicle vehicle = vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         NormalizedVehicle normalized = normalize(request);
@@ -140,8 +140,8 @@ public class VehicleService {
         }
     }
 
-    private AppUser user(String username) {
-        return users.findByUsernameIgnoreCase(username)
+    private AppUser user(Long userId) {
+        return users.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 

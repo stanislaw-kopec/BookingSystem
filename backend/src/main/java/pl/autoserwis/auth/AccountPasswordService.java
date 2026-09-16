@@ -25,8 +25,8 @@ public class AccountPasswordService {
     }
 
     @Transactional
-    public void changePassword(String username, ChangePasswordRequest request) {
-        AppUser user = users.findByUsernameIgnoreCase(username)
+    public long changePassword(Long userId, ChangePasswordRequest request) {
+        AppUser user = users.findByIdForUpdate(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Map<String, String> errors = new LinkedHashMap<>();
         if (request.currentPassword().getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES
@@ -43,5 +43,6 @@ public class AccountPasswordService {
             throw new AccountPasswordValidationException(errors);
         }
         user.changePassword(passwords.encode(request.newPassword()));
+        return user.getSessionVersion();
     }
 }

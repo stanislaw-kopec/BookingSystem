@@ -23,17 +23,17 @@ public class ClientProfileService {
         this.users = users;
     }
 
-    public ClientProfileResponse getCurrent(String username) {
-        AppUser user = user(username);
+    public ClientProfileResponse getCurrent(Long userId) {
+        AppUser user = user(userId);
         return profiles.findByUser_Id(user.getId())
             .map(profile -> response(profile, true))
             .orElseGet(() -> emptyResponse(user.getEmail()));
     }
 
     @Transactional
-    public ClientProfileResponse saveCurrent(String username, ClientProfileRequest request) {
+    public ClientProfileResponse saveCurrent(Long userId, ClientProfileRequest request) {
         validateCompany(request);
-        AppUser user = user(username);
+        AppUser user = user(userId);
         ClientProfile profile = profiles.findByUser_Id(user.getId())
             .orElseGet(() -> new ClientProfile(user));
 
@@ -64,8 +64,8 @@ public class ClientProfileService {
         if (value == null || value.isBlank()) errors.put(field, message);
     }
 
-    private AppUser user(String username) {
-        return users.findByUsernameIgnoreCase(username)
+    private AppUser user(Long userId) {
+        return users.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
     }
 

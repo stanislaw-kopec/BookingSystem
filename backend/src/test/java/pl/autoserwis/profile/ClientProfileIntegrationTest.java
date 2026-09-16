@@ -19,7 +19,7 @@ import pl.autoserwis.user.UserRole;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -40,7 +40,7 @@ class ClientProfileIntegrationTest {
     void returnsDraftWithAccountEmailBeforeFirstSave() throws Exception {
         createUser("draft-client", "draft@example.com", UserRole.CLIENT);
 
-        mockMvc.perform(get("/api/profile/me").with(user("draft-client").roles("CLIENT")))
+        mockMvc.perform(get("/api/profile/me").with(databaseUser("draft-client").roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.configured").value(false))
             .andExpect(jsonPath("$.contactEmail").value("draft@example.com"))
@@ -53,7 +53,7 @@ class ClientProfileIntegrationTest {
         createUser("profile-client", "account@example.com", UserRole.CLIENT);
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("profile-client").roles("CLIENT"))
+                .with(databaseUser("profile-client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(profileJson(true)))
@@ -64,7 +64,7 @@ class ClientProfileIntegrationTest {
             .andExpect(jsonPath("$.companyName").value("Warsztat Testowy"));
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("profile-client").roles("CLIENT"))
+                .with(databaseUser("profile-client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(profileWithoutCompanyJson()))
@@ -87,13 +87,13 @@ class ClientProfileIntegrationTest {
         createUser("second-client", "second@example.com", UserRole.CLIENT);
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("first-client").roles("CLIENT"))
+                .with(databaseUser("first-client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(profileWithoutCompanyJson()))
             .andExpect(status().isOk());
 
-        mockMvc.perform(get("/api/profile/me").with(user("second-client").roles("CLIENT")))
+        mockMvc.perform(get("/api/profile/me").with(databaseUser("second-client").roles("CLIENT")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.configured").value(false))
             .andExpect(jsonPath("$.contactEmail").value("second@example.com"))
@@ -105,7 +105,7 @@ class ClientProfileIntegrationTest {
         createUser("validation-client", "validation@example.com", UserRole.CLIENT);
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("validation-client").roles("CLIENT"))
+                .with(databaseUser("validation-client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -122,7 +122,7 @@ class ClientProfileIntegrationTest {
             .andExpect(jsonPath("$.fieldErrors.city").exists());
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("validation-client").roles("CLIENT"))
+                .with(databaseUser("validation-client").roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(profileWithEmptyCompanyJson()))
@@ -142,7 +142,7 @@ class ClientProfileIntegrationTest {
             .andExpect(status().isUnauthorized());
 
         mockMvc.perform(put("/api/profile/me")
-                .with(user("csrf-profile-client").roles("CLIENT"))
+                .with(databaseUser("csrf-profile-client").roles("CLIENT"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(profileWithoutCompanyJson()))
             .andExpect(status().isForbidden());
@@ -153,7 +153,7 @@ class ClientProfileIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"MECHANIC", "ADMIN"})
     void staffRolesCannotUseClientProfile(String role) throws Exception {
-        mockMvc.perform(get("/api/profile/me").with(user("staff").roles(role)))
+        mockMvc.perform(get("/api/profile/me").with(databaseUser("staff").roles(role)))
             .andExpect(status().isForbidden());
     }
 

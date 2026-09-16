@@ -19,7 +19,7 @@ import pl.autoserwis.user.UserRole;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,7 +40,7 @@ class AccountPasswordIntegrationTest {
         AppUser account = createUser("password-" + role.name().toLowerCase(), role, "current-password");
 
         mockMvc.perform(put("/api/auth/password")
-                .with(user(account.getUsername()).roles(role.name()))
+                .with(databaseUser(account.getUsername()).roles(role.name()))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("current-password", "new-password-2026", "new-password-2026")))
@@ -56,7 +56,7 @@ class AccountPasswordIntegrationTest {
         AppUser account = createUser("invalid-password-client", UserRole.CLIENT, "current-password");
 
         mockMvc.perform(put("/api/auth/password")
-                .with(user(account.getUsername()).roles("CLIENT"))
+                .with(databaseUser(account.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("wrong-password", "new-password-2026", "different-password")))
@@ -75,7 +75,7 @@ class AccountPasswordIntegrationTest {
         String longPassword = "ą".repeat(40);
 
         mockMvc.perform(put("/api/auth/password")
-                .with(user(account.getUsername()).roles("CLIENT"))
+                .with(databaseUser(account.getUsername()).roles("CLIENT"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("current-password", longPassword, longPassword)))
@@ -95,7 +95,7 @@ class AccountPasswordIntegrationTest {
             .andExpect(status().isUnauthorized());
 
         mockMvc.perform(put("/api/auth/password")
-                .with(user(account.getUsername()).roles("CLIENT"))
+                .with(databaseUser(account.getUsername()).roles("CLIENT"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("current-password", "new-password-2026", "new-password-2026")))
             .andExpect(status().isForbidden());

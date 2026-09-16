@@ -14,7 +14,7 @@ import pl.autoserwis.PostgresTestConfiguration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -39,7 +39,7 @@ class AdminAccountIntegrationTest {
         createUser("portfolio-filter-admin", UserRole.ADMIN, true);
 
         mockMvc.perform(get("/api/admin/accounts")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .param("query", "portfolio-filter")
                 .param("page", "0")
                 .param("size", "2"))
@@ -50,7 +50,7 @@ class AdminAccountIntegrationTest {
             .andExpect(jsonPath("$.content[0].username").value("portfolio-filter-admin"));
 
         mockMvc.perform(get("/api/admin/accounts")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .param("role", "CLIENT")
                 .param("enabled", "false")
                 .param("query", "portfolio-filter-beta"))
@@ -61,7 +61,7 @@ class AdminAccountIntegrationTest {
             .andExpect(jsonPath("$.content[0].enabled").value(false));
 
         mockMvc.perform(get("/api/admin/accounts")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .param("role", "ADMIN")
                 .param("query", "portfolio-filter-admin"))
             .andExpect(status().isOk())
@@ -72,7 +72,7 @@ class AdminAccountIntegrationTest {
     @Test
     void adminCreatesAnotherAdministrator() throws Exception {
         mockMvc.perform(post("/api/admin/accounts/administrators")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
@@ -99,7 +99,7 @@ class AdminAccountIntegrationTest {
         AppUser client = createUser("managed-client", UserRole.CLIENT, true);
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(accountJson("updated-client", "UPDATED@EXAMPLE.COM")))
@@ -108,14 +108,14 @@ class AdminAccountIntegrationTest {
             .andExpect(jsonPath("$.email").value("updated@example.com"));
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}/password", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("temporary-password", "temporary-password")))
             .andExpect(status().isOk());
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}/status", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":false}"))
@@ -134,7 +134,7 @@ class AdminAccountIntegrationTest {
         AppUser anotherAdmin = createUser("protected-admin", UserRole.ADMIN, true);
 
         mockMvc.perform(get("/api/admin/accounts")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .param("role", "ADMIN")
                 .param("query", "protected-admin"))
             .andExpect(status().isOk())
@@ -142,21 +142,21 @@ class AdminAccountIntegrationTest {
             .andExpect(jsonPath("$.content[0].username").value("protected-admin"));
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}/password", anotherAdmin.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("changed-password", "changed-password")))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}", anotherAdmin.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(accountJson("changed-admin", "changed-admin@example.com")))
             .andExpect(status().isNotFound());
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}/status", anotherAdmin.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"enabled\":false}"))
@@ -181,26 +181,26 @@ class AdminAccountIntegrationTest {
 
         mockMvc.perform(get("/api/admin/accounts"))
             .andExpect(status().isUnauthorized());
-        mockMvc.perform(get("/api/admin/accounts").with(user("client").roles("CLIENT")))
+        mockMvc.perform(get("/api/admin/accounts").with(databaseUser("client").roles("CLIENT")))
             .andExpect(status().isForbidden());
-        mockMvc.perform(get("/api/admin/accounts").with(user("mechanic").roles("MECHANIC")))
+        mockMvc.perform(get("/api/admin/accounts").with(databaseUser("mechanic").roles("MECHANIC")))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/admin/accounts/administrators")
-                .with(user("mechanic").roles("MECHANIC"))
+                .with(databaseUser("mechanic").roles("MECHANIC"))
                 .with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(administratorJson))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/api/admin/accounts/administrators")
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(administratorJson))
             .andExpect(status().isForbidden());
 
         mockMvc.perform(put("/api/admin/accounts/{accountId}/password", client.getId())
-                .with(user("admin").roles("ADMIN"))
+                .with(databaseUser("admin").roles("ADMIN"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(passwordJson("changed-password", "changed-password")))
             .andExpect(status().isForbidden());

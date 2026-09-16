@@ -16,10 +16,6 @@ public class DatabaseUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) {
         var user = users.findByUsernameIgnoreCase(username.strip())
             .orElseThrow(() -> new UsernameNotFoundException("Invalid username or password."));
-        return User.withUsername(user.getUsername())
-            .password(user.getPasswordHash())
-            .disabled(!user.isEnabled())
-            .roles(user.getRole().name())
-            .build();
+        return new AccountPrincipal(user);
     }
 }

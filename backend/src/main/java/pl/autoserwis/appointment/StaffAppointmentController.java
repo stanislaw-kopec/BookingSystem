@@ -4,7 +4,8 @@ import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import pl.autoserwis.security.AccountPrincipal;
 import org.springframework.web.bind.annotation.*;
 import pl.autoserwis.appointment.dto.AppointmentPageResponse;
 import pl.autoserwis.appointment.dto.AppointmentResponse;
@@ -55,33 +56,33 @@ public class StaffAppointmentController {
             .body(invoice.content());
     }
     @PostMapping("/{appointmentId}/accept")
-    public AppointmentResponse accept(Authentication authentication, @PathVariable Long appointmentId) {
-        return appointmentService.accept(authentication.getName(), appointmentId);
+    public AppointmentResponse accept(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long appointmentId) {
+        return appointmentService.accept(principal.getUserId(), appointmentId);
     }
     @PostMapping("/{appointmentId}/reject")
-    public AppointmentResponse reject(Authentication authentication, @PathVariable Long appointmentId,
+    public AppointmentResponse reject(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long appointmentId,
             @Valid @RequestBody StaffMessageRequest request) {
-        return appointmentService.reject(authentication.getName(), appointmentId, request);
+        return appointmentService.reject(principal.getUserId(), appointmentId, request);
     }
     @PostMapping("/{appointmentId}/propose-time")
-    public AppointmentResponse proposeTime(Authentication authentication,
+    public AppointmentResponse proposeTime(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long appointmentId,
             @Valid @RequestBody ProposeAppointmentTimeRequest request) {
-        return appointmentService.proposeTime(authentication.getName(), appointmentId, request);
+        return appointmentService.proposeTime(principal.getUserId(), appointmentId, request);
     }
     @PostMapping("/{appointmentId}/confirm-proposed")
-    public AppointmentResponse confirmGuestProposedTime(Authentication authentication,
+    public AppointmentResponse confirmGuestProposedTime(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long appointmentId) {
-        return appointmentService.confirmGuestProposedTime(authentication.getName(), appointmentId);
+        return appointmentService.confirmGuestProposedTime(principal.getUserId(), appointmentId);
     }
     @PostMapping("/{appointmentId}/complete-repair")
-    public AppointmentResponse completeRepair(Authentication authentication,
+    public AppointmentResponse completeRepair(@AuthenticationPrincipal AccountPrincipal principal,
             @PathVariable Long appointmentId,
             @Valid @RequestBody CompleteRepairRequest request) {
-        return appointmentService.completeRepair(authentication.getName(), appointmentId, request);
+        return appointmentService.completeRepair(principal.getUserId(), appointmentId, request);
     }
     @PostMapping("/{appointmentId}/mark-picked-up")
-    public AppointmentResponse markPickedUp(Authentication authentication, @PathVariable Long appointmentId) {
-        return appointmentService.markPickedUp(authentication.getName(), appointmentId);
+    public AppointmentResponse markPickedUp(@AuthenticationPrincipal AccountPrincipal principal, @PathVariable Long appointmentId) {
+        return appointmentService.markPickedUp(principal.getUserId(), appointmentId);
     }
 }

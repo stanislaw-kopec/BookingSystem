@@ -140,13 +140,13 @@ public class AdminAccountService {
     }
 
     private AppUser mechanicAccount(Long mechanicId) {
-        return users.findById(mechanicId)
+        return users.findByIdForUpdate(mechanicId)
             .filter(user -> user.getRole() == UserRole.MECHANIC)
             .orElseThrow(() -> new ResourceNotFoundException("Mechanic account not found."));
     }
 
     private AppUser manageableAccount(Long accountId) {
-        return users.findById(accountId)
+        return users.findByIdForUpdate(accountId)
             .filter(user -> user.getRole() == UserRole.CLIENT || user.getRole() == UserRole.MECHANIC)
             .orElseThrow(() -> new ResourceNotFoundException("Managed account not found."));
     }
