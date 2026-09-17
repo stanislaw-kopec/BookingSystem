@@ -154,7 +154,7 @@ Konta i hasła służą wyłącznie do lokalnej prezentacji aplikacji.
 GitHub Actions przy każdym pushu i pull requeście do `main` wykonuje:
 
 - testy backendu z Testcontainers,
-- lint i produkcyjny build frontendu,
+- testy zachowania frontendu (Vitest i React Testing Library), lint i produkcyjny build,
 - sprawdzenie konfiguracji Docker Compose.
 
 ## Dokumentacja

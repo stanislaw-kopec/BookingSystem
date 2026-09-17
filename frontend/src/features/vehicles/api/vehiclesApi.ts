@@ -1,4 +1,4 @@
-import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
+import { ApiError, apiDownload, apiRequest, isRecord } from '../../../api/apiClient'
 import type { RepairHistoryEntry, RepairItem, RepairItemType, Vehicle, VehicleInput } from '../types'
 
 function isVehicle(value: unknown): value is Vehicle {
@@ -88,19 +88,7 @@ export async function updateVehicle(vehicleId: number, input: VehicleInput): Pro
 }
 
 export async function downloadRepairInvoice(vehicleId: number, appointmentId: number): Promise<Blob> {
-  const response = await fetch(`/api/vehicles/${vehicleId}/repair-history/${appointmentId}/invoice`, {
-    credentials: 'same-origin',
-    cache: 'no-store',
-  })
-  if (!response.ok) {
-    const payload: unknown = await response.json().catch(() => null)
-    const message = isRecord(payload) && typeof payload.message === 'string'
-      ? payload.message
-      : 'Nie udało się pobrać faktury.'
-    const code = isRecord(payload) && typeof payload.code === 'string' ? payload.code : null
-    throw new ApiError(response.status, message, {}, code)
-  }
-  return response.blob()
+  return apiDownload(`/api/vehicles/${vehicleId}/repair-history/${appointmentId}/invoice`)
 }
 
 export function repairInvoiceFilename(entry: RepairHistoryEntry): string {

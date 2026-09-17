@@ -131,6 +131,11 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Znane błędy API mapuj po stronie frontendu na czytelne polskie komunikaty
   na podstawie stabilnych kodów błędów. Zachowaj obsługę pola `message` jako
   fallback dla nieznanych odpowiedzi backendu.
+- Błędy pól mapuje wspólny `validationMessages.ts`; nieznana reguła otrzymuje
+  polski komunikat ogólny. Zachowuj indeksy błędów pozycji naprawy i wiąż je z polami.
+- JSON i PDF pobieraj przez `apiClient.ts`. Odpowiedź 401 usuwa prywatne widoki;
+  licznik sesji odrzuca spóźnione odpowiedzi. Zmiany sesji synchronizujemy między
+  kartami sygnałem storage bez danych konta i sprawdzamy ponownie w API.
 - `useServiceCatalog` w `HomePage` jest wspólnym źródłem katalogu dla oferty i panelu.
   Po zapisie odśwież dane z API. Przewodnik po tej strukturze jest w
   `docs/service-catalog-walkthrough.md` w głównym folderze repozytorium.
@@ -169,4 +174,7 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
   formularze wymagają etykiet i czytelnych komunikatów.
 - Gdy powstaną interaktywne przepływy, dobierz testy do ich zachowania: wyboru dnia,
   obsługi konfliktu, decyzji personelu i prezentacji historii właściwego pojazdu.
-  Obecnie nie ma skonfigurowanego polecenia `npm test` ani frameworka testów UI.
+  `npm test` uruchamia Vitest i React Testing Library w jsdom, także w CI.
+  `npm run test:watch` służy do pracy nad testami. Sprawdzaj zachowanie użytkownika,
+  a układ i rzeczywiste przewijanie dodatkowo w przeglądarce. Opis rozwiązań:
+  `docs/frontend-state-walkthrough.md` w głównym folderze repozytorium.

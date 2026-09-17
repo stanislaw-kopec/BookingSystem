@@ -39,7 +39,7 @@ jobs:
         run: ./mvnw test
 
   frontend:
-    name: Frontend lint and build
+    name: Frontend tests, lint and build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -63,6 +63,9 @@ jobs:
 
       - name: Run frontend lint
         run: npm run lint
+
+      - name: Run frontend tests
+        run: npm test
 
       - name: Build frontend
         run: npm run build

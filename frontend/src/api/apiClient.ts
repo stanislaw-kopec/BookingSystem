@@ -1,3 +1,6 @@
+import { assertCurrentSession, expireSession, sessionRevision } from './sessionEvents'
+import { validationMessage } from './validationMessages'
+
 export class ApiError extends Error {
   readonly status: number
   readonly code: string | null
@@ -13,7 +16,7 @@ export class ApiError extends Error {
     this.name = 'ApiError'
     this.status = status
     this.code = code
-    this.fieldErrors = fieldErrors
+    this.fieldErrors = Object.fromEntries(Object.entries(fieldErrors).map(([field, text]) => [field, validationMessage(text)]))
   }
 }
 
@@ -66,28 +69,54 @@ async function readResponse(response: Response): Promise<unknown> {
   return payload
 }
 
-export async function apiRequest(path: string, options: RequestInit = {}): Promise<unknown> {
+async function request(path: string, options: RequestInit = {}): Promise<Response> {
+  const startedAt = sessionRevision()
   const headers = new Headers(options.headers)
   const method = (options.method ?? 'GET').toUpperCase()
 
   if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
     // A fresh token also works after login, logout or session expiration.
-    const csrf = await readResponse(await fetch('/api/auth/csrf', {
+    const csrf = await readResponse(await checkedFetch('/api/auth/csrf', {
       credentials: 'same-origin',
       cache: 'no-store',
-    }))
+      signal: options.signal,
+    }, startedAt))
     if (!isRecord(csrf) || typeof csrf.headerName !== 'string' || typeof csrf.token !== 'string') {
       throw new ApiError(502, 'Nie udało się przygotować formularza. Odśwież stronę.', {}, 'CSRF_TOKEN_UNAVAILABLE')
     }
     headers.set(csrf.headerName, csrf.token)
   }
 
-  return readResponse(await fetch(path, {
+  assertCurrentSession(startedAt)
+  return checkedFetch(path, {
     ...options,
     headers,
     credentials: 'same-origin',
     cache: 'no-store',
-  }))
+  }, startedAt)
+}
+
+async function checkedFetch(path: string, options: RequestInit, startedAt: number): Promise<Response> {
+  const response = await fetch(path, options)
+  assertCurrentSession(startedAt)
+  if (response.status === 401 && path !== '/api/auth/login') expireSession(startedAt)
+  return response
+}
+
+export async function apiRequest(path: string, options: RequestInit = {}): Promise<unknown> {
+  const startedAt = sessionRevision()
+  const payload = await readResponse(await request(path, options))
+  assertCurrentSession(startedAt)
+  return payload
+}
+
+export async function apiDownload(path: string): Promise<Blob> {
+  const startedAt = sessionRevision()
+  const response = await request(path)
+  if (!response.ok) await readResponse(response)
+  const blob = await response.blob()
+  assertCurrentSession(startedAt)
+  return blob
 }
 
 export function errorMessage(error: unknown): string {

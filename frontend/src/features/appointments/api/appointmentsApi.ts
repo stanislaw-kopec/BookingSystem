@@ -1,4 +1,4 @@
-import { ApiError, apiRequest, isRecord } from '../../../api/apiClient'
+import { ApiError, apiDownload, apiRequest, isRecord } from '../../../api/apiClient'
 import type {
   Appointment,
   AppointmentAvailability,
@@ -319,19 +319,7 @@ export async function markVehiclePickedUp(appointmentId: number): Promise<Appoin
 
 
 export async function downloadStaffRepairInvoice(appointmentId: number): Promise<Blob> {
-  const response = await fetch(`/api/staff/appointments/${appointmentId}/invoice`, {
-    credentials: 'same-origin',
-    cache: 'no-store',
-  })
-  if (!response.ok) {
-    const payload: unknown = await response.json().catch(() => null)
-    const message = isRecord(payload) && typeof payload.message === 'string'
-      ? payload.message
-      : 'Nie udało się pobrać faktury.'
-    const code = isRecord(payload) && typeof payload.code === 'string' ? payload.code : null
-    throw new ApiError(response.status, message, {}, code)
-  }
-  return response.blob()
+  return apiDownload(`/api/staff/appointments/${appointmentId}/invoice`)
 }
 
 export function staffRepairInvoiceFilename(appointment: { reference: string }): string {

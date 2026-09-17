@@ -60,6 +60,10 @@ export function CustomSelect({
   const selectedOption = options.find((option) => option.value === value)
 
   useEffect(() => {
+    if (isOpen) document.getElementById(`${listboxId}-option-${activeIndex}`)?.scrollIntoView({ block: 'nearest' })
+  }, [isOpen, activeIndex, listboxId])
+
+  useEffect(() => {
     if (!isOpen) return
 
     function closeOnOutsideClick(event: PointerEvent) {
@@ -79,7 +83,7 @@ export function CustomSelect({
 
   function selectOption(option: CustomSelectOption) {
     if (option.disabled) return
-    onChange(option.value)
+    if (option.value !== value) onChange(option.value)
     setIsOpen(false)
     triggerRef.current?.focus()
   }
@@ -131,8 +135,11 @@ export function CustomSelect({
   }
 
   return (
-    <div className={`custom-select${isOpen ? ' open' : ''}`} ref={wrapperRef}>
+    <div className={`custom-select${isOpen ? ' open' : ''}`} ref={wrapperRef}
+      onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setIsOpen(false) }}>
       <button id={id} ref={triggerRef} type="button" className="custom-select-trigger"
+        role="combobox" aria-autocomplete="none"
+        aria-activedescendant={isOpen && activeIndex >= 0 ? `${listboxId}-option-${activeIndex}` : undefined}
         aria-haspopup="listbox" aria-expanded={isOpen} aria-controls={listboxId}
         aria-invalid={invalid || undefined} aria-describedby={describedBy} disabled={disabled}
         onClick={() => isOpen ? setIsOpen(false) : openList()} onKeyDown={handleKeyDown}>
@@ -143,11 +150,17 @@ export function CustomSelect({
       {isOpen && (
         <ul id={listboxId} className="custom-select-panel" role="listbox" aria-labelledby={id}>
           {options.map((option, index) => (
-            <li key={option.value} role="option" aria-selected={option.value === value}
+            <li key={option.value} id={`${listboxId}-option-${index}`} role="option"
+              aria-selected={option.value === value} aria-disabled={option.disabled || undefined}
               className={`custom-select-option${index === activeIndex ? ' active' : ''}${option.disabled ? ' disabled' : ''}`}
               onMouseEnter={() => !option.disabled && setActiveIndex(index)}
               onMouseDown={(event) => event.preventDefault()}
-              onClick={() => selectOption(option)}>
+              onClick={(event) => {
+                // Do not forward the wrapping label's click back to the trigger.
+                event.preventDefault()
+                event.stopPropagation()
+                selectOption(option)
+              }}>
               {option.label}
             </li>
           ))}

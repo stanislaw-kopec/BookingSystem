@@ -37,12 +37,14 @@ Status: zakończony 17.09.2026. [Opis rozwiązania i ograniczeń](invoice-snapsh
 
 ## Etap 4 — działanie frontendu (A08–A11)
 
-- [ ] Ponowny wybór aktualnego filtra/sortowania nie uruchamia nieskończonego ładowania.
-- [ ] Błąd odświeżenia listy jest widoczny; stare wyniki nie udają wyniku nowych filtrów.
-- [ ] Obsługa utraty sesji, usuwanie prywatnych widoków i ponowne logowanie; synchronizacja kart.
-- [ ] Polskie komunikaty walidacji oraz wskazanie konkretnej pozycji naprawy z błędem.
-- [ ] CustomSelect: fokus/ARIA, klawiatura i przewijanie aktywnej opcji.
-- [ ] Mały zestaw testów zachowania UI uruchamiany także w CI.
+Status: zakończony 17.09.2026. [Opis rozwiązania i testów](frontend-state-walkthrough.md).
+
+- [x] Ponowny wybór aktualnego filtra/sortowania nie uruchamia nieskończonego ładowania.
+- [x] Błąd odświeżenia listy jest widoczny; stare wyniki nie udają wyniku nowych filtrów.
+- [x] Obsługa utraty sesji, usuwanie prywatnych widoków i ponowne logowanie; synchronizacja kart.
+- [x] Polskie komunikaty walidacji oraz wskazanie konkretnej pozycji naprawy z błędem.
+- [x] CustomSelect: fokus/ARIA, klawiatura i przewijanie aktywnej opcji.
+- [x] Mały zestaw testów zachowania UI uruchamiany także w CI.
 
 ## Etap 5 — weryfikacja i prezentacja
 
@@ -70,6 +72,8 @@ pozostają poza tym planem. Po każdym etapie zapisujemy poniżej wynik sprawdze
 - 17.09.2026: przebudowano lokalny Compose z zachowaniem wolumenu danych. Sprawdzono w przeglądarce logowanie mechanika, siedem dni grafiku z istniejącymi wyjątkami zamknięcia, poprzedni/następny tydzień, odświeżanie i pusty tydzień. Widok 390 × 844 mieści się bez poziomego przewijania; sprawdzono karty i otwarcie szczegółów klawiszem Enter. Otwarcie soboty i konflikt zmian konfiguracji pokrywają testy integracyjne; nie zmieniano w tym celu roboczych rezerwacji ani ustawień warsztatu.
 
 - 17.09.2026: zakończono etap 3. Migracja V18 dodaje trwałe dokumenty faktur; zapis odbywa się przy odbiorze, a dla starszych napraw przy pierwszym pobraniu. Pełny końcowy przebieg testów backendu: 126 testów, 0 niepowodzeń, 0 błędów, 0 pominięć, w tym 12 nowych przypadków faktur i kwot. Zweryfikowano treść PDF-ów, niezmienność po zmianie danych i zegara, równoczesne pobrania oraz wycofanie odbioru po błędzie generatora. Wizualnie sprawdzono fakturę prywatną, firmową, trzystronicową (30 pozycji), zaokrąglony grosz i maksymalną kwotę. Frontend nie wymagał zmian; adresy pobierania pozostały takie same.
+- 17.09.2026: zakończono etap 4. Dodano 22 testy frontendu w Vitest i React Testing Library oraz ich uruchamianie w CI. Testy obejmują powtórny wybór filtrów, błąd odświeżenia i ponowienie, spóźnione odpowiedzi, listę kont, utratę sesji przy JSON/PDF/CSRF, synchronizację kart, ponowne logowanie, walidację pozycji naprawy i klawiaturę CustomSelect. Wszystkie 22 testy przeszły; lint bez ostrzeżeń oraz build przeszły. W przeglądarce sprawdzono listy klienta i mechanika, ponowny wybór filtra, przewijanie aktywnej opcji, wylogowanie w drugiej karcie oraz formularz naprawy. Widok 390 × 844 nie ma poziomego przewijania. Formularza naprawy nie zapisano; nie zmieniano roboczych zgłoszeń. Uruchomiono lokalny Compose z istniejącym wolumenem. Backend nie wymagał zmian ani ponownego uruchamiania jego testów w tym etapie. Workflow został zaktualizowany, ale zdalny przebieg GitHub Actions nastąpi po pushu.
+
 ## Jak działa poprawka grafiku
 
 `ScheduleLocks` używa blokad transakcyjnych PostgreSQL. Zapisy zgłoszeń pobierają
@@ -96,7 +100,7 @@ na danych testowych, nie benchmark wydajności produkcyjnej.
 
 Zmiana domyślnej pojemności waliduje dziś i przyszłość, również poza skróconym
 horyzontem. System nie przechowuje historii konfiguracji: przeglądając dawny tydzień,
-personel widzi aktualny limit domyślny i zachowane wyjątki. Faktury i kwoty opisuje ukończony etap 3; ogólne problemy obsługi stanu frontendu — etapem 4.
+personel widzi aktualny limit domyślny i zachowane wyjątki. Faktury i kwoty opisuje ukończony etap 3; obsługę stanu frontendu opisuje ukończony etap 4.
 
 ## Jak działa poprawka sesji
 
@@ -114,4 +118,4 @@ przed zatwierdzeniem zmiany konta.
 Kosztem tego prostego rozwiązania jest jeden dodatkowy odczyt konta z bazy przy
 uwierzytelnionym żądaniu. Nie potrzeba dodatkowego magazynu sesji ani JWT. Migracja
 V16 dodaje licznik do istniejących kont bez usuwania danych. Automatyczna reakcja
-interfejsu na 401 pozostaje osobnym punktem etapu 4.
+interfejsu na 401 została dodana w etapie 4.

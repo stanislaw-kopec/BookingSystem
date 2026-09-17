@@ -41,11 +41,13 @@ export function AdminAccountsSection() {
 
   useEffect(() => {
     const controller = new AbortController()
+    let redirected = false
     adminAccountsApi.getAccounts({ role, enabled, query, page, size: pageSize }, controller.signal)
       .then((result) => {
         if (controller.signal.aborted) return
-        if (result.totalPages > 0 && page >= result.totalPages) {
-          setPage(result.totalPages - 1)
+        if (page > Math.max(0, result.totalPages - 1)) {
+          redirected = true
+          setPage(Math.max(0, result.totalPages - 1))
           return
         }
         setAccountPage(result)
@@ -53,24 +55,33 @@ export function AdminAccountsSection() {
         setError(null)
       })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted) setError(errorMessage(cause))
+        if (!controller.signal.aborted) {
+          setAccountPage(null)
+          setError(errorMessage(cause))
+        }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false)
+        if (!controller.signal.aborted && !redirected) setIsLoading(false)
       })
     return () => controller.abort()
   }, [enabled, page, query, revision, role])
 
-  function refreshAccounts() {
+  function startLoadingAccounts() {
+    setIsLoading(true)
+    setError(null)
     setEditingId(null)
     setPasswordResetId(null)
-    setIsLoading(true)
+    setPasswordForms({})
+  }
+
+  function refreshAccounts() {
+    startLoadingAccounts()
     setRevision((value) => value + 1)
   }
 
   function applySearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setIsLoading(true)
+    startLoadingAccounts()
     setPage(0)
     setQuery(queryInput.trim())
     setRevision((value) => value + 1)
@@ -79,7 +90,7 @@ export function AdminAccountsSection() {
   function changeRoleFilter(value: string) {
     const nextRole = value === 'CLIENT' || value === 'MECHANIC' || value === 'ADMIN' ? value : null
     if (nextRole === role) return
-    setIsLoading(true)
+    startLoadingAccounts()
     setPage(0)
     setRole(nextRole)
   }
@@ -87,7 +98,7 @@ export function AdminAccountsSection() {
   function changeStatusFilter(value: string) {
     const nextEnabled = value === 'true' ? true : value === 'false' ? false : null
     if (nextEnabled === enabled) return
-    setIsLoading(true)
+    startLoadingAccounts()
     setPage(0)
     setEnabled(nextEnabled)
   }
@@ -168,7 +179,7 @@ export function AdminAccountsSection() {
 
   function handleFailure(cause: unknown) {
     setError(errorMessage(cause))
-    if (cause instanceof ApiError) setFieldErrors(localizedFieldErrors(cause.fieldErrors))
+    if (cause instanceof ApiError) setFieldErrors(cause.fieldErrors)
   }
 
   function clearFieldError(field: string) {
@@ -255,7 +266,7 @@ export function AdminAccountsSection() {
           </form>
 
           {isLoading && <p role="status">Ładowanie kont…</p>}
-          {!isLoading && accounts.length === 0 && <p className="empty-state">Nie znaleziono kont spełniających wybrane kryteria.</p>}
+          {!isLoading && accountPage && accounts.length === 0 && <p className="empty-state">Nie znaleziono kont spełniających wybrane kryteria.</p>}
           {!isLoading && accounts.length > 0 && (
             <ul className="admin-account-list">
               {accounts.map((account) => {
@@ -340,10 +351,10 @@ export function AdminAccountsSection() {
           {!isLoading && totalPages > 1 && (
             <div className="admin-account-pagination">
               <button type="button" className="button secondary small" disabled={page === 0}
-                onClick={() => { setIsLoading(true); setPage((value) => Math.max(0, value - 1)) }}>Poprzednia</button>
+                onClick={() => { startLoadingAccounts(); setPage((value) => Math.max(0, value - 1)) }}>Poprzednia</button>
               <span>Strona {page + 1} z {totalPages} · {accountPage?.totalElements ?? 0} kont</span>
               <button type="button" className="button secondary small" disabled={page >= totalPages - 1}
-                onClick={() => { setIsLoading(true); setPage((value) => Math.min(totalPages - 1, value + 1)) }}>Następna</button>
+                onClick={() => { startLoadingAccounts(); setPage((value) => Math.min(totalPages - 1, value + 1)) }}>Następna</button>
             </div>
           )}
         </div>
@@ -392,14 +403,4 @@ function roleGenitiveLabel(role: ManagedAccountRole) {
   if (role === 'CLIENT') return 'klienta'
   if (role === 'MECHANIC') return 'mechanika'
   return 'administratora'
-}
-
-function localizedFieldErrors(fields: Record<string, string>): Record<string, string> {
-  const messages: Record<string, string> = {
-    username: 'Login musi mieć od 3 do 30 znaków i może zawierać litery, cyfry, kropkę, myślnik oraz podkreślenie.',
-    email: 'Podaj poprawny i nieużywany adres e-mail.',
-    password: 'Hasło musi mieć od 8 do 64 znaków i mieścić się w limicie BCrypt.',
-    passwordConfirmation: 'Hasła nie są takie same.',
-  }
-  return Object.fromEntries(Object.keys(fields).map((field) => [field, messages[field] ?? fields[field]]))
 }

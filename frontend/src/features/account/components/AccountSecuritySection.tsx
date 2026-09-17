@@ -4,19 +4,6 @@ import { ApiError, errorMessage } from '../../../api/apiClient'
 import * as accountApi from '../api/accountApi'
 import '../account.css'
 
-const passwordFieldMessages: Record<string, string> = {
-  currentPassword: 'Obecne hasło jest nieprawidłowe.',
-  newPassword: 'Nowe hasło musi mieć od 8 do 64 znaków i mieścić się w limicie BCrypt.',
-  newPasswordConfirmation: 'Nowe hasła nie są takie same.',
-}
-
-function localizedFieldErrors(fields: Record<string, string>): Record<string, string> {
-  return Object.fromEntries(Object.keys(fields).map((field) => [
-    field,
-    passwordFieldMessages[field] ?? fields[field],
-  ]))
-}
-
 export function AccountSecuritySection() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -40,7 +27,7 @@ export function AccountSecuritySection() {
       setNotice('Hasło zostało zmienione.')
     } catch (cause) {
       setError(errorMessage(cause))
-      if (cause instanceof ApiError) setFieldErrors(localizedFieldErrors(cause.fieldErrors))
+      if (cause instanceof ApiError) setFieldErrors(cause.fieldErrors)
     } finally {
       setIsSaving(false)
     }

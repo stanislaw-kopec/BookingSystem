@@ -55,11 +55,13 @@ export function StaffAppointmentsSection() {
 
   useEffect(() => {
     const controller = new AbortController()
+    let redirected = false
     appointmentsApi.getStaffAppointments(currentPage, pageSize, dateSortDirection, statusFilter, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
           const lastPage = Math.max(0, result.totalPages - 1)
           if (currentPage > lastPage) {
+            redirected = true
             setCurrentPage(lastPage)
             return
           }
@@ -68,10 +70,13 @@ export function StaffAppointmentsSection() {
         }
       })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted) setLoadError(errorMessage(cause))
+        if (!controller.signal.aborted) {
+          setAppointmentPage(null)
+          setLoadError(errorMessage(cause))
+        }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false)
+        if (!controller.signal.aborted && !redirected) setIsLoading(false)
       })
     return () => controller.abort()
   }, [currentPage, dateSortDirection, revision, statusFilter])
@@ -100,17 +105,22 @@ export function StaffAppointmentsSection() {
 
   function refreshCurrentPage() {
     setIsLoading(true)
+    setLoadError(null)
     setRevision((value) => value + 1)
   }
 
   function changeStatusFilter(value: StatusFilter) {
+    if (value === statusFilter) return
     setIsLoading(true)
+    setLoadError(null)
     setStatusFilter(value)
     setCurrentPage(0)
   }
 
   function changeDateSortDirection(value: DateSortDirection) {
+    if (value === dateSortDirection) return
     setIsLoading(true)
+    setLoadError(null)
     setDateSortDirection(value)
     setCurrentPage(0)
   }
@@ -263,16 +273,13 @@ export function StaffAppointmentsSection() {
       {notice && <p className="message success" role="status">{notice}</p>}
       {actionError && <p className="message error" role="alert">{actionError}</p>}
       {isLoading && <p role="status">Ładowanie zgłoszeń…</p>}
-      {!isLoading && loadError && appointmentPage === null && (
+      {!isLoading && loadError && (
         <div className="message error" role="alert">
           <p>{loadError}</p>
           <button type="button" className="button secondary" onClick={retry}>Spróbuj ponownie</button>
         </div>
       )}
-      {appointmentPage && appointmentPage.totalElements === 0 && statusFilter === 'ALL' && (
-        <p className="empty-state">Nie ma jeszcze żadnych zgłoszeń wizyt.</p>
-      )}
-      {appointmentPage && (appointmentPage.totalElements > 0 || statusFilter !== 'ALL') && (
+      {(
         <>
           <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie zgłoszeń">
             <label className="form-field compact-field">
@@ -290,12 +297,12 @@ export function StaffAppointmentsSection() {
                 ]}
                 onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
             </label>
-            <p className="appointment-list-summary">
+            {!isLoading && !loadError && appointmentPage && <p className="appointment-list-summary">
               Pokazuję {firstVisibleIndex}–{lastVisibleIndex} z {totalElements} zgłoszeń
-            </p>
+            </p>}
           </div>
-          {appointments.length === 0 ? (
-            <p className="empty-state">Brak zgłoszeń pasujących do wybranego statusu.</p>
+          {!isLoading && !loadError && appointmentPage && (appointments.length === 0 ? (
+            <p className="empty-state">{statusFilter === 'ALL' ? 'Nie ma jeszcze żadnych zgłoszeń wizyt.' : 'Brak zgłoszeń pasujących do wybranego statusu.'}</p>
           ) : (
             <>
               <ul className="appointment-list staff-appointment-list">
@@ -437,28 +444,36 @@ export function StaffAppointmentsSection() {
                                     <span className="field-label">Pozycje naprawy</span>
                                     <div className="repair-items-list">
                                       {repairItems.map((item, index) => (
-                                        <div className="repair-item-row" key={index}>
+                                        <div className="repair-item-row" key={index} role="group" aria-label={`Pozycja naprawy ${index + 1}`}>
+                                          <span className="field-label">Pozycja {index + 1}</span>
                                           <label>
                                             <span>Typ</span>
                                             <CustomSelect id={`repair-item-type-${appointment.id}-${index}`} value={item.type}
+                                              invalid={Boolean(fieldErrors[`repairItems[${index}].type`])}
+                                              describedBy={fieldErrors[`repairItems[${index}].type`] ? `repair-${appointment.id}-${index}-type-error` : undefined}
                                               options={[
                                                 { value: 'LABOR', label: repairItemTypeLabel('LABOR') },
                                                 { value: 'PART', label: repairItemTypeLabel('PART') },
                                               ]}
                                               onChange={(value) => changeRepairItem(index, { type: value as RepairItemType })} />
+                                            <RepairItemError errors={fieldErrors} index={index} field="type" appointmentId={appointment.id} />
                                           </label>
                                           <label>
-                                            <span>Nazwa</span>
-                                            <input value={item.name} maxLength={160} onChange={(event) => changeRepairItem(index, { name: event.target.value })} />
+                                            <span id={`repair-${appointment.id}-${index}-name-label`}>Nazwa</span>
+                                            <input aria-labelledby={`repair-${appointment.id}-${index}-name-label`} aria-invalid={Boolean(fieldErrors[`repairItems[${index}].name`])} aria-describedby={fieldErrors[`repairItems[${index}].name`] ? `repair-${appointment.id}-${index}-name-error` : undefined} value={item.name} maxLength={160} onChange={(event) => changeRepairItem(index, { name: event.target.value })} />
+                                            <RepairItemError errors={fieldErrors} index={index} field="name" appointmentId={appointment.id} />
                                           </label>
                                           <label>
-                                            <span>Ilość</span>
-                                            <input type="number" min="0.01" step="0.01" value={item.quantity} onChange={(event) => changeRepairItem(index, { quantity: event.target.value })} />
+                                            <span id={`repair-${appointment.id}-${index}-quantity-label`}>Ilość</span>
+                                            <input type="number" min="0.01" step="0.01" aria-labelledby={`repair-${appointment.id}-${index}-quantity-label`} aria-invalid={Boolean(fieldErrors[`repairItems[${index}].quantity`])} aria-describedby={fieldErrors[`repairItems[${index}].quantity`] ? `repair-${appointment.id}-${index}-quantity-error` : undefined} value={item.quantity} onChange={(event) => changeRepairItem(index, { quantity: event.target.value })} />
+                                            <RepairItemError errors={fieldErrors} index={index} field="quantity" appointmentId={appointment.id} />
                                           </label>
                                           <label>
-                                            <span>Cena brutto</span>
-                                            <input type="number" min="0.01" step="0.01" value={item.unitGrossAmount} onChange={(event) => changeRepairItem(index, { unitGrossAmount: event.target.value })} />
+                                            <span id={`repair-${appointment.id}-${index}-unitGrossAmount-label`}>Cena brutto</span>
+                                            <input type="number" min="0.01" step="0.01" aria-labelledby={`repair-${appointment.id}-${index}-unitGrossAmount-label`} aria-invalid={Boolean(fieldErrors[`repairItems[${index}].unitGrossAmount`])} aria-describedby={fieldErrors[`repairItems[${index}].unitGrossAmount`] ? `repair-${appointment.id}-${index}-unitGrossAmount-error` : undefined} value={item.unitGrossAmount} onChange={(event) => changeRepairItem(index, { unitGrossAmount: event.target.value })} />
+                                            <RepairItemError errors={fieldErrors} index={index} field="unitGrossAmount" appointmentId={appointment.id} />
                                           </label>
+                                          {fieldErrors[`repairItems[${index}]`] && <small className="field-error">{fieldErrors[`repairItems[${index}]`]}</small>}
                                           {repairItems.length > 1 && (
                                             <button type="button" className="button secondary" onClick={() => removeRepairItem(index)}>Usuń</button>
                                           )}
@@ -518,6 +533,7 @@ export function StaffAppointmentsSection() {
                     disabled={currentPage === 0}
                     onClick={() => {
                       setIsLoading(true)
+                      setLoadError(null)
                       setCurrentPage((page) => Math.max(0, page - 1))
                     }}>
                     Poprzednia
@@ -527,6 +543,7 @@ export function StaffAppointmentsSection() {
                     disabled={currentPage >= totalPages - 1}
                     onClick={() => {
                       setIsLoading(true)
+                      setLoadError(null)
                       setCurrentPage((page) => Math.min(totalPages - 1, page + 1))
                     }}>
                     Następna
@@ -534,7 +551,7 @@ export function StaffAppointmentsSection() {
                 </nav>
               )}
             </>
-          )}
+          ))}
         </>
       )}
     </section>
@@ -544,4 +561,11 @@ export function StaffAppointmentsSection() {
 
 function formatMoney(value: number) {
   return new Intl.NumberFormat('pl-PL', { style: 'currency', currency: 'PLN' }).format(value)
+}
+
+function RepairItemError({ errors, index, field, appointmentId }: {
+  errors: Record<string, string>, index: number, field: string, appointmentId: number,
+}) {
+  const message = errors[`repairItems[${index}].${field}`]
+  return message ? <small id={`repair-${appointmentId}-${index}-${field}-error`} className="field-error">{message}</small> : null
 }

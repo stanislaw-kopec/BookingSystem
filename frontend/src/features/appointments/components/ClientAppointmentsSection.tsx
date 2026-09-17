@@ -36,11 +36,13 @@ export function ClientAppointmentsSection() {
 
   useEffect(() => {
     const controller = new AbortController()
+    let redirected = false
     appointmentsApi.getClientAppointments(currentPage, pageSize, dateSortDirection, statusFilter, controller.signal)
       .then((result) => {
         if (!controller.signal.aborted) {
           const lastPage = Math.max(0, result.totalPages - 1)
           if (currentPage > lastPage) {
+            redirected = true
             setCurrentPage(lastPage)
             return
           }
@@ -49,10 +51,13 @@ export function ClientAppointmentsSection() {
         }
       })
       .catch((cause: unknown) => {
-        if (!controller.signal.aborted) setError(errorMessage(cause))
+        if (!controller.signal.aborted) {
+          setAppointmentPage(null)
+          setError(errorMessage(cause))
+        }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setIsLoading(false)
+        if (!controller.signal.aborted && !redirected) setIsLoading(false)
       })
     return () => controller.abort()
   }, [currentPage, dateSortDirection, revision, statusFilter])
@@ -81,17 +86,22 @@ export function ClientAppointmentsSection() {
 
   function refreshCurrentPage() {
     setIsLoading(true)
+    setError(null)
     setRevision((value) => value + 1)
   }
 
   function changeStatusFilter(value: StatusFilter) {
+    if (value === statusFilter) return
     setIsLoading(true)
+    setError(null)
     setStatusFilter(value)
     setCurrentPage(0)
   }
 
   function changeDateSortDirection(value: DateSortDirection) {
+    if (value === dateSortDirection) return
     setIsLoading(true)
+    setError(null)
     setDateSortDirection(value)
     setCurrentPage(0)
   }
@@ -160,16 +170,13 @@ export function ClientAppointmentsSection() {
         {notice && <p className="message success" role="status">{notice}</p>}
         {actionError && <p className="message error" role="alert">{actionError}</p>}
         {isLoading && <p role="status">Ładowanie zgłoszeń…</p>}
-        {!isLoading && error && appointmentPage === null && (
+        {!isLoading && error && (
           <div className="message error" role="alert">
             <p>{error}</p>
             <button type="button" className="button secondary" onClick={retry}>Spróbuj ponownie</button>
           </div>
         )}
-        {appointmentPage && appointmentPage.totalElements === 0 && statusFilter === 'ALL' && (
-          <p className="empty-state">Nie masz jeszcze żadnych zgłoszeń wizyt.</p>
-        )}
-        {appointmentPage && (appointmentPage.totalElements > 0 || statusFilter !== 'ALL') && (
+        {(
           <>
             <div className="appointment-list-controls" aria-label="Filtrowanie i sortowanie wizyt">
               <label className="form-field compact-field">
@@ -187,12 +194,12 @@ export function ClientAppointmentsSection() {
                   ]}
                   onChange={(value) => changeDateSortDirection(value as DateSortDirection)} />
               </label>
-              <p className="appointment-list-summary">
+              {!isLoading && !error && appointmentPage && <p className="appointment-list-summary">
                 Pokazuję {firstVisibleIndex}–{lastVisibleIndex} z {totalElements} zgłoszeń
-              </p>
+              </p>}
             </div>
-            {appointments.length === 0 ? (
-              <p className="empty-state">Brak zgłoszeń pasujących do wybranego statusu.</p>
+            {!isLoading && !error && appointmentPage && (appointments.length === 0 ? (
+              <p className="empty-state">{statusFilter === 'ALL' ? 'Nie masz jeszcze żadnych zgłoszeń wizyt.' : 'Brak zgłoszeń pasujących do wybranego statusu.'}</p>
             ) : (
               <>
                 <ul className="appointment-list">
@@ -238,6 +245,7 @@ export function ClientAppointmentsSection() {
                       disabled={currentPage === 0}
                       onClick={() => {
                         setIsLoading(true)
+                        setError(null)
                         setCurrentPage((page) => Math.max(0, page - 1))
                       }}>
                       Poprzednia
@@ -247,6 +255,7 @@ export function ClientAppointmentsSection() {
                       disabled={currentPage >= totalPages - 1}
                       onClick={() => {
                         setIsLoading(true)
+                        setError(null)
                         setCurrentPage((page) => Math.min(totalPages - 1, page + 1))
                       }}>
                       Następna
@@ -254,7 +263,7 @@ export function ClientAppointmentsSection() {
                   </nav>
                 )}
               </>
-            )}
+            ))}
           </>
         )}
       </section>

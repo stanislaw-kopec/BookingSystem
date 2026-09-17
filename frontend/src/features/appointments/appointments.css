@@ -284,6 +284,11 @@
   font-weight: 700;
 }
 
+.repair-item-row > .field-label,
+.repair-item-row > .field-error {
+  grid-column: 1 / -1;
+}
+
 .repair-item-row span {
   color: var(--text);
 }

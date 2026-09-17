@@ -580,7 +580,7 @@ Repozytorium ma workflow CI w `.github/workflows/ci.yml`. GitHub uruchamia go po
 z trzech niezależnych zadań:
 
 - backend: ustawia Javę 25 i uruchamia `./mvnw test` w katalogu `backend`,
-- frontend: ustawia Node.js 24, wykonuje `npm ci`, `npm run lint` i `npm run build`,
+- frontend: ustawia Node.js 24, wykonuje `npm ci`, `npm run lint`, `npm test` i `npm run build`,
 - Docker Compose: sprawdza poprawność `compose.yaml` poleceniem `docker compose config --quiet`.
 
 Testy backendu korzystają z Testcontainers, więc na runnerze używany jest Docker
@@ -621,6 +621,7 @@ Z folderu `frontend`:
 ```powershell
 npm run build
 npm run lint
+npm test
 ```
 
 Testy integracyjne sprawdzają uprawnienia, CRUD, walidację, logowanie, sesję, CSRF oraz administracyjne zarządzanie kontami użytkowników i tworzenie kont personelu.
@@ -629,3 +630,5 @@ Budowa obrazu Docker pomija uruchomienie testów — sprawdzaj je osobno.
 Szczegóły mechanizmów: [gotowość usług w Compose](https://docs.docker.com/compose/how-tos/startup-order/),
 [proxy i wykrywanie zmian w Vite](https://vite.dev/config/server-options),
 [integracja Spring Boot z Compose](https://docs.spring.io/spring-boot/reference/features/dev-services.html).
+
+Opis obsługi sesji, błędów list i testów frontendu: [przewodnik etapu 4](frontend-state-walkthrough.md).
