@@ -48,11 +48,16 @@ Status: zakończony 17.09.2026. [Opis rozwiązania i testów](frontend-state-wal
 
 ## Etap 5 — weryfikacja i prezentacja
 
-- [ ] Scenariusz E2E: klient rezerwuje → personel potwierdza → naprawa → odbiór → PDF.
+Status: w toku od 17.09.2026. Cztery z pięciu punktów zakończone.
+
+- [x] Scenariusz E2E: klient rezerwuje → personel potwierdza → naprawa → odbiór → PDF.
 - [ ] Screeny zamiast placeholderów w README, ewentualnie krótki film demonstracyjny.
-- [ ] Aktualne wersje technologii w dokumentacji i uporządkowana roadmapa.
-- [ ] Raporty testów dostępne po nieudanym CI; sprawdzone uruchomienie z README.
-- [ ] Krótki opis znanych ograniczeń i najważniejszych decyzji technicznych.
+- [x] Aktualne wersje technologii w dokumentacji i uporządkowana roadmapa.
+- [x] Raporty testów dostępne po nieudanym CI; sprawdzone uruchomienie z README.
+- [x] Krótki opis znanych ograniczeń i najważniejszych decyzji technicznych.
+
+Gotowy jest podgląd faktury `06-invoice-preview.png`. Pozostają trzy kadry interfejsu:
+formularz zgłoszenia, grafik mechanika i formularz zakończenia naprawy.
 
 ## Opcjonalne działania po głównych poprawkach
 
@@ -73,6 +78,7 @@ pozostają poza tym planem. Po każdym etapie zapisujemy poniżej wynik sprawdze
 
 - 17.09.2026: zakończono etap 3. Migracja V18 dodaje trwałe dokumenty faktur; zapis odbywa się przy odbiorze, a dla starszych napraw przy pierwszym pobraniu. Pełny końcowy przebieg testów backendu: 126 testów, 0 niepowodzeń, 0 błędów, 0 pominięć, w tym 12 nowych przypadków faktur i kwot. Zweryfikowano treść PDF-ów, niezmienność po zmianie danych i zegara, równoczesne pobrania oraz wycofanie odbioru po błędzie generatora. Wizualnie sprawdzono fakturę prywatną, firmową, trzystronicową (30 pozycji), zaokrąglony grosz i maksymalną kwotę. Frontend nie wymagał zmian; adresy pobierania pozostały takie same.
 - 17.09.2026: zakończono etap 4. Dodano 22 testy frontendu w Vitest i React Testing Library oraz ich uruchamianie w CI. Testy obejmują powtórny wybór filtrów, błąd odświeżenia i ponowienie, spóźnione odpowiedzi, listę kont, utratę sesji przy JSON/PDF/CSRF, synchronizację kart, ponowne logowanie, walidację pozycji naprawy i klawiaturę CustomSelect. Wszystkie 22 testy przeszły; lint bez ostrzeżeń oraz build przeszły. W przeglądarce sprawdzono listy klienta i mechanika, ponowny wybór filtra, przewijanie aktywnej opcji, wylogowanie w drugiej karcie oraz formularz naprawy. Widok 390 × 844 nie ma poziomego przewijania. Formularza naprawy nie zapisano; nie zmieniano roboczych zgłoszeń. Uruchomiono lokalny Compose z istniejącym wolumenem. Backend nie wymagał zmian ani ponownego uruchamiania jego testów w tym etapie. Workflow został zaktualizowany, ale zdalny przebieg GitHub Actions nastąpi po pushu.
+- 17.09.2026: wykonano cztery z pięciu punktów etapu 5. W działającym Compose przeprowadzono scenariusz zgłoszenia `a3b0d95d-6638-4ebc-b75b-b7364fc1beb2`: klient `anna.demo` zarezerwował Hondę Civic, mechanik potwierdził dzień, zapisał robociznę i część na 1130,00 zł brutto, zakończył naprawę i potwierdził odbiór. Wpis pojawił się w historii pojazdu, a PDF MC/2026/000014 pobrano i sprawdzono wizualnie. Testy backendu: 126/126; frontendu: 22/22; lint i build przeszły. Polecenie `docker compose up --build -d --wait` zakończyło się powodzeniem, trzy usługi były zdrowe, a aplikacja, health check i Swagger odpowiedziały HTTP 200. CI publikuje raporty nieudanych testów. Uzupełniono wersje, decyzje, ograniczenia i roadmapę. Pozostały trzy ręczne zrzuty interfejsu; podgląd faktury jest gotowy.
 
 ## Jak działa poprawka grafiku
 

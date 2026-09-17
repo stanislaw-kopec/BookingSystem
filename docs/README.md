@@ -33,10 +33,10 @@ transakcji, pracy z PostgreSQL, testów integracyjnych i uruchamiania aplikacji 
 | --- | --- |
 | Backend | Java 25, Spring Boot 4.1.1, Spring Web MVC, Spring Data JPA, Spring Security, Bean Validation |
 | Baza danych | PostgreSQL 17, Flyway, Hibernate |
-| Frontend | React, TypeScript, Vite, React Router |
-| Dokumenty | OpenPDF — generowanie faktur PDF |
-| Testy | JUnit 5, Spring MockMvc, AssertJ, Testcontainers |
-| Narzędzia | Maven Wrapper, npm, Docker Compose, GitHub Actions, Swagger/OpenAPI |
+| Frontend | React 19.2.8, TypeScript 6.0.2, Vite 8.2.2, React Router 7.18.3 |
+| Dokumenty | OpenPDF 2.4.0 — generowanie faktur PDF |
+| Testy | JUnit 5, Spring MockMvc, AssertJ, Testcontainers, Vitest 5.0.1, React Testing Library |
+| Narzędzia | Maven Wrapper, Node.js 24, npm, Docker Compose, GitHub Actions, springdoc-openapi 3.1.1 |
 
 ## Architektura
 
@@ -73,8 +73,11 @@ Security i ciasteczka HttpOnly, a operacje zmieniające dane wymagają tokenu CS
 
 ## Zrzuty ekranu
 
-Zrzuty zostaną uzupełnione przed publikacją repozytorium. Przygotowane nazwy plików
-i dokładna lista widoków znajdują się w [`screenshots/README.md`](screenshots/README.md).
+Przykładowa faktura pochodzi z pełnego scenariusza demonstracyjnego opisanego w
+[`portfolio-verification.md`](portfolio-verification.md). Lista pozostałych kadrów
+do wykonania znajduje się w [`screenshots/README.md`](screenshots/README.md).
+
+![Przykładowa faktura z pozycjami netto i brutto](screenshots/06-invoice-preview.png)
 
 | Widok | Docelowy plik | Co powinien pokazywać |
 | --- | --- | --- |
@@ -112,6 +115,9 @@ Najwygodniejsze konto do pierwszej prezentacji to `anna.demo` z hasłem
 5. Pokaż decyzję o terminie, formularz zakończenia naprawy z robocizną i częściami oraz potwierdzenie odbioru.
 6. Zaloguj się jako `admin`, zmień limit wybranego dnia w konfiguracji grafiku i pokaż panel kont.
 7. Na końcu otwórz Swagger UI oraz workflow GitHub Actions, aby pokazać kontrakt API i automatyczną weryfikację projektu.
+
+Gotowy przebieg z użytymi danymi i oczekiwanymi rezultatami zawiera
+[raport weryfikacji portfolio](portfolio-verification.md).
 
 ## Spis treści
 
@@ -580,11 +586,13 @@ Repozytorium ma workflow CI w `.github/workflows/ci.yml`. GitHub uruchamia go po
 z trzech niezależnych zadań:
 
 - backend: ustawia Javę 25 i uruchamia `./mvnw test` w katalogu `backend`,
-- frontend: ustawia Node.js 24, wykonuje `npm ci`, `npm run lint`, `npm test` i `npm run build`,
+- frontend: ustawia Node.js 24, wykonuje `npm ci`, `npm run lint`, `npm run test:ci` i `npm run build`,
 - Docker Compose: sprawdza poprawność `compose.yaml` poleceniem `docker compose config --quiet`.
 
 Testy backendu korzystają z Testcontainers, więc na runnerze używany jest Docker
-dostępny w środowisku GitHub Actions.
+dostępny w środowisku GitHub Actions. Jeżeli testy nie przejdą, workflow zachowuje
+raporty Surefire jako `backend-test-reports` albo raport JUnit Vitest jako
+`frontend-test-reports`. Artefakty są dostępne przez 7 dni na stronie danego przebiegu.
 
 ## Nauka i sprawdzanie zmian
 

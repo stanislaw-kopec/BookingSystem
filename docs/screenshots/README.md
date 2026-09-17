@@ -5,6 +5,13 @@ Przed wykonaniem zrzutów uruchom aplikację z profilem `local` i użyj danych
 demonstracyjnych. Nie pokazuj prawdziwych danych osobowych ani haseł wpisanych
 w formularzach.
 
+## Stan
+
+Pełny scenariusz demonstracyjny wykonano 17.09.2026. Faktura z tego przebiegu została
+wyrenderowana i zapisana jako `06-invoice-preview.png`. Trzy kadry interfejsu do
+głównego README pozostają do ręcznego zapisania z przeglądarki; ich dokładna
+zawartość jest opisana poniżej.
+
 ## Lista zrzutów
 
 Do głównego README przygotuj cztery obrazy pokazujące tę samą naprawę od zgłoszenia
@@ -15,7 +22,7 @@ do faktury. Pozostałe widoki z tabeli poniżej są uzupełnieniem do `docs/READ
 | Zgłoszenie wizyty | `booking-request.png` | `/appointments`: wybrany pojazd, dostępny dzień i opis problemu z hamulcami |
 | Potwierdzenie terminu | `03-staff-schedule.png` | `/staff/schedule`: grafik zawierający zgłoszenie tego pojazdu |
 | Zakończenie naprawy | `repair-completion.png` | `/staff/appointments`: rozwinięty formularz „Praca zakończona”, opis prac oraz pozycje robocizny i części |
-| Odbiór i faktura | `06-invoice-preview.png` | PDF pobrany po oznaczeniu odbioru tego samego auta |
+| Odbiór i faktura | `06-invoice-preview.png` | Gotowe: PDF pobrany po oznaczeniu odbioru tego samego auta |
 
 ## Dodatkowe widoki do dokumentacji technicznej
 
