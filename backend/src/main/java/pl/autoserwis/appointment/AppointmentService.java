@@ -9,7 +9,7 @@ import pl.autoserwis.appointment.dto.*;
 import pl.autoserwis.exception.ApiErrorCode;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.invoice.InvoiceFile;
-import pl.autoserwis.invoice.InvoicePdfGenerator;
+import pl.autoserwis.invoice.InvoiceService;
 import pl.autoserwis.profile.ClientProfile;
 import pl.autoserwis.profile.ClientProfileRepository;
 import pl.autoserwis.user.AppUser;
@@ -40,17 +40,17 @@ public class AppointmentService {
     private final UserRepository users;
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
-    private final InvoicePdfGenerator invoicePdfGenerator;
+    private final InvoiceService invoices;
     public AppointmentService(AppointmentRepository appointments, AppointmentSchedule schedule,
             UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles,
-            InvoicePdfGenerator invoicePdfGenerator, ScheduleLocks locks) {
+            InvoiceService invoices, ScheduleLocks locks) {
         this.appointments = appointments;
         this.schedule = schedule;
         this.locks = locks;
         this.users = users;
         this.profiles = profiles;
         this.vehicles = vehicles;
-        this.invoicePdfGenerator = invoicePdfGenerator;
+        this.invoices = invoices;
     }
     public AppointmentAvailabilityResponse getAvailability() {
         return schedule.availability();
@@ -113,6 +113,7 @@ public class AppointmentService {
             .map(this::repairHistoryEntry)
             .toList();
     }
+    @Transactional
     public InvoiceFile getStaffRepairInvoice(Long appointmentId) {
         AppointmentRequest appointment = appointments.findById(appointmentId)
             .filter(request -> request.getStatus() == AppointmentStatus.COMPLETED)
@@ -122,9 +123,7 @@ public class AppointmentService {
                 || appointment.getVehicle() == null) {
             throw new ResourceNotFoundException("Invoice is available only for a completed repair of a registered client.");
         }
-        ClientProfile profile = profiles.findByUser_Id(appointment.getClient().getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
-        return invoicePdfGenerator.generate(appointment, profile);
+        return invoices.documentFor(appointment.getId());
     }
     @Transactional
     public AppointmentResponse createForClient(Long userId, ClientAppointmentRequest request) {
@@ -270,6 +269,9 @@ public class AppointmentService {
         requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
             "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");
         appointment.markPickedUp(user(staffId), Instant.now());
+        if (appointment.getRequesterType() == AppointmentRequesterType.CLIENT) {
+            invoices.documentFor(appointment.getId());
+        }
         return response(appointments.save(appointment));
     }
     private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {

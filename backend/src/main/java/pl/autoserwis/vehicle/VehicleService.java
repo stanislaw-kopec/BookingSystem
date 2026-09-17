@@ -9,9 +9,7 @@ import pl.autoserwis.appointment.AppointmentStatus;
 import pl.autoserwis.appointment.dto.RepairItemResponse;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.invoice.InvoiceFile;
-import pl.autoserwis.invoice.InvoicePdfGenerator;
-import pl.autoserwis.profile.ClientProfile;
-import pl.autoserwis.profile.ClientProfileRepository;
+import pl.autoserwis.invoice.InvoiceService;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
@@ -31,17 +29,14 @@ public class VehicleService {
     private final VehicleRepository vehicles;
     private final UserRepository users;
     private final AppointmentRepository appointments;
-    private final ClientProfileRepository profiles;
-    private final InvoicePdfGenerator invoicePdfGenerator;
+    private final InvoiceService invoices;
 
     public VehicleService(VehicleRepository vehicles, UserRepository users,
-            AppointmentRepository appointments, ClientProfileRepository profiles,
-            InvoicePdfGenerator invoicePdfGenerator) {
+            AppointmentRepository appointments, InvoiceService invoices) {
         this.vehicles = vehicles;
         this.users = users;
         this.appointments = appointments;
-        this.profiles = profiles;
-        this.invoicePdfGenerator = invoicePdfGenerator;
+        this.invoices = invoices;
     }
 
     public List<VehicleResponse> getCurrentClientVehicles(Long userId) {
@@ -67,6 +62,7 @@ public class VehicleService {
             .toList();
     }
 
+    @Transactional
     public InvoiceFile getCurrentClientRepairInvoice(Long userId, Long vehicleId, Long appointmentId) {
         AppUser owner = user(userId);
         vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
@@ -74,9 +70,7 @@ public class VehicleService {
         AppointmentRequest appointment = appointments.findByIdAndVehicle_IdAndClient_IdAndStatus(
                 appointmentId, vehicleId, owner.getId(), AppointmentStatus.COMPLETED)
             .orElseThrow(() -> new ResourceNotFoundException("Completed repair not found."));
-        ClientProfile profile = profiles.findByUser_Id(owner.getId())
-            .orElseThrow(() -> new ResourceNotFoundException("Client profile not found."));
-        return invoicePdfGenerator.generate(appointment, profile);
+        return invoices.documentFor(appointment.getId());
     }
 
     @Transactional

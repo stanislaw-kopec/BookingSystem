@@ -140,16 +140,15 @@ public class AppointmentRequest {
     }
     public void completeRepair(AppUser staff, String repairDescription,
             List<RepairItemDraft> items, Instant actionAt) {
+        BigDecimal validatedTotal = RepairAmounts.validatedTotal(items);
         status = AppointmentStatus.READY_FOR_PICKUP;
         this.repairDescription = repairDescription;
         repairItems.clear();
-        BigDecimal calculatedTotal = BigDecimal.ZERO;
         for (int index = 0; index < items.size(); index++) {
             AppointmentRepairItem item = new AppointmentRepairItem(this, index + 1, items.get(index));
             repairItems.add(item);
-            calculatedTotal = calculatedTotal.add(item.getTotalGrossAmount());
         }
-        totalGrossAmount = calculatedTotal;
+        totalGrossAmount = validatedTotal;
         repairCompletedAt = actionAt;
         repairCompletedBy = staff;
         updatedAt = actionAt;

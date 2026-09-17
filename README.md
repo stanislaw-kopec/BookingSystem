@@ -71,6 +71,7 @@ Klient widzi podsumowanie prac i kwotę do zapłaty na miejscu.
 
 Personel oznacza samochód jako odebrany (`COMPLETED`). Naprawa pojawia się w historii
 pojazdu, skąd klient pobiera fakturę PDF z pozycjami oraz wartościami netto i brutto.
+Dokument jest zapisany przy odbiorze i zachowuje dane mimo późniejszej edycji profilu.
 Dane nabywcy są imienne lub firmowe, zależnie od uzupełnionego profilu.
 
 > **Miejsce na screen:** faktura za tę naprawę z logo, pozycjami i podsumowaniem kwot.

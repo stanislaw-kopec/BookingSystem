@@ -300,7 +300,12 @@ Podstrona pokazuje szczegóły, przycisk „Edytuj pojazd” i sekcję historii 
 Edycja pozwala poprawić markę, model, rocznik, numer rejestracyjny oraz VIN, ale tylko właścicielowi pojazdu.
 Historia pokazuje zakończone naprawy powiązane z tym pojazdem. Wpis pojawia się,
 gdy personel zakończy pracę, a potem oznaczy samochód jako odebrany przez klienta.
-Przy każdym wpisie można pobrać prostą fakturę PDF. Jeśli profil klienta ma uzupełnione dane firmy, PDF użyje danych firmowych; w przeciwnym razie użyje danych imiennych i adresowych klienta. Backend ustala właściciela z sesji i dla cudzego pojazdu zwraca 404.
+Przy każdym wpisie można pobrać prostą fakturę PDF. Dane firmy albo dane imienne i adresowe
+klienta są utrwalane z profilu przy odbiorze auta, razem z numerem, datami, pozycjami,
+kwotami i gotowym PDF-em. Kolejne pobrania zwracają zapisany dokument, również po
+edycji profilu. Starsze zakończone naprawy bez dokumentu utrwalają go przy pierwszym
+pobraniu na podstawie dostępnych wtedy danych. Backend ustala właściciela z sesji
+i dla cudzego pojazdu zwraca 404. Szczegóły: [utrwalanie faktur i kwoty](invoice-snapshots-walkthrough.md).
 
 ## Zmiana własnego hasła
 

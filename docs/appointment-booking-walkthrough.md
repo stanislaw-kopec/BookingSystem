@@ -150,8 +150,9 @@ status `COMPLETED`. Szczegóły pojazdu pobierają historię z
 `GET /api/vehicles/{vehicleId}/repair-history`, czyli z zakończonych zgłoszeń klienta.
 Każdy wpis historii ma przycisk „Pobierz fakturę”, który pobiera PDF z
 `GET /api/vehicles/{vehicleId}/repair-history/{appointmentId}/invoice`. PDF używa
-danych firmowych klienta, jeśli profil ma je uzupełnione, albo danych imiennych
-w przeciwnym razie.
+danych firmowych albo imiennych utrwalonych przy odbiorze auta. Zmiana profilu
+nie zmienia zapisanego dokumentu. Starsze zakończone naprawy bez faktury zapisują ją
+przy pierwszym pobraniu; [opis rozwiązania](invoice-snapshots-walkthrough.md).
 
 W `types.ts` typ `StaffSchedule` opisuje odpowiedź grafiku. `appointmentsApi.ts`
 wysyła zakres dat i sprawdza otrzymany JSON. `StaffScheduleSection` przechowuje

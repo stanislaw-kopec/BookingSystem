@@ -196,6 +196,23 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   Nie dodawaj jeszcze korekt, płatności online ani pełnej integracji księgowej bez osobnego wymagania.
 - Zachowuj dane i pozycje wystawionego dokumentu z momentu jego wystawienia.
   Późniejsza zmiana profilu klienta lub oferty usług nie może zmieniać historii faktury.
+- `InvoiceService` utrwala dokument przy przejściu klienta z kontem do `COMPLETED`,
+  w tej samej transakcji co odbiór. Błąd wygenerowania dokumentu wycofuje odbiór.
+  `invoice_documents` ma jeden rekord na zgłoszenie, unikalny numer, wersjonowany
+  `InvoiceSnapshot` w JSONB i gotowy PDF w BYTEA. Encja jest niezmienna (`@Immutable`).
+  Nie generuj ponownie zapisanego PDF-u z aktualnego profilu, logo ani zegara.
+- Starsze zakończone naprawy bez dokumentu utrwalaj przy pierwszym autoryzowanym
+  pobraniu; blokada rekordu zgłoszenia i ponowny odczyt dokumentu chronią równoczesne
+  pobrania. To zgodność ze starymi danymi, nie odtworzenie dawnego profilu klienta.
+  Taki odczyt wymaga transakcji pozwalającej na zapis. Kontrolę właściciela/roli
+  wykonuj przed wywołaniem serwisu dokumentów. Goście nie otrzymują faktur w tym zakresie.
+- `RepairAmounts`: cena wejściowa jest brutto, wartość pozycji to ilość × cena
+  zaokrąglona do 2 miejsc `HALF_UP`. Po zaokrągleniu pozycja i cała naprawa muszą
+  mieścić się w 0,01–99 999 999,99; błędy zwracaj jako walidację przed zapisem encji.
+  Przy obecnej demonstracyjnej stawce 23% netto pozycji to brutto / 1,23 (`HALF_UP`),
+  VAT to brutto minus netto. Suma netto/VAT/brutto dokumentu jest sumą odpowiednich
+  wartości pozycji. PDF pokazuje wejściową cenę jednostkową brutto, bez zaokrąglonej
+  ceny jednostkowej netto sugerującej inny wynik mnożenia.
 - Sposób wystawiania, statusy, korekty, numeracja i eksport dokumentów pozostają
   do ustalenia. Nie deklaruj zgodności księgowej na podstawie samego modelu danych.
 - Stosuj Bean Validation dla wejścia oraz walidację biznesową w serwisach.

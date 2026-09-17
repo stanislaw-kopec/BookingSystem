@@ -27,11 +27,13 @@ Status: zakończony 17.09.2026.
 
 ## Etap 3 — faktury i kwoty (A05–A06)
 
-- [ ] Utrwalenie danych nabywcy, sprzedawcy, numeru, daty i pozycji dokumentu.
-- [ ] Ponowne pobranie faktury nie zmienia danych po edycji profilu ani zmianie dnia.
-- [ ] Wspólne zasady obliczania i zaokrąglania netto, VAT i brutto.
-- [ ] Walidacja wynikowej wartości pozycji oraz sumy naprawy przed zapisem w bazie.
-- [ ] Testy treści PDF, różnic groszowych, małych wartości i przekroczenia limitów.
+Status: zakończony 17.09.2026. [Opis rozwiązania i ograniczeń](invoice-snapshots-walkthrough.md).
+
+- [x] Utrwalenie danych nabywcy, sprzedawcy, numeru, daty i pozycji dokumentu.
+- [x] Ponowne pobranie faktury nie zmienia danych po edycji profilu ani zmianie dnia.
+- [x] Wspólne zasady obliczania i zaokrąglania netto, VAT i brutto.
+- [x] Walidacja wynikowej wartości pozycji oraz sumy naprawy przed zapisem w bazie.
+- [x] Testy treści PDF, różnic groszowych, małych wartości i przekroczenia limitów.
 
 ## Etap 4 — działanie frontendu (A08–A11)
 
@@ -67,6 +69,7 @@ pozostają poza tym planem. Po każdym etapie zapisujemy poniżej wynik sprawdze
 - 17.09.2026: zakończono etap 2. Pełny przebieg `mvn -B -ntp test` z 16.09: 114 testów, 0 niepowodzeń, 0 błędów, 0 pominięć. Dodano 15 przypadków konfiguracji, uprawnień, zakresu dat, zmiany czasu i zapytań SQL oraz 9 przypadków współbieżności. Lint i build frontendu przeszły. Testy używały odizolowanego PostgreSQL w Testcontainers.
 - 17.09.2026: przebudowano lokalny Compose z zachowaniem wolumenu danych. Sprawdzono w przeglądarce logowanie mechanika, siedem dni grafiku z istniejącymi wyjątkami zamknięcia, poprzedni/następny tydzień, odświeżanie i pusty tydzień. Widok 390 × 844 mieści się bez poziomego przewijania; sprawdzono karty i otwarcie szczegółów klawiszem Enter. Otwarcie soboty i konflikt zmian konfiguracji pokrywają testy integracyjne; nie zmieniano w tym celu roboczych rezerwacji ani ustawień warsztatu.
 
+- 17.09.2026: zakończono etap 3. Migracja V18 dodaje trwałe dokumenty faktur; zapis odbywa się przy odbiorze, a dla starszych napraw przy pierwszym pobraniu. Pełny końcowy przebieg testów backendu: 126 testów, 0 niepowodzeń, 0 błędów, 0 pominięć, w tym 12 nowych przypadków faktur i kwot. Zweryfikowano treść PDF-ów, niezmienność po zmianie danych i zegara, równoczesne pobrania oraz wycofanie odbioru po błędzie generatora. Wizualnie sprawdzono fakturę prywatną, firmową, trzystronicową (30 pozycji), zaokrąglony grosz i maksymalną kwotę. Frontend nie wymagał zmian; adresy pobierania pozostały takie same.
 ## Jak działa poprawka grafiku
 
 `ScheduleLocks` używa blokad transakcyjnych PostgreSQL. Zapisy zgłoszeń pobierają
@@ -93,8 +96,7 @@ na danych testowych, nie benchmark wydajności produkcyjnej.
 
 Zmiana domyślnej pojemności waliduje dziś i przyszłość, również poza skróconym
 horyzontem. System nie przechowuje historii konfiguracji: przeglądając dawny tydzień,
-personel widzi aktualny limit domyślny i zachowane wyjątki. Faktury i kwoty pozostają
-etapem 3; ogólne problemy obsługi stanu frontendu — etapem 4.
+personel widzi aktualny limit domyślny i zachowane wyjątki. Faktury i kwoty opisuje ukończony etap 3; ogólne problemy obsługi stanu frontendu — etapem 4.
 
 ## Jak działa poprawka sesji
 

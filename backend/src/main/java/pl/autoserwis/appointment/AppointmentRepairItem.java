@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 @Entity
 @Table(name = "appointment_repair_items")
@@ -47,6 +46,6 @@ public class AppointmentRepairItem {
         this.name = draft.name();
         this.quantity = draft.quantity();
         this.unitGrossAmount = draft.unitGrossAmount();
-        this.totalGrossAmount = draft.quantity().multiply(draft.unitGrossAmount()).setScale(2, RoundingMode.HALF_UP);
+        this.totalGrossAmount = RepairAmounts.lineGross(draft.quantity(), draft.unitGrossAmount());
     }
 }
