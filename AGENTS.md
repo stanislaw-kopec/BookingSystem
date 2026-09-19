@@ -131,6 +131,11 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   PostgreSQL 17, React, TypeScript i Vite. Dokładne wersje sprawdzaj w manifestach.
 - Docker Compose uruchamia trzy usługi: `postgres`, `backend` i `frontend`.
   Zachowaj istniejący wolumen bazy i możliwość uruchamiania aplikacji lokalnie z IDE.
+- `compose.production.yaml` jest oddzielnym wariantem wdrożeniowym. Buduje statyczny
+  frontend serwowany przez Nginx, wystawia wyłącznie Caddy, używa profilu Springa
+  `production` i pobiera sekrety z ignorowanego pliku `.env.production`. Domena
+  w `APP_ADDRESS` włącza automatyczne HTTPS. Profil produkcyjny nie tworzy danych demo;
+  przy pustej bazie tworzy jednego administratora z konfiguracji środowiska.
 - API używa prefiksu `/api`; `/api/health` służy do sprawdzania gotowości backendu.
   Frontend korzysta z proxy Vite. Szczegóły uruchomienia zawiera `README.md`.
 - Działają katalog kategorii i usług w PostgreSQL, publiczna strona oraz panel

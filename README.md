@@ -14,7 +14,8 @@ bezpieczeństwa sesyjnego, transakcji, testów integracyjnych oraz Reacta z Type
 **Na skróty:** [Funkcje](#funkcje) · [Przepływ aplikacji](#jak-działa-aplikacja) ·
 [Technologie](#technologie) · [Architektura](#architektura) ·
 [Uruchomienie](#uruchomienie) · [Konta demo](#konta-demonstracyjne) ·
-[Decyzje i ograniczenia](#decyzje-i-ograniczenia) · [Dokumentacja](#dokumentacja)
+[Wdrożenie](#wariant-wdrożeniowy) · [Decyzje i ograniczenia](#decyzje-i-ograniczenia) ·
+[Dokumentacja](#dokumentacja)
 
 ## Funkcje
 
@@ -120,17 +121,16 @@ aplikacji webowej i nie wymagają JWT. Backend pozostaje źródłem prawdy dla u
 pojemności grafiku, kwot oraz utrwalonych danych faktury. Rezerwacja dotyczy dnia,
 a blokady transakcyjne chronią limit przy równoczesnych żądaniach.
 
-Wersja portfolio działa lokalnie przez Docker Compose. Nie obejmuje HTTPS, wdrożenia
-produkcyjnego, płatności online, korekt księgowych, powiadomień e-mail/SMS,
+Repozytorium zawiera wariant wdrożeniowy z automatycznym HTTPS, ale nie utrzymuje
+publicznej instancji ani domeny. Aplikacja nie obejmuje płatności online, korekt księgowych, powiadomień e-mail/SMS,
 automatycznego odzyskiwania hasła ani przydzielania zleceń do konkretnych mechaników.
 Publiczny formularz nie ma jeszcze limitowania nadużyć. Faktury są dokumentami
 demonstracyjnymi, a dane sprzedawcy i lokalizacja warsztatu są przykładowe.
 
 ## Roadmapa
 
-Podstawowy zakres portfolio jest domknięty. Dalszy rozwój może objąć przygotowanie
-wdrożenia z HTTPS i sekretami poza profilem `local`, ochronę publicznych formularzy,
-powiadomienia, obserwowalność oraz rozbudowę planowania pracy warsztatu. Pełna
+Podstawowy zakres portfolio jest domknięty. Dalszy rozwój może objąć ochronę
+publicznych formularzy, powiadomienia, obserwowalność oraz rozbudowę planowania pracy warsztatu. Pełna
 księgowość i płatności pozostają osobnymi integracjami, a nie częścią obecnej wersji.
 
 ## Uruchomienie
@@ -153,6 +153,17 @@ Zatrzymanie aplikacji:
 ```powershell
 docker compose down
 ```
+
+## Wariant wdrożeniowy
+
+Osobny plik `compose.production.yaml` buduje statyczny frontend i serwuje go przez
+Nginx. Caddy jest publicznym reverse proxy i automatycznie obsługuje HTTPS dla
+prawidłowo skonfigurowanej domeny. Profil `production` nie tworzy danych demo,
+wyłącza Swaggera i wymaga pierwszego administratora przekazanego przez środowisko.
+
+Konfigurację, przygotowanie domeny i bezpieczny pierwszy start opisuje
+[instrukcja wdrożenia](docs/deployment-guide.md). Plik `.env.production.example`
+jest wyłącznie wzorem — prawdziwy `.env.production` jest ignorowany przez Git.
 
 ## Konta demonstracyjne
 

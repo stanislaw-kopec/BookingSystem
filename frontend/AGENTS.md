@@ -160,6 +160,10 @@ Ten plik dotyczy kodu i konfiguracji w `frontend`.
 - Zachowaj proxy w `vite.config.ts`: w Dockerze cel ustawia `API_PROXY_TARGET`,
   lokalnie używany jest `http://localhost:8080`. Prywatnych sekretów nie umieszczaj
   w kodzie frontendu ani zmiennych udostępnianych przeglądarce.
+- Developerski `Dockerfile` nadal uruchamia Vite z podłączonym kodem. Wariant
+  wdrożeniowy używa `Dockerfile.production`: buduje `dist`, serwuje go przez Nginx,
+  obsługuje trasy SPA i przekazuje `/api`, Swagger oraz OpenAPI do backendu w tej samej
+  domenie. Nie dodawaj sekretów do obrazu ani zmiennych Vite dostępnych w przeglądarce.
 - Z katalogu `frontend`: `npm ci` instaluje zależności z lockfile,
   `npm run dev` uruchamia Vite, `npm run build` sprawdza TypeScript i buduje aplikację,
   a `npm run lint` uruchamia istniejący Oxlint.

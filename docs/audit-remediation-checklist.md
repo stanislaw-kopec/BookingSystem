@@ -61,13 +61,24 @@ formularz zgłoszenia, grafik mechanika i formularz zakończenia naprawy.
 
 ## Opcjonalne działania po głównych poprawkach
 
-- [ ] Osobny wariant wdrożeniowy: statyczny frontend, HTTPS, konfiguracja i sekrety poza profilem local.
+- [x] Osobny wariant wdrożeniowy: statyczny frontend, HTTPS, konfiguracja i sekrety poza profilem local.
 - [ ] Przed publicznym demo: ograniczanie nadużyć logowania i formularza rezerwacji.
 - [ ] Identyfikatory żądań, diagnostyka błędów i ślad ważnych operacji administracyjnych.
 - [ ] Podział dużego komponentu obsługi zgłoszeń, wspólne pobieranie PDF i mniejszy plik logo.
 
 Pełna księgowość, płatności online, SMS/e-mail, mikroserwisy i zmiana sesji na JWT
 pozostają poza tym planem. Po każdym etapie zapisujemy poniżej wynik sprawdzeń.
+
+## Etap 6 — wariant wdrożeniowy
+
+Status: zakończony 19.09.2026. [Instrukcja wdrożenia](deployment-guide.md).
+
+- [x] Statyczny build Reacta serwowany przez Nginx zamiast Vite dev servera.
+- [x] Wspólny origin dla SPA i `/api`; backend i PostgreSQL bez publicznych portów.
+- [x] Caddy jako warstwa brzegowa z automatycznym HTTPS dla skonfigurowanej domeny.
+- [x] Profil `production` bez danych demo, z bezpiecznym ciasteczkiem i wyłączonym Swaggerem.
+- [x] Pierwszy administrator tworzony jednorazowo z konfiguracji środowiska.
+- [x] Przykładowy plik zmiennych, instrukcja uruchomienia i walidacja Compose w CI.
 
 ## Dziennik wykonania
 
@@ -79,6 +90,7 @@ pozostają poza tym planem. Po każdym etapie zapisujemy poniżej wynik sprawdze
 - 17.09.2026: zakończono etap 3. Migracja V18 dodaje trwałe dokumenty faktur; zapis odbywa się przy odbiorze, a dla starszych napraw przy pierwszym pobraniu. Pełny końcowy przebieg testów backendu: 126 testów, 0 niepowodzeń, 0 błędów, 0 pominięć, w tym 12 nowych przypadków faktur i kwot. Zweryfikowano treść PDF-ów, niezmienność po zmianie danych i zegara, równoczesne pobrania oraz wycofanie odbioru po błędzie generatora. Wizualnie sprawdzono fakturę prywatną, firmową, trzystronicową (30 pozycji), zaokrąglony grosz i maksymalną kwotę. Frontend nie wymagał zmian; adresy pobierania pozostały takie same.
 - 17.09.2026: zakończono etap 4. Dodano 22 testy frontendu w Vitest i React Testing Library oraz ich uruchamianie w CI. Testy obejmują powtórny wybór filtrów, błąd odświeżenia i ponowienie, spóźnione odpowiedzi, listę kont, utratę sesji przy JSON/PDF/CSRF, synchronizację kart, ponowne logowanie, walidację pozycji naprawy i klawiaturę CustomSelect. Wszystkie 22 testy przeszły; lint bez ostrzeżeń oraz build przeszły. W przeglądarce sprawdzono listy klienta i mechanika, ponowny wybór filtra, przewijanie aktywnej opcji, wylogowanie w drugiej karcie oraz formularz naprawy. Widok 390 × 844 nie ma poziomego przewijania. Formularza naprawy nie zapisano; nie zmieniano roboczych zgłoszeń. Uruchomiono lokalny Compose z istniejącym wolumenem. Backend nie wymagał zmian ani ponownego uruchamiania jego testów w tym etapie. Workflow został zaktualizowany, ale zdalny przebieg GitHub Actions nastąpi po pushu.
 - 17.09.2026: wykonano cztery z pięciu punktów etapu 5. W działającym Compose przeprowadzono scenariusz zgłoszenia `a3b0d95d-6638-4ebc-b75b-b7364fc1beb2`: klient `anna.demo` zarezerwował Hondę Civic, mechanik potwierdził dzień, zapisał robociznę i część na 1130,00 zł brutto, zakończył naprawę i potwierdził odbiór. Wpis pojawił się w historii pojazdu, a PDF MC/2026/000014 pobrano i sprawdzono wizualnie. Testy backendu: 126/126; frontendu: 22/22; lint i build przeszły. Polecenie `docker compose up --build -d --wait` zakończyło się powodzeniem, trzy usługi były zdrowe, a aplikacja, health check i Swagger odpowiedziały HTTP 200. CI publikuje raporty nieudanych testów. Uzupełniono wersje, decyzje, ograniczenia i roadmapę. Pozostały trzy ręczne zrzuty interfejsu; podgląd faktury jest gotowy.
+- 19.09.2026: zakończono etap 6. Dodano oddzielny stos wdrożeniowy: Caddy → Nginx ze statycznym SPA → Spring Boot → PostgreSQL. Testowy projekt Compose uruchomił cztery zdrowe usługi na oddzielnych sieciach i wolumenach. Strona oraz `/api/health` odpowiedziały HTTP 200, Swagger był wyłączony (404), a pierwszy administrator zalogował się z rolą ADMIN. Potwierdzono cache zasobów, brak cache HTML, nagłówki bezpieczeństwa oraz brak publicznych portów bazy i backendu. Pełne testy backendu: 129/129; frontendu: 22/22; lint i build przeszły. Oba pliki Compose przeszły walidację.
 
 ## Jak działa poprawka grafiku
 

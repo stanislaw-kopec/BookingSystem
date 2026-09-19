@@ -122,6 +122,7 @@ Gotowy przebieg z użytymi danymi i oczekiwanymi rezultatami zawiera
 ## Spis treści
 
 - [Cała aplikacja w Dockerze](#cała-aplikacja-w-dockerze)
+- [Wariant wdrożeniowy](deployment-guide.md)
 - [Praca nad kodem](#praca-nad-kodem)
 - [Spring i React uruchamiane lokalnie](#spring-i-react-uruchamiane-lokalnie)
 - [Główne moduły aplikacji](#katalog-usług)
@@ -593,6 +594,8 @@ Testy backendu korzystają z Testcontainers, więc na runnerze używany jest Doc
 dostępny w środowisku GitHub Actions. Jeżeli testy nie przejdą, workflow zachowuje
 raporty Surefire jako `backend-test-reports` albo raport JUnit Vitest jako
 `frontend-test-reports`. Artefakty są dostępne przez 7 dni na stronie danego przebiegu.
+Osobny krok sprawdza także składnię `compose.production.yaml` z przykładowym plikiem
+zmiennych środowiskowych.
 
 ## Nauka i sprawdzanie zmian
 

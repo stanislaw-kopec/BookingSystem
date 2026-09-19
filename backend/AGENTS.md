@@ -77,6 +77,11 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - `local` tworzy brakujące konta i dane demonstracyjne; nie zmienia haseł, profili,
   pojazdów ani zgłoszeń, które już istnieją. Nie stosuj demonstracyjnej bazy ani jej
   kont we wdrożeniu produkcyjnym.
+- Profil `production` nie ładuje danych demo. Jeżeli nie istnieje żaden administrator,
+  `ProductionAdminBootstrap` wymaga loginu, e-maila i hasła ze zmiennych środowiskowych,
+  waliduje je i tworzy jedno konto ADMIN. Po utworzeniu administratora kolejne starty
+  nie zmieniają konta ani hasła. Profil ufa nagłówkom reverse proxy, domyślnie wymaga
+  bezpiecznego ciasteczka sesji i wyłącza publiczną dokumentację OpenAPI.
 
 ## Rejestracja klienta
 
