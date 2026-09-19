@@ -23,12 +23,12 @@ public class InvoiceService {
     private final Clock clock;
 
     public InvoiceService(InvoiceDocumentRepository documents, AppointmentRepository appointments,
-            ClientProfileRepository profiles, InvoicePdfGenerator generator, Clock invoiceClock) {
+            ClientProfileRepository profiles, InvoicePdfGenerator generator, Clock workshopClock) {
         this.documents = documents;
         this.appointments = appointments;
         this.profiles = profiles;
         this.generator = generator;
-        this.clock = invoiceClock;
+        this.clock = workshopClock;
     }
 
     /** Caller must authorize access before calling. The row lock also serializes legacy first downloads. */

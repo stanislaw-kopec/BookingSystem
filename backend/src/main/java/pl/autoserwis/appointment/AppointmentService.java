@@ -17,12 +17,9 @@ import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
 import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.Year;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -41,9 +38,15 @@ public class AppointmentService {
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
     private final InvoiceService invoices;
+    private final AppointmentResponseMapper responses;
+    private final RepairHistoryMapper repairHistory;
+    private final RepairItemValidator repairItemValidator;
+    private final Clock clock;
     public AppointmentService(AppointmentRepository appointments, AppointmentSchedule schedule,
             UserRepository users, ClientProfileRepository profiles, VehicleRepository vehicles,
-            InvoiceService invoices, ScheduleLocks locks) {
+            InvoiceService invoices, ScheduleLocks locks, AppointmentResponseMapper responses,
+            RepairHistoryMapper repairHistory, RepairItemValidator repairItemValidator,
+            Clock workshopClock) {
         this.appointments = appointments;
         this.schedule = schedule;
         this.locks = locks;
@@ -51,6 +54,10 @@ public class AppointmentService {
         this.profiles = profiles;
         this.vehicles = vehicles;
         this.invoices = invoices;
+        this.responses = responses;
+        this.repairHistory = repairHistory;
+        this.repairItemValidator = repairItemValidator;
+        this.clock = workshopClock;
     }
     public AppointmentAvailabilityResponse getAvailability() {
         return schedule.availability();
@@ -58,7 +65,7 @@ public class AppointmentService {
     public List<AppointmentResponse> getCurrentClientAppointments(Long userId) {
         AppUser client = user(userId);
         return appointments.findByClient_IdOrderByCreatedAtDesc(client.getId()).stream()
-            .map(this::response)
+            .map(responses::toResponse)
             .toList();
     }
     public AppointmentPageResponse getCurrentClientAppointments(Long userId,
@@ -75,7 +82,7 @@ public class AppointmentService {
             ? appointments.findByClient_Id(client.getId(), pageable)
             : appointments.findByClient_IdAndStatus(client.getId(), status, pageable);
         return new AppointmentPageResponse(
-            result.getContent().stream().map(this::response).toList(),
+            result.getContent().stream().map(responses::toResponse).toList(),
             result.getNumber(),
             result.getSize(),
             result.getTotalElements(),
@@ -94,14 +101,14 @@ public class AppointmentService {
             ? appointments.findAll(pageable)
             : appointments.findByStatus(status, pageable);
         return new AppointmentPageResponse(
-            result.getContent().stream().map(this::response).toList(),
+            result.getContent().stream().map(responses::toResponse).toList(),
             result.getNumber(),
             result.getSize(),
             result.getTotalElements(),
             result.getTotalPages());
     }
     public AppointmentResponse getStaffAppointment(Long appointmentId) {
-        return response(appointments.findById(appointmentId)
+        return responses.toResponse(appointments.findById(appointmentId)
             .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found.")));
     }
     public List<RepairHistoryEntryResponse> getStaffAppointmentRepairHistory(Long appointmentId) {
@@ -110,7 +117,7 @@ public class AppointmentService {
         if (appointment.getVehicle() == null) return List.of();
         return appointments.findByVehicle_IdAndStatusOrderByVehiclePickedUpAtDesc(
                 appointment.getVehicle().getId(), AppointmentStatus.COMPLETED).stream()
-            .map(this::repairHistoryEntry)
+            .map(repairHistory::toResponse)
             .toList();
     }
     @Transactional
@@ -141,7 +148,7 @@ public class AppointmentService {
             profile.getFirstName(), profile.getLastName(), profile.getPhoneNumber(),
             profile.getContactEmail(), vehicle.getMake(), vehicle.getModel(),
             vehicle.getProductionYear(), vehicle.getRegistrationNumber(), optional(vehicle.getVin()),
-            startAt, description, Instant.now());
+            startAt, description, Instant.now(clock));
         return saveInAvailableDay(appointment);
     }
     @Transactional
@@ -156,7 +163,7 @@ public class AppointmentService {
             request.firstName().strip(), request.lastName().strip(), optional(request.phoneNumber()),
             optionalLowercase(request.contactEmail()), request.vehicleMake().strip(),
             request.vehicleModel().strip(), request.vehicleProductionYear(), registrationNumber,
-            optionalUppercase(request.vehicleVin()), startAt, description, Instant.now());
+            optionalUppercase(request.vehicleVin()), startAt, description, Instant.now(clock));
         return saveInAvailableDay(appointment);
     }
     @Transactional
@@ -165,8 +172,8 @@ public class AppointmentService {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.PENDING,
             "Only a pending appointment request can be accepted.");
-        appointment.accept(user(staffId), Instant.now());
-        return response(appointments.save(appointment));
+        appointment.accept(user(staffId), Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse reject(Long staffId, Long appointmentId,
@@ -178,8 +185,8 @@ public class AppointmentService {
             throw new AppointmentConflictException(
                 "Only a pending request or a day proposal can be rejected.");
         }
-        appointment.reject(user(staffId), optional(request.message()), Instant.now());
-        return response(appointments.save(appointment));
+        appointment.reject(user(staffId), optional(request.message()), Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse proposeTime(Long staffId, Long appointmentId,
@@ -201,9 +208,9 @@ public class AppointmentService {
             throw unavailableDay();
         }
         appointment.proposeTime(user(staffId), proposedStartAt,
-            optional(request.message()), Instant.now());
+            optional(request.message()), Instant.now(clock));
         try {
-            return response(appointments.saveAndFlush(appointment));
+            return responses.toResponse(appointments.saveAndFlush(appointment));
         } catch (DataIntegrityViolationException exception) {
             throw unavailableDay();
         }
@@ -217,8 +224,8 @@ public class AppointmentService {
             .orElseThrow(() -> new ResourceNotFoundException("Appointment request not found."));
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
             "This request is not waiting for a proposed day confirmation.");
-        appointment.confirmProposedTime(Instant.now());
-        return response(appointments.save(appointment));
+        appointment.confirmProposedTime(Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse cancelClientAppointment(Long userId, Long appointmentId) {
@@ -233,8 +240,8 @@ public class AppointmentService {
             throw new AppointmentConflictException(
                 "Only an active appointment can be cancelled.");
         }
-        appointment.cancel(Instant.now());
-        return response(appointments.save(appointment));
+        appointment.cancel(Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse confirmGuestProposedTime(Long staffId, Long appointmentId) {
@@ -246,8 +253,8 @@ public class AppointmentService {
         }
         requireStatus(appointment, AppointmentStatus.TIME_PROPOSED,
             "This request is not waiting for a proposed day confirmation.");
-        appointment.confirmGuestProposedTime(user(staffId), Instant.now());
-        return response(appointments.save(appointment));
+        appointment.confirmGuestProposedTime(user(staffId), Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse completeRepair(Long staffId, Long appointmentId,
@@ -258,9 +265,9 @@ public class AppointmentService {
             "Repair can be completed only for a confirmed appointment.");
         appointment.completeRepair(user(staffId),
             normalizedRepairDescription(request.repairDescription()),
-            normalizedRepairItems(request.repairItems()),
-            Instant.now());
-        return response(appointments.save(appointment));
+            repairItemValidator.normalize(request.repairItems()),
+            Instant.now(clock));
+        return responses.toResponse(appointments.save(appointment));
     }
     @Transactional
     public AppointmentResponse markPickedUp(Long staffId, Long appointmentId) {
@@ -268,11 +275,11 @@ public class AppointmentService {
         AppointmentRequest appointment = appointmentForStaffUpdate(appointmentId);
         requireStatus(appointment, AppointmentStatus.READY_FOR_PICKUP,
             "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");
-        appointment.markPickedUp(user(staffId), Instant.now());
+        appointment.markPickedUp(user(staffId), Instant.now(clock));
         if (appointment.getRequesterType() == AppointmentRequesterType.CLIENT) {
             invoices.documentFor(appointment.getId());
         }
-        return response(appointments.save(appointment));
+        return responses.toResponse(appointments.save(appointment));
     }
     private AppointmentResponse saveInAvailableDay(AppointmentRequest appointment) {
         appointments.lockAppointmentDay(schedule.visitDate(appointment.getCurrentStartAt()));
@@ -280,7 +287,7 @@ public class AppointmentService {
             throw unavailableDay();
         }
         try {
-            return response(appointments.saveAndFlush(appointment));
+            return responses.toResponse(appointments.saveAndFlush(appointment));
         } catch (DataIntegrityViolationException exception) {
             throw unavailableDay();
         }
@@ -302,7 +309,7 @@ public class AppointmentService {
             errors.put("phoneNumber", message);
             errors.put("contactEmail", message);
         }
-        int latestAllowedYear = Year.now().getValue() + 1;
+        int latestAllowedYear = Year.now(clock).getValue() + 1;
         if (request.vehicleProductionYear() > latestAllowedYear) {
             errors.put("vehicleProductionYear",
                 "Production year cannot be later than " + latestAllowedYear + ".");
@@ -332,41 +339,6 @@ public class AppointmentService {
                 "Completed work description must have at least 10 characters."));
         }
         return normalized;
-    }
-    private List<RepairItemDraft> normalizedRepairItems(List<RepairItemRequest> items) {
-        if (items == null || items.isEmpty()) {
-            throw new AppointmentValidationException(Map.of("repairItems",
-                "Add at least one repair item."));
-        }
-        List<RepairItemDraft> normalized = new ArrayList<>();
-        Map<String, String> errors = new LinkedHashMap<>();
-        for (int index = 0; index < items.size(); index++) {
-            RepairItemRequest item = items.get(index);
-            String prefix = "repairItems[" + index + "].";
-            if (item == null) {
-                errors.put("repairItems[" + index + "]", "Complete the repair item.");
-                continue;
-            }
-            String name = item.name() == null ? "" : item.name().strip();
-            if (name.isBlank()) errors.put(prefix + "name", "Enter an item name.");
-            if (item.type() == null) errors.put(prefix + "type", "Select an item type.");
-            BigDecimal quantity = normalizedDecimal(item.quantity(), prefix + "quantity", errors, "Quantity can have at most 2 decimal places.");
-            BigDecimal unitGrossAmount = normalizedDecimal(item.unitGrossAmount(), prefix + "unitGrossAmount", errors, "Gross price can have at most 2 decimal places.");
-            if (item.type() != null && !name.isBlank() && quantity != null && unitGrossAmount != null) {
-                normalized.add(new RepairItemDraft(item.type(), name, quantity, unitGrossAmount));
-            }
-        }
-        if (!errors.isEmpty()) throw new AppointmentValidationException(errors);
-        return normalized;
-    }
-    private BigDecimal normalizedDecimal(BigDecimal value, String field, Map<String, String> errors, String message) {
-        if (value == null) return null;
-        try {
-            return value.setScale(2, RoundingMode.UNNECESSARY);
-        } catch (ArithmeticException exception) {
-            errors.put(field, message);
-            return null;
-        }
     }
     private int normalizedPageSize(int size) {
         if (size < 1) return DEFAULT_PAGE_SIZE;
@@ -401,42 +373,5 @@ public class AppointmentService {
     private String optionalUppercase(String value) {
         String normalized = optional(value);
         return normalized == null ? null : normalized.toUpperCase(Locale.ROOT);
-    }
-    private AppointmentResponse response(AppointmentRequest appointment) {
-        return new AppointmentResponse(
-            appointment.getId(), appointment.getReference(), appointment.getRequesterType(),
-            appointment.getStatus(), appointment.getVehicle() == null ? null : appointment.getVehicle().getId(),
-            appointment.getVehicleMake(), appointment.getVehicleModel(),
-            appointment.getVehicleProductionYear(), appointment.getVehicleRegistrationNumber(),
-            text(appointment.getVehicleVin()), appointment.getFirstName(), appointment.getLastName(),
-            text(appointment.getPhoneNumber()), text(appointment.getContactEmail()),
-            offset(appointment.getRequestedStartAt()), offset(appointment.getCurrentStartAt()),
-            appointment.getProblemDescription(), text(appointment.getStaffMessage()),
-            offset(appointment.getCreatedAt()), offset(appointment.getStaffActionAt()),
-            appointment.getStaffActionBy() == null ? null : appointment.getStaffActionBy().getUsername(),
-            offset(appointment.getClientConfirmedAt()), text(appointment.getRepairDescription()),
-            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
-            appointment.getRepairCompletedBy() == null ? null : appointment.getRepairCompletedBy().getUsername(),
-            offset(appointment.getVehiclePickedUpAt()),
-            appointment.getVehiclePickedUpBy() == null ? null : appointment.getVehiclePickedUpBy().getUsername());
-    }
-    private OffsetDateTime offset(Instant value) {
-        return value == null ? null : value.atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
-    }
-    private RepairHistoryEntryResponse repairHistoryEntry(AppointmentRequest appointment) {
-        return new RepairHistoryEntryResponse(appointment.getId(), appointment.getReference(),
-            offset(appointment.getCurrentStartAt()), appointment.getRepairDescription(),
-            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
-            appointment.getRepairCompletedBy().getUsername(), offset(appointment.getVehiclePickedUpAt()),
-            appointment.getVehiclePickedUpBy().getUsername());
-    }
-    private List<RepairItemResponse> repairItems(AppointmentRequest appointment) {
-        return appointment.getRepairItems().stream()
-            .map(item -> new RepairItemResponse(item.getId(), item.getType(), item.getName(),
-                item.getQuantity(), item.getUnitGrossAmount(), item.getTotalGrossAmount()))
-            .toList();
-    }
-    private String text(String value) {
-        return value == null ? "" : value;
     }
 }

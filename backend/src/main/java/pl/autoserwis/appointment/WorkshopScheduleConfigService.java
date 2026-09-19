@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.dto.*;
 import pl.autoserwis.exception.ApiErrorCode;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.LinkedHashMap;
@@ -23,13 +24,16 @@ public class WorkshopScheduleConfigService {
     private final ScheduleDayOverrideRepository overridesRepository;
     private final AppointmentRepository appointments;
     private final ScheduleLocks locks;
+    private final Clock clock;
 
     public WorkshopScheduleConfigService(WorkshopScheduleSettingsRepository settingsRepository,
-            ScheduleDayOverrideRepository overridesRepository, AppointmentRepository appointments, ScheduleLocks locks) {
+            ScheduleDayOverrideRepository overridesRepository, AppointmentRepository appointments,
+            ScheduleLocks locks, Clock workshopClock) {
         this.settingsRepository = settingsRepository;
         this.overridesRepository = overridesRepository;
         this.appointments = appointments;
         this.locks = locks;
+        this.clock = workshopClock;
     }
 
     public WorkshopScheduleSettings currentSettings() {
@@ -50,7 +54,7 @@ public class WorkshopScheduleConfigService {
 
     public WorkshopScheduleConfigResponse config() {
         WorkshopScheduleSettings settings = currentSettings();
-        LocalDate today = LocalDate.now(AppointmentSchedule.TIME_ZONE);
+        LocalDate today = LocalDate.now(clock);
         return response(settings, overrides(today, today.plusDays(settings.getBookingHorizonDays())));
     }
 
@@ -58,7 +62,7 @@ public class WorkshopScheduleConfigService {
     public WorkshopScheduleConfigResponse updateSettings(ScheduleSettingsRequest request) {
         locks.forConfiguration();
         validateHours(request.workdayStart(), request.workdayEnd());
-        LocalDate today = LocalDate.now(AppointmentSchedule.TIME_ZONE);
+        LocalDate today = LocalDate.now(clock);
         WorkshopScheduleSettings proposed = new WorkshopScheduleSettings(request.defaultDailyCapacity(),
             request.bookingHorizonDays(), request.workdayStart(), request.workdayEnd());
         // Include reservations beyond a newly shortened booking horizon.

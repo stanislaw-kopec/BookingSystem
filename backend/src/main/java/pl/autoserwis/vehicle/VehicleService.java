@@ -4,9 +4,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.appointment.AppointmentRepository;
 import pl.autoserwis.appointment.AppointmentRequest;
-import pl.autoserwis.appointment.AppointmentSchedule;
 import pl.autoserwis.appointment.AppointmentStatus;
-import pl.autoserwis.appointment.dto.RepairItemResponse;
+import pl.autoserwis.appointment.RepairHistoryMapper;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.invoice.InvoiceFile;
 import pl.autoserwis.invoice.InvoiceService;
@@ -16,8 +15,7 @@ import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
 import pl.autoserwis.vehicle.dto.VehicleRequest;
 import pl.autoserwis.vehicle.dto.VehicleResponse;
 
-import java.time.Instant;
-import java.time.OffsetDateTime;
+import java.time.Clock;
 import java.time.Year;
 import java.util.List;
 import java.util.Locale;
@@ -30,13 +28,18 @@ public class VehicleService {
     private final UserRepository users;
     private final AppointmentRepository appointments;
     private final InvoiceService invoices;
+    private final RepairHistoryMapper repairHistory;
+    private final Clock clock;
 
     public VehicleService(VehicleRepository vehicles, UserRepository users,
-            AppointmentRepository appointments, InvoiceService invoices) {
+            AppointmentRepository appointments, InvoiceService invoices,
+            RepairHistoryMapper repairHistory, Clock workshopClock) {
         this.vehicles = vehicles;
         this.users = users;
         this.appointments = appointments;
         this.invoices = invoices;
+        this.repairHistory = repairHistory;
+        this.clock = workshopClock;
     }
 
     public List<VehicleResponse> getCurrentClientVehicles(Long userId) {
@@ -58,7 +61,7 @@ public class VehicleService {
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
         return appointments.findByVehicle_IdAndClient_IdAndStatusOrderByVehiclePickedUpAtDesc(
                 vehicleId, owner.getId(), AppointmentStatus.COMPLETED).stream()
-            .map(this::repairHistoryEntry)
+            .map(repairHistory::toResponse)
             .toList();
     }
 
@@ -127,7 +130,7 @@ public class VehicleService {
     }
 
     private void validateProductionYear(int productionYear) {
-        int latestAllowedYear = Year.now().getValue() + 1;
+        int latestAllowedYear = Year.now(clock).getValue() + 1;
         if (productionYear > latestAllowedYear) {
             throw new VehicleValidationException(Map.of("productionYear",
                 "Production year cannot be later than " + latestAllowedYear + "."));
@@ -147,25 +150,6 @@ public class VehicleService {
         return new VehicleResponse(vehicle.getId(), vehicle.getMake(), vehicle.getModel(),
             vehicle.getProductionYear(), vehicle.getRegistrationNumber(),
             vehicle.getVin() == null ? "" : vehicle.getVin());
-    }
-
-    private RepairHistoryEntryResponse repairHistoryEntry(AppointmentRequest appointment) {
-        return new RepairHistoryEntryResponse(appointment.getId(), appointment.getReference(),
-            offset(appointment.getCurrentStartAt()), appointment.getRepairDescription(),
-            appointment.getTotalGrossAmount(), repairItems(appointment), offset(appointment.getRepairCompletedAt()),
-            appointment.getRepairCompletedBy().getUsername(), offset(appointment.getVehiclePickedUpAt()),
-            appointment.getVehiclePickedUpBy().getUsername());
-    }
-
-    private List<RepairItemResponse> repairItems(AppointmentRequest appointment) {
-        return appointment.getRepairItems().stream()
-            .map(item -> new RepairItemResponse(item.getId(), item.getType(), item.getName(),
-                item.getQuantity(), item.getUnitGrossAmount(), item.getTotalGrossAmount()))
-            .toList();
-    }
-
-    private OffsetDateTime offset(Instant value) {
-        return value.atZone(AppointmentSchedule.TIME_ZONE).toOffsetDateTime();
     }
 
     private record NormalizedVehicle(

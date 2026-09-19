@@ -158,8 +158,9 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 
 - Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
   zgłoszenia wizyt z kalendarzem i decyzją personelu, zakończenie naprawy,
-  odbiór auta, historia napraw, prosta faktura PDF oraz lokalne dane pokazowe.
-  Kolejne etapy obejmują dalsze reguły harmonogramu, powiadomienia i pełniejszy moduł faktur.
+  odbiór auta, historia napraw, prosta faktura PDF, lokalne dane pokazowe oraz etap 7A
+  audytu backendu: wspólny zegar, mapery DTO i wydzielona walidacja pozycji naprawy.
+  Kolejny krok jakościowy to etap 7B — podział `AppointmentService` według przypadków użycia.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

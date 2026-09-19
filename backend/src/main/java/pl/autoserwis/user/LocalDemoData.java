@@ -18,6 +18,7 @@ import pl.autoserwis.vehicle.Vehicle;
 import pl.autoserwis.vehicle.VehicleRepository;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -33,15 +34,17 @@ public class LocalDemoData implements ApplicationRunner {
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
     private final AppointmentRepository appointments;
+    private final Clock clock;
 
     public LocalDemoData(UserRepository users, PasswordEncoder passwords,
             ClientProfileRepository profiles, VehicleRepository vehicles,
-            AppointmentRepository appointments) {
+            AppointmentRepository appointments, Clock workshopClock) {
         this.users = users;
         this.passwords = passwords;
         this.profiles = profiles;
         this.vehicles = vehicles;
         this.appointments = appointments;
+        this.clock = workshopClock;
     }
 
     @Override
@@ -57,7 +60,7 @@ public class LocalDemoData implements ApplicationRunner {
         Vehicle transit = vehicle(firm, "Ford", "Transit Custom", 2021, "DW5FIRM", "WF0YXXTTGYMD00001");
 
         AppUser mechanic = user("mechanic", "mechanic@local.invalid", "mechanic-local-2026", UserRole.MECHANIC);
-        Instant now = Instant.now().truncatedTo(ChronoUnit.SECONDS);
+        Instant now = Instant.now(clock).truncatedTo(ChronoUnit.SECONDS);
 
         pending(anna, civic, workingDate(1), "Podczas hamowania czuć bicie kierownicy i słychać tarcie z przodu.",
             UUID.fromString("11111111-1111-4111-8111-111111111111"), now.minus(5, ChronoUnit.HOURS));
@@ -183,7 +186,7 @@ public class LocalDemoData implements ApplicationRunner {
     }
 
     private LocalDate workingDate(int workingDaysOffset) {
-        LocalDate date = LocalDate.now(AppointmentSchedule.TIME_ZONE);
+        LocalDate date = LocalDate.now(clock);
         int remaining = Math.abs(workingDaysOffset);
         int direction = workingDaysOffset < 0 ? -1 : 1;
         while (remaining > 0) {

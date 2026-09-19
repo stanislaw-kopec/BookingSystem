@@ -123,6 +123,7 @@ Gotowy przebieg z użytymi danymi i oczekiwanymi rezultatami zawiera
 
 - [Cała aplikacja w Dockerze](#cała-aplikacja-w-dockerze)
 - [Wariant wdrożeniowy](deployment-guide.md)
+- [Audyt jakości kodu backendu](backend-code-audit.md)
 - [Praca nad kodem](#praca-nad-kodem)
 - [Spring i React uruchamiane lokalnie](#spring-i-react-uruchamiane-lokalnie)
 - [Główne moduły aplikacji](#katalog-usług)
@@ -599,6 +600,8 @@ zmiennych środowiskowych.
 
 ## Nauka i sprawdzanie zmian
 
+[Audyt jakości kodu backendu](backend-code-audit.md) opisuje ocenę zasad SOLID i DRY,
+docelowy podział pakietu `appointment` oraz bezpieczną kolejność refaktoryzacji.
 [Przewodnik krok po kroku po katalogu usług](service-catalog-walkthrough.md)
 wyjaśnia strukturę folderów, komponenty, props, stan oraz drogę danych do Springa.
 [Przewodnik po rejestracji klienta](client-registration-walkthrough.md)

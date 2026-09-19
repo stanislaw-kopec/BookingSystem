@@ -1,14 +1,16 @@
-package pl.autoserwis.invoice;
+package pl.autoserwis.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import pl.autoserwis.appointment.AppointmentSchedule;
+
 import java.time.Clock;
 
 @Configuration
-public class InvoiceConfiguration {
+public class TimeConfiguration {
+
     @Bean
-    Clock invoiceClock() {
+    Clock workshopClock() {
         return Clock.system(AppointmentSchedule.TIME_ZONE);
     }
 }

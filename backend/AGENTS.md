@@ -15,6 +15,14 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Zachowaj prefiks `/api`, działanie `/api/health`, publiczne endpointy Swaggera `/swagger-ui.html`, `/swagger-ui/**`, `/v3/api-docs/**` i istniejącą konfigurację Compose.
   Lokalny Spring zarządza tylko usługą `postgres`; w kontenerze integracja Springa
   z Compose jest wyłączona i używane są ustawienia połączenia ze zmiennych środowiska.
+- Czas aplikacji pobieraj przez bean `workshopClock` z `TimeConfiguration`, ustawiony
+  na strefę `Europe/Warsaw`. Nie dodawaj bezpośrednich wywołań `Instant.now()`,
+  `LocalDate.now()`, `Year.now()` ani `ZonedDateTime.now()` w kodzie produkcyjnym;
+  wstrzyknięty `Clock` pozwala testom kontrolować bieżący czas.
+- Mapowanie zgłoszeń, historii napraw i pozycji do DTO znajduje się odpowiednio w
+  `AppointmentResponseMapper`, `RepairHistoryMapper` i `RepairItemResponseMapper`.
+  Normalizację wejściowych pozycji naprawy wykonuje `RepairItemValidator`. Nie
+  duplikuj tych operacji w serwisach pojazdów, wizyt ani nowych kontrolerach.
 
 ## Model domeny i przepływy
 

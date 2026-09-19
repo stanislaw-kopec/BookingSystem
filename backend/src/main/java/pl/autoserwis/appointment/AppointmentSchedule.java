@@ -29,14 +29,17 @@ public class AppointmentSchedule {
 
     private final AppointmentRepository appointments;
     private final WorkshopScheduleConfigService scheduleConfig;
+    private final Clock clock;
 
-    public AppointmentSchedule(AppointmentRepository appointments, WorkshopScheduleConfigService scheduleConfig) {
+    public AppointmentSchedule(AppointmentRepository appointments,
+            WorkshopScheduleConfigService scheduleConfig, Clock workshopClock) {
         this.appointments = appointments;
         this.scheduleConfig = scheduleConfig;
+        this.clock = workshopClock;
     }
 
     public AppointmentAvailabilityResponse availability() {
-        ZonedDateTime now = ZonedDateTime.now(TIME_ZONE);
+        ZonedDateTime now = ZonedDateTime.now(clock);
         WorkshopScheduleSettings settings = scheduleConfig.currentSettings();
         LocalDate firstDate = now.toLocalDate();
         LocalDate lastDate = firstDate.plusDays(settings.getBookingHorizonDays());
@@ -59,7 +62,7 @@ public class AppointmentSchedule {
     }
 
     public Instant validateAndNormalize(LocalDate visitDate) {
-        ZonedDateTime now = ZonedDateTime.now(TIME_ZONE);
+        ZonedDateTime now = ZonedDateTime.now(clock);
         LocalDate today = now.toLocalDate();
 
         if (!visitDate.isAfter(today)) {

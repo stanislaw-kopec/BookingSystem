@@ -63,7 +63,7 @@ class InvoiceIntegrationTest {
     @Autowired EntityManager entityManager;
     @Autowired PlatformTransactionManager transactionManager;
     @Autowired MockMvc mvc;
-    @MockitoBean(name = "invoiceClock") Clock clock;
+    @MockitoBean(name = "workshopClock") Clock clock;
 
     @BeforeEach
     void setDate() {
