@@ -10,11 +10,11 @@ kontrolery nie zwracają encji JPA, operacje zapisu mają granice transakcji, ba
 wersjonowana przez Flyway, a najważniejsze reguły dostępu i współbieżności pokrywają
 testy integracyjne z PostgreSQL.
 
-Największym problemem utrzymaniowym jest pakiet `appointment`. Zawiera 42 pliki:
+W momencie audytu największym problemem utrzymaniowym był pakiet `appointment`. Zawierał 42 pliki:
 23 w pakiecie głównym i 19 w jednym wspólnym `dto`. Łączy rezerwowanie terminu,
 obsługę statusów, konfigurację grafiku, widok grafiku personelu, wykonanie naprawy,
-historię napraw i pobieranie faktur. `AppointmentService` ma 442 linie, siedem
-zależności konstruktora i szesnaście publicznych operacji. Jego podział jest
+historię napraw i pobieranie faktur. `AppointmentService` miał 377 linii, jedenaście
+zależności konstruktora i szesnaście publicznych operacji. Jego podział był
 uzasadniony zasadą pojedynczej odpowiedzialności i ułatwi znalezienie kodu.
 
 Nie zalecam przepisywania backendu ani wprowadzania mikroserwisów. Najbezpieczniejsza
@@ -251,12 +251,19 @@ pozycji naprawy. Dodano 6 testów jednostkowych; pełny wynik backendu to 135/13
 
 ### Etap 7B — podział `AppointmentService`
 
-- [ ] Wydzielić odczyty i paginację do `AppointmentQueryService`.
-- [ ] Wydzielić tworzenie zgłoszeń do `AppointmentBookingService`.
-- [ ] Wydzielić decyzje i propozycje terminów do `StaffAppointmentService`.
-- [ ] Wydzielić zakończenie naprawy i odbiór do `RepairWorkflowService`.
-- [ ] Umieścić reguły przejść statusów w modelu domenowym.
-- [ ] Zachować transakcje, kolejność blokad i obecne endpointy.
+- [x] Wydzielić odczyty i paginację do `AppointmentQueryService`.
+- [x] Wydzielić tworzenie zgłoszeń do `AppointmentBookingService`.
+- [x] Wydzielić decyzje i propozycje terminów do `StaffAppointmentService`.
+- [x] Wydzielić zakończenie naprawy i odbiór do `RepairWorkflowService`.
+- [x] Umieścić reguły przejść statusów w modelu domenowym.
+- [x] Zachować transakcje, kolejność blokad i obecne endpointy.
+
+Status: zakończony 20.09.2026. Usunięty `AppointmentService` zastąpiło pięć
+serwisów przypadków użycia: rezerwacje, zapytania, operacje klienta, decyzje
+personelu i obsługa napraw. Kontrolery zachowały dotychczasowe adresy oraz DTO.
+Encja `AppointmentRequest` odrzuca niedozwolone przejścia statusów także wtedy,
+gdy zostanie użyta poza aktualnym kontrolerem. Dodano 5 testów jednostkowych
+cyklu życia zgłoszenia; pełny wynik backendu to 140/140.
 
 ### Etap 7C — uporządkowanie pakietów i testów
 

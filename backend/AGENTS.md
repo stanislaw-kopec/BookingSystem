@@ -23,6 +23,13 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `AppointmentResponseMapper`, `RepairHistoryMapper` i `RepairItemResponseMapper`.
   Normalizację wejściowych pozycji naprawy wykonuje `RepairItemValidator`. Nie
   duplikuj tych operacji w serwisach pojazdów, wizyt ani nowych kontrolerach.
+- Przypadki użycia wizyt są rozdzielone między `AppointmentBookingService`,
+  `AppointmentQueryService`, `ClientAppointmentService`, `StaffAppointmentService`
+  i `RepairWorkflowService`. Nie twórz ponownie jednego serwisu pośredniczącego we
+  wszystkich operacjach.
+- `AppointmentRequest` chroni dozwolone przejścia statusów. Serwisy aplikacyjne
+  odpowiadają za transakcje, blokady, pobranie zależności oraz walidację danych
+  wejściowych, a zmianę stanu wykonują przez metody encji.
 
 ## Model domeny i przepływy
 

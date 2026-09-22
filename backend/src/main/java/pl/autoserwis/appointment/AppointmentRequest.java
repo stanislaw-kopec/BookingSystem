@@ -112,34 +112,58 @@ public class AppointmentRequest {
         this.updatedAt = createdAt;
     }
     public void accept(AppUser staff, Instant actionAt) {
+        requireStatus(AppointmentStatus.PENDING,
+            "Only a pending appointment request can be accepted.");
         status = AppointmentStatus.CONFIRMED;
         recordStaffAction(staff, actionAt, null);
     }
     public void reject(AppUser staff, String message, Instant actionAt) {
+        requireStatusIn("Only a pending request or a day proposal can be rejected.",
+            AppointmentStatus.PENDING, AppointmentStatus.TIME_PROPOSED);
         status = AppointmentStatus.REJECTED;
         recordStaffAction(staff, actionAt, message);
     }
+    public void requireCanProposeTime() {
+        requireStatusIn("A new day can be proposed only for a pending request.",
+            AppointmentStatus.PENDING, AppointmentStatus.TIME_PROPOSED);
+    }
     public void proposeTime(AppUser staff, Instant proposedStartAt, String message, Instant actionAt) {
+        requireCanProposeTime();
         currentStartAt = proposedStartAt;
         status = AppointmentStatus.TIME_PROPOSED;
         clientConfirmedAt = null;
         recordStaffAction(staff, actionAt, message);
     }
     public void confirmProposedTime(Instant actionAt) {
+        requireStatus(AppointmentStatus.TIME_PROPOSED,
+            "This request is not waiting for a proposed day confirmation.");
         status = AppointmentStatus.CONFIRMED;
         clientConfirmedAt = actionAt;
         updatedAt = actionAt;
     }
     public void cancel(Instant actionAt) {
+        requireStatusIn("Only an active appointment can be cancelled.",
+            AppointmentStatus.PENDING, AppointmentStatus.TIME_PROPOSED, AppointmentStatus.CONFIRMED);
         status = AppointmentStatus.CANCELLED;
         updatedAt = actionAt;
     }
     public void confirmGuestProposedTime(AppUser staff, Instant actionAt) {
+        if (requesterType != AppointmentRequesterType.GUEST) {
+            throw new AppointmentConflictException(
+                "A registered client confirms the proposed day personally.");
+        }
+        requireStatus(AppointmentStatus.TIME_PROPOSED,
+            "This request is not waiting for a proposed day confirmation.");
         status = AppointmentStatus.CONFIRMED;
         recordStaffAction(staff, actionAt, staffMessage);
     }
+    public void requireCanCompleteRepair() {
+        requireStatus(AppointmentStatus.CONFIRMED,
+            "Repair can be completed only for a confirmed appointment.");
+    }
     public void completeRepair(AppUser staff, String repairDescription,
             List<RepairItemDraft> items, Instant actionAt) {
+        requireCanCompleteRepair();
         BigDecimal validatedTotal = RepairAmounts.validatedTotal(items);
         status = AppointmentStatus.READY_FOR_PICKUP;
         this.repairDescription = repairDescription;
@@ -154,6 +178,8 @@ public class AppointmentRequest {
         updatedAt = actionAt;
     }
     public void markPickedUp(AppUser staff, Instant actionAt) {
+        requireStatus(AppointmentStatus.READY_FOR_PICKUP,
+            "Vehicle pickup can be confirmed only for a vehicle ready for pickup.");
         status = AppointmentStatus.COMPLETED;
         vehiclePickedUpAt = actionAt;
         vehiclePickedUpBy = staff;
@@ -164,5 +190,18 @@ public class AppointmentRequest {
         staffActionAt = actionAt;
         staffMessage = message;
         updatedAt = actionAt;
+    }
+    private void requireStatus(AppointmentStatus expected, String message) {
+        if (status != expected) {
+            throw new AppointmentConflictException(message);
+        }
+    }
+    private void requireStatusIn(String message, AppointmentStatus... allowed) {
+        for (AppointmentStatus candidate : allowed) {
+            if (status == candidate) {
+                return;
+            }
+        }
+        throw new AppointmentConflictException(message);
     }
 }

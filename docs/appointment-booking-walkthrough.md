@@ -33,7 +33,7 @@ chroni danych przed ręcznie przygotowanym żądaniem HTTP.
 ## 2. Klient z kontem i gość
 
 Zalogowany klient wysyła `vehicleId`, `visitDate` i opis. Nie wysyła `clientId`, danych
-właściciela ani statusu. [AppointmentService.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentService.java)
+właściciela ani statusu. [AppointmentBookingService.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentBookingService.java)
 pobiera użytkownika z sesji, sprawdza własność pojazdu i wymaga uzupełnionego profilu.
 
 Gość podaje imię, nazwisko, co najmniej jeden sposób kontaktu oraz dane pojazdu.

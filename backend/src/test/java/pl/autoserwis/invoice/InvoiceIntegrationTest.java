@@ -55,7 +55,7 @@ class InvoiceIntegrationTest {
     @Autowired InvoiceService invoices;
     @Autowired InvoiceDocumentRepository documents;
     @MockitoSpyBean InvoicePdfGenerator generator;
-    @Autowired AppointmentService service;
+    @Autowired RepairWorkflowService service;
     @Autowired AppointmentRepository appointments;
     @Autowired UserRepository users;
     @Autowired VehicleRepository vehicles;

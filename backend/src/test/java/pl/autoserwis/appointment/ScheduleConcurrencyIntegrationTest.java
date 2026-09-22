@@ -27,7 +27,8 @@ import static org.assertj.core.api.Assertions.*;
 @Import(PostgresTestConfiguration.class)
 @ActiveProfiles("test")
 class ScheduleConcurrencyIntegrationTest {
-    @Autowired AppointmentService booking;
+    @Autowired AppointmentBookingService booking;
+    @Autowired StaffAppointmentService staffAppointments;
     @Autowired AppointmentRepository appointments;
     @Autowired WorkshopScheduleConfigService config;
     @Autowired WorkshopScheduleSettingsRepository settings;
@@ -105,7 +106,8 @@ class ScheduleConcurrencyIntegrationTest {
         LocalDate target = original.plusDays(1);
         staffId = users.save(new AppUser("schedule-race-staff", "schedule-race@example.test", "unused", UserRole.MECHANIC)).getId();
         Long appointmentId = booking.createForGuest(request(original)).id();
-        Runnable propose = () -> booking.proposeTime(staffId, appointmentId, new ProposeAppointmentTimeRequest(target, "New day"));
+        Runnable propose = () -> staffAppointments.proposeTime(staffId, appointmentId,
+            new ProposeAppointmentTimeRequest(target, "New day"));
         Runnable close = () -> config.saveOverride(new ScheduleDayOverrideRequest(target, 0, true, "Closed"));
         RuntimeException failure = proposalFirst ? runOverlapping(propose, close) : runOverlapping(close, propose);
         assertThat(failure).isInstanceOf(proposalFirst ? AppointmentConflictException.class : AppointmentValidationException.class);

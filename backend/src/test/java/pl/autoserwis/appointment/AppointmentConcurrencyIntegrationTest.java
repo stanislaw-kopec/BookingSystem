@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Import(PostgresTestConfiguration.class)
 @ActiveProfiles("test")
 class AppointmentConcurrencyIntegrationTest {
-    @Autowired AppointmentService appointmentService;
+    @Autowired AppointmentBookingService appointmentService;
     @Autowired AppointmentRepository appointments;
 
     @BeforeEach
