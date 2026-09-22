@@ -1,203 +1,259 @@
 # Mietek Customs — Car Workshop Management System
 
 <p align="center">
-  <img src="frontend/src/assets/branding/mietek-customs-logo.png" alt="Mietek Customs workshop logo" width="240">
+  <img src="frontend/src/assets/branding/mietek-customs-logo.png" alt="Mietek Customs logo" width="220">
 </p>
 
-A full-stack portfolio application for managing a car workshop. Customers can manage
-their vehicles and request appointments, mechanics handle repairs from acceptance to
-pickup, and administrators configure workshop availability and user accounts.
+Mietek Customs is a full-stack application that supports the complete service process
+of a car workshop: from an appointment request, through workshop approval and repair,
+to vehicle pickup, repair history, and a PDF invoice.
 
-The project demonstrates practical use of Spring Boot, a relational database, session
-security, transactional concurrency control, integration testing, and React with
-TypeScript. The application interface is in Polish, while source code and API messages
-use English naming.
+The project was built as a portfolio application focused on backend development in Java.
+It demonstrates business-rule modelling, authorization, transactional consistency,
+concurrent booking protection, database migrations, integration tests, and a React client
+written in TypeScript.
 
-**Quick navigation:** [Features](#features) · [Application flow](#application-flow) ·
-[Technology stack](#technology-stack) · [Architecture](#architecture) ·
-[Getting started](#getting-started) · [Demo accounts](#demo-accounts) ·
-[Deployment](#production-deployment) · [Decisions and limitations](#decisions-and-limitations) ·
-[Documentation](#documentation)
+> The application interface is in Polish because the system represents a Polish car
+> workshop. Source code, API contracts, database objects, and technical identifiers use
+> English naming.
 
-## Features
+## What the application does
 
-| Role | Capabilities |
+The system supports four ways of using the workshop:
+
+| User | Available operations |
 | --- | --- |
-| Customer | Personal or company profile, owned vehicles, appointment requests, repair history, and PDF invoices |
-| Guest | Appointment request without creating an account |
-| Mechanic | Weekly schedule, request handling, labor and parts, repair completion, and vehicle pickup |
-| Administrator | Mechanic capabilities, schedule configuration, and customer/staff account management |
+| Guest | Browse workshop services and submit an appointment request without creating an account |
+| Customer | Maintain a profile, manage owned vehicles, request appointments, track their status, browse repair history, and download invoices |
+| Mechanic | Review incoming requests, manage the weekly schedule, record labor and parts, complete repairs, and confirm vehicle pickup |
+| Administrator | Use mechanic features, configure workshop capacity and opening days, and manage customer, mechanic, and administrator accounts |
 
-The application also provides a public workshop service catalog managed by mechanics
-and administrators.
+The public service catalog is divided into categories such as mechanics, electrical
+services, and tire services. Mechanics and administrators can manage categories and
+individual services.
 
 ## Application flow
 
-Example scenario: a customer reports a braking problem, the workshop accepts the car,
-performs the repair, and records the pickup. The completed repair appears in the vehicle
-history with a downloadable PDF invoice. The screenshots use records prepared by the
-local demo-data profile.
+The screenshots below show one complete business scenario using the records created by
+the local demo-data profile.
 
-**Request → confirmation → repair → pickup and invoice**
+### 1. The customer requests an appointment
 
-### 1. Customer requests an appointment
+A logged-in customer selects one of their vehicles, chooses an available drop-off day,
+and describes the problem. A guest can submit the same type of request by providing
+vehicle and contact details without creating an account.
 
-The customer selects an owned vehicle, an available drop-off day, and describes the
-problem. The request receives the `PENDING` status. The backend validates availability
-again inside the write transaction to prevent the daily capacity from being exceeded.
+The new request receives the `PENDING` status. Availability shown in the calendar is
+informational; the backend verifies capacity again while saving the request.
 
 ![Customer appointment request](docs/screenshots/booking-request.png)
 
-### 2. Workshop reviews the requested date
+### 2. The workshop reviews the request
 
-The mechanic sees active requests on the weekly schedule. Staff can confirm or reject a
-request, or propose another available day. A logged-in customer accepts the proposed day
-from the “My appointments” page.
+Mechanics see active requests in a weekly schedule. Each day displays its configured
+capacity and the appointments that currently occupy it.
+
+Staff can:
+
+- confirm the requested day,
+- reject the request,
+- propose another available day.
+
+When a new day is proposed, a logged-in customer confirms it from their appointment
+panel. Guest arrangements are confirmed by staff after contacting the guest outside the
+application.
 
 ![Mechanic weekly schedule](docs/screenshots/03-staff-schedule.png)
 
-### 3. Mechanic records the completed repair
+### 3. The mechanic completes the repair
 
-The mechanic enters a work summary and separate labor and part items. The backend
-calculates the final gross amount and moves the request to `READY_FOR_PICKUP`. Payment is
-handled at the workshop outside the application.
+After repairing a confirmed vehicle, the mechanic records a summary of the work and adds
+separate repair items. Every item is classified as labor or a part and contains quantity,
+unit, VAT rate, and unit net price.
 
-![Repair completion form with labor and parts](docs/screenshots/repair-completion.png)
+The backend calculates line totals and the final net, VAT, and gross amounts. Completing
+the repair changes the status to `READY_FOR_PICKUP`.
 
-### 4. Customer picks up the vehicle and downloads the invoice
+![Repair completion form](docs/screenshots/repair-completion.png)
 
-Staff marks the vehicle as picked up, changing the status to `COMPLETED`. The repair then
-appears in the vehicle history. The invoice snapshot and generated PDF are persisted, so
-later profile, logo, or pricing changes do not modify an issued document.
+### 4. The vehicle is picked up
 
-![PDF invoice for a completed repair](docs/screenshots/06-invoice-preview.png)
+Staff marks the vehicle as collected after the customer arrives at the workshop. The
+appointment changes to `COMPLETED` and becomes part of the vehicle's repair history.
+Payment takes place at the workshop and is outside the application.
 
-## Technology stack
+At pickup, the system persists an invoice snapshot containing:
 
-- **Backend:** Java 25, Spring Boot 4.1.1, Spring MVC, Spring Data JPA, Spring Security
-- **Database:** PostgreSQL 17, Hibernate, Flyway
-- **Frontend:** React 19.2.8, TypeScript 6.0.2, Vite 8.2.2, React Router 7.18.3
-- **Testing:** JUnit/Jupiter, MockMvc, AssertJ, Testcontainers, Vitest, React Testing Library
-- **Tooling:** Maven, Docker Compose, GitHub Actions, springdoc-openapi 3.1.1, OpenPDF 2.4.0
+- workshop and customer data,
+- vehicle details,
+- labor and part items,
+- net, VAT, and gross totals,
+- issue and sale dates,
+- the generated PDF document.
 
-## Architecture
+Persisting the snapshot means that later edits to a customer profile, vehicle, logo, or
+prices cannot change an already issued document.
+
+![Generated PDF invoice](docs/screenshots/06-invoice-preview.png)
+
+## Appointment lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING: request submitted
+    PENDING --> CONFIRMED: workshop confirms
+    PENDING --> TIME_PROPOSED: workshop proposes another day
+    TIME_PROPOSED --> CONFIRMED: customer or staff confirms
+    PENDING --> REJECTED: workshop rejects
+    PENDING --> CANCELLED: customer cancels
+    TIME_PROPOSED --> CANCELLED: customer cancels
+    CONFIRMED --> CANCELLED: customer cancels
+    CONFIRMED --> READY_FOR_PICKUP: repair completed
+    READY_FOR_PICKUP --> COMPLETED: vehicle collected
+```
+
+Status changes are protected by business rules in the backend. For example, a repair can
+only be completed from `CONFIRMED`, and only a `READY_FOR_PICKUP` appointment can be
+marked as collected.
+
+## Technical architecture
 
 ```mermaid
 flowchart LR
-    U[Browser] --> R[React + TypeScript]
-    R -->|REST /api, session and CSRF| C[Spring MVC]
-    C --> S[Application services and business rules]
-    S --> J[Spring Data JPA]
-    J --> P[(PostgreSQL)]
-    S --> F[PDF invoice generator]
-    M[Flyway migrations] --> P
+    B[Browser] --> UI[React + TypeScript SPA]
+    UI -->|REST /api<br/>session cookie + CSRF token| API[Spring MVC controllers]
+    API --> APP[Application services]
+    APP --> DOMAIN[Domain rules]
+    APP --> REPO[Spring Data JPA repositories]
+    REPO --> DB[(PostgreSQL)]
+    APP --> PDF[Invoice PDF generator]
+    FLYWAY[Flyway migrations] --> DB
 ```
 
-The backend is a modular monolith organized by business capability. Spring Security uses
-server-side sessions with HttpOnly cookies, while state-changing requests require CSRF
-protection.
+The project is a modular monolith. Backend packages are grouped by business capability,
+including accounts, appointments, vehicles, workshop schedule, service catalog, and
+invoices. This keeps related controllers, use cases, persistence code, and domain rules
+close together without introducing the deployment overhead of microservices.
 
-## Key technical highlights
+The React application consumes the REST API and uses routes for public, customer, staff,
+and administration views. In local development Vite proxies API requests to Spring Boot.
+The production Compose variant serves the built frontend through Nginx and exposes the
+application through Caddy.
 
-- Profile, vehicle, appointment, and document ownership is derived from the authenticated
-  account ID rather than identifiers supplied by the browser.
-- `CLIENT`, `MECHANIC`, and `ADMIN` permissions are enforced by the backend.
-- Transactional PostgreSQL locks protect appointment capacity against concurrent bookings
-  and schedule-configuration changes.
-- Appointment and account lists provide backend pagination, filtering, and sorting.
-- Flyway versions the database schema; the `local` profile creates demo data idempotently.
-- Repair items use `BigDecimal`; invoice totals are calculated per line as net, VAT, and gross.
-- Issued invoice data and the generated PDF are persisted as an immutable snapshot.
-- The API exposes a consistent error format with stable technical error codes.
-- Integration tests run against an isolated PostgreSQL instance through Testcontainers.
+## Important backend mechanisms
 
-## Decisions and limitations
+### Authentication and authorization
 
-The project uses a modular monolith because the current scope does not justify the
-operational cost of microservices. Session-based Spring Security with CSRF matches a
-single web application and avoids introducing JWT without a concrete requirement. The
-backend remains the source of truth for authorization, schedule capacity, repair totals,
-and persisted invoice data.
+- Spring Security uses server-side sessions and BCrypt password hashes.
+- State-changing requests require CSRF protection.
+- The backend enforces `CLIENT`, `MECHANIC`, and `ADMIN` permissions.
+- Ownership of profiles, vehicles, appointments, and invoices comes from the authenticated
+  account ID instead of an ID supplied by the browser.
+- Requests for another customer's resources return `404` to avoid disclosing their
+  existence.
+- Password changes and administrative resets invalidate older sessions according to the
+  account security rules.
 
-The repository contains a production-oriented deployment variant, but no public instance
-or domain is maintained. The application does not include online payments, accounting
-corrections, e-mail/SMS notifications, automatic password recovery, or assignment of jobs
-to individual mechanics. The public booking form does not yet have rate limiting. Invoice
-documents and workshop address data are demonstrational and are not presented as a
-complete legally compliant accounting system.
+### Booking consistency
 
-## Roadmap
+The workshop has a configurable default daily capacity, booking horizon, working hours,
+and per-day exceptions. An administrator can close a selected day or assign a custom
+capacity.
 
-The core portfolio scope is complete. Possible next steps include rate limiting for public
-forms, notification delivery, request tracing and audit logging, and more advanced workshop
-resource planning. Full accounting and online payments would remain separate integrations.
+The backend does not trust calendar data previously loaded by the browser. It checks the
+selected day again inside the write transaction. PostgreSQL locking protects daily
+capacity when multiple customers submit requests at the same time. Moving an appointment
+releases the old day and reserves the new one atomically.
 
-## Getting started
+### Data snapshots
+
+Customer contact details and vehicle information are copied into an appointment when it
+is submitted. Later profile or vehicle edits therefore do not change the information
+that the workshop originally received.
+
+Invoice documents follow the same principle. The final invoice data and PDF are stored as
+an immutable snapshot rather than generated from the customer's current profile on every
+download.
+
+### API design
+
+- REST endpoints use request and response DTOs instead of exposing JPA entities.
+- Bean Validation handles input validation.
+- API errors have a consistent response structure and stable technical error codes.
+- Customer appointments, staff appointments, and administrative account lists support
+  backend pagination, filtering, and sorting.
+- Swagger UI documents the API in the local environment.
+
+## Technology stack
+
+| Area | Technologies |
+| --- | --- |
+| Backend | Java 25, Spring Boot 4.1.1, Spring MVC, Spring Data JPA, Spring Security |
+| Database | PostgreSQL 17, Hibernate, Flyway |
+| Frontend | React 19.2.8, TypeScript 6.0.2, Vite 8.2.2, React Router 7.18.3 |
+| PDF | OpenPDF 2.4.0 |
+| API documentation | springdoc-openapi 3.1.1 |
+| Backend testing | JUnit/Jupiter, MockMvc, AssertJ, Testcontainers |
+| Frontend testing | Vitest, React Testing Library |
+| Tooling | Maven, Docker Compose, GitHub Actions |
+
+## Running the project
 
 Requirements:
 
 - Docker Desktop using Linux containers
 - Docker Compose 2.20.3 or newer
 
-From the repository root, run:
+Start the complete application from the repository root:
 
 ```powershell
 docker compose up --build -d --wait
 ```
 
-| Component | URL |
+| Component | Address |
 | --- | --- |
-| Application | http://localhost:5173 |
+| Web application | http://localhost:5173 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| Backend health check | http://localhost:8080/api/health |
+| Backend health endpoint | http://localhost:8080/api/health |
 
-Stop the application while preserving the database volume:
+Stop the containers while preserving the PostgreSQL volume:
 
 ```powershell
 docker compose down
 ```
 
-## Production deployment
+## Local demo accounts
 
-`compose.production.yaml` builds a static React frontend served by Nginx. Caddy acts as
-the public reverse proxy and automatically configures HTTPS for a valid domain. The
-`production` Spring profile does not seed demo data, disables Swagger, enables secure
-session-cookie defaults, and creates the first administrator from environment variables.
+The default Docker Compose configuration runs Spring Boot with the `local` profile. It
+creates presentation data idempotently and provides the following accounts:
 
-Domain configuration, secrets, and the first deployment are described in the
-[deployment guide](docs/deployment-guide.md). `.env.production.example` is only a
-template; the real `.env.production` file is ignored by Git.
-
-## Demo accounts
-
-The `local` Spring profile used by Docker Compose provides these accounts:
-
-| Username | Password | Role |
+| Username | Password | Role and sample data |
 | --- | --- | --- |
-| `anna.demo` | `client-local-2026` | Customer with vehicles, appointments, and an invoice |
-| `firma.demo` | `client-local-2026` | Company customer with a company invoice |
+| `anna.demo` | `client-local-2026` | Customer with vehicles, appointments, repair history, and an invoice |
+| `firma.demo` | `client-local-2026` | Company customer with company billing data |
 | `mechanic` | `mechanic-local-2026` | Mechanic |
 | `admin` | `admin-local-2026` | Administrator |
 
 These credentials are intended only for local demonstration.
 
-## Verification
+## Testing and continuous integration
 
-GitHub Actions runs the following checks for every push and pull request to `main`:
+The automated test suite covers business rules, resource ownership, security boundaries,
+appointment capacity, concurrent booking attempts, schedule changes, repair totals, and
+invoice persistence.
 
-- backend tests with PostgreSQL Testcontainers,
-- frontend behavior tests, linting, and a production build,
-- validation of the local and production Docker Compose configurations.
+GitHub Actions runs the following checks for pushes and pull requests to `main`:
 
-The latest documented local verification includes **146 backend tests** and **22 frontend
-tests**, all passing. Failed CI jobs upload backend or frontend test reports as workflow
-artifacts. The full customer → mechanic → invoice scenario is described in the
-[portfolio verification report](docs/portfolio-verification.md).
+- backend tests against PostgreSQL provided by Testcontainers,
+- frontend tests and linting,
+- frontend production build,
+- validation of local and production Docker Compose files.
 
-## Documentation
+The latest verified project state contains **146 backend tests** and **22 frontend tests**.
 
-Extended setup instructions, module descriptions, API endpoint tables, audit notes, and
-learning materials are available in the [detailed project documentation](docs/README.md)
-(written in Polish).
+## Current scope
 
-Swagger UI is available after startup at http://localhost:8080/swagger-ui.html.
+The completed portfolio scope covers the workshop process from appointment request to a
+persisted invoice. Online payments, full accounting corrections, e-mail/SMS notifications,
+automatic password recovery, rate limiting for the guest form, and assigning work to
+individual mechanics are outside the current version.
