@@ -1,0 +1,39 @@
+package pl.autoserwis.appointment.api.dto;
+import pl.autoserwis.appointment.domain.AppointmentRequesterType;
+import pl.autoserwis.appointment.domain.AppointmentStatus;
+import pl.autoserwis.appointment.repair.dto.RepairItemResponse;
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.UUID;
+public record AppointmentResponse(
+    Long id,
+    UUID reference,
+    AppointmentRequesterType requesterType,
+    AppointmentStatus status,
+    Long vehicleId,
+    String vehicleMake,
+    String vehicleModel,
+    int vehicleProductionYear,
+    String vehicleRegistrationNumber,
+    String vehicleVin,
+    String firstName,
+    String lastName,
+    String phoneNumber,
+    String contactEmail,
+    OffsetDateTime requestedStartAt,
+    OffsetDateTime currentStartAt,
+    String problemDescription,
+    String staffMessage,
+    OffsetDateTime createdAt,
+    OffsetDateTime staffActionAt,
+    String staffActionBy,
+    OffsetDateTime clientConfirmedAt,
+    String repairDescription,
+    BigDecimal totalGrossAmount,
+    List<RepairItemResponse> repairItems,
+    OffsetDateTime repairCompletedAt,
+    String repairCompletedBy,
+    OffsetDateTime vehiclePickedUpAt,
+    String vehiclePickedUpBy
+) {}

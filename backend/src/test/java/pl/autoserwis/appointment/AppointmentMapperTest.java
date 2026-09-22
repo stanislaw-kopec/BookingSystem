@@ -1,10 +1,18 @@
 package pl.autoserwis.appointment;
 
 import org.junit.jupiter.api.Test;
-import pl.autoserwis.appointment.dto.AppointmentResponse;
+import pl.autoserwis.appointment.api.dto.AppointmentResponse;
+import pl.autoserwis.appointment.application.AppointmentResponseMapper;
+import pl.autoserwis.appointment.domain.AppointmentRequest;
+import pl.autoserwis.appointment.domain.AppointmentRequesterType;
+import pl.autoserwis.appointment.domain.AppointmentStatus;
+import pl.autoserwis.appointment.domain.RepairItemDraft;
+import pl.autoserwis.appointment.domain.RepairItemType;
+import pl.autoserwis.appointment.repair.RepairHistoryMapper;
+import pl.autoserwis.appointment.repair.RepairItemResponseMapper;
+import pl.autoserwis.appointment.repair.dto.RepairHistoryEntryResponse;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRole;
-import pl.autoserwis.vehicle.dto.RepairHistoryEntryResponse;
 
 import java.math.BigDecimal;
 import java.time.Clock;

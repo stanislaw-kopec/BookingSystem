@@ -1,7 +1,11 @@
 package pl.autoserwis.appointment;
 
 import org.junit.jupiter.api.Test;
-import pl.autoserwis.appointment.dto.RepairItemRequest;
+import pl.autoserwis.appointment.domain.AppointmentValidationException;
+import pl.autoserwis.appointment.domain.RepairItemDraft;
+import pl.autoserwis.appointment.domain.RepairItemType;
+import pl.autoserwis.appointment.repair.RepairItemValidator;
+import pl.autoserwis.appointment.repair.dto.RepairItemRequest;
 
 import java.math.BigDecimal;
 import java.util.List;

@@ -1,6 +1,6 @@
 package pl.autoserwis.invoice;
 
-import pl.autoserwis.appointment.RepairItemType;
+import pl.autoserwis.appointment.domain.RepairItemType;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;

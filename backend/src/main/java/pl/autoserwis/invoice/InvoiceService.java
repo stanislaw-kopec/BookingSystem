@@ -2,7 +2,14 @@ package pl.autoserwis.invoice;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import pl.autoserwis.appointment.*;
+import pl.autoserwis.appointment.domain.AppointmentRepairItem;
+import pl.autoserwis.appointment.domain.AppointmentRequest;
+import pl.autoserwis.appointment.domain.AppointmentRequesterType;
+import pl.autoserwis.appointment.domain.AppointmentStatus;
+import pl.autoserwis.appointment.domain.RepairAmounts;
+import pl.autoserwis.appointment.domain.RepairItemType;
+import pl.autoserwis.appointment.persistence.AppointmentRepository;
+import pl.autoserwis.appointment.schedule.AppointmentSchedule;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.profile.ClientProfile;
 import pl.autoserwis.profile.ClientProfileRepository;

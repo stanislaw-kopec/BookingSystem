@@ -2,7 +2,7 @@ package pl.autoserwis.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import pl.autoserwis.appointment.AppointmentSchedule;
+import pl.autoserwis.appointment.schedule.AppointmentSchedule;
 
 import java.time.Clock;
 

@@ -8,7 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 import pl.autoserwis.PostgresTestConfiguration;
-import pl.autoserwis.appointment.dto.GuestAppointmentRequest;
+import pl.autoserwis.appointment.api.dto.GuestAppointmentRequest;
+import pl.autoserwis.appointment.application.AppointmentBookingService;
+import pl.autoserwis.appointment.domain.AppointmentConflictException;
+import pl.autoserwis.appointment.persistence.AppointmentRepository;
+import pl.autoserwis.appointment.schedule.AppointmentSchedule;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;

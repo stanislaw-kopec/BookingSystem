@@ -19,14 +19,18 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   na strefę `Europe/Warsaw`. Nie dodawaj bezpośrednich wywołań `Instant.now()`,
   `LocalDate.now()`, `Year.now()` ani `ZonedDateTime.now()` w kodzie produkcyjnym;
   wstrzyknięty `Clock` pozwala testom kontrolować bieżący czas.
+- Moduł `appointment` ma pakiety `api`, `application`, `domain`, `persistence`,
+  `repair` i `schedule`. DTO endpointów wizyt znajdują się w `api.dto`, DTO napraw
+  w `repair.dto`, a DTO grafiku w `schedule.dto`.
 - Mapowanie zgłoszeń, historii napraw i pozycji do DTO znajduje się odpowiednio w
-  `AppointmentResponseMapper`, `RepairHistoryMapper` i `RepairItemResponseMapper`.
+  `application.AppointmentResponseMapper`, `repair.RepairHistoryMapper` i
+  `repair.RepairItemResponseMapper`.
   Normalizację wejściowych pozycji naprawy wykonuje `RepairItemValidator`. Nie
   duplikuj tych operacji w serwisach pojazdów, wizyt ani nowych kontrolerach.
-- Przypadki użycia wizyt są rozdzielone między `AppointmentBookingService`,
-  `AppointmentQueryService`, `ClientAppointmentService`, `StaffAppointmentService`
-  i `RepairWorkflowService`. Nie twórz ponownie jednego serwisu pośredniczącego we
-  wszystkich operacjach.
+- Przypadki użycia wizyt są rozdzielone między klasy w `appointment.application`:
+  `AppointmentBookingService`, `AppointmentQueryService`, `ClientAppointmentService`
+  i `StaffAppointmentService`, oraz `appointment.repair.RepairWorkflowService`.
+  Nie twórz ponownie jednego serwisu pośredniczącego we wszystkich operacjach.
 - `AppointmentRequest` chroni dozwolone przejścia statusów. Serwisy aplikacyjne
   odpowiadają za transakcje, blokady, pobranie zależności oraz walidację danych
   wejściowych, a zmianę stanu wykonują przez metody encji.

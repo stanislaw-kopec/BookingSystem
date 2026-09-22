@@ -161,7 +161,8 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
   odbiór auta, historia napraw, prosta faktura PDF, lokalne dane pokazowe oraz etapy
   7A–7B audytu backendu: wspólny zegar, mapery DTO, wydzielona walidacja naprawy,
   podział obsługi wizyt według przypadków użycia i ochrona przejść statusów w encji.
-  Kolejny krok jakościowy to etap 7C — uporządkowanie pakietów i podział testów.
+  W etapie 7C uporządkowano już produkcyjne pakiety i DTO modułu `appointment`;
+  kolejnym krokiem jakościowym jest podział dużego testu integracyjnego.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

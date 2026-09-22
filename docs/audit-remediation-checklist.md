@@ -87,7 +87,7 @@ Status: w toku od 19.09.2026; etapy 7A i 7B zakończone. Szczegółowy audyt i k
 
 - [x] 7A: wspólny zegar, mapery odpowiedzi i wydzielona walidacja naprawy.
 - [x] 7B: podział `AppointmentService` według przypadków użycia i ochrona przejść statusów w domenie.
-- [ ] 7C: podział pakietów `appointment`, DTO i dużego testu integracyjnego.
+- [ ] 7C: pakiety produkcyjne i DTO uporządkowane; pozostał podział dużego testu integracyjnego.
 - [ ] Etap 8: wspólne reguły kont, danych pojazdu i wyjątków API.
 
 ## Dziennik wykonania
@@ -103,6 +103,7 @@ Status: w toku od 19.09.2026; etapy 7A i 7B zakończone. Szczegółowy audyt i k
 - 19.09.2026: zakończono etap 6. Dodano oddzielny stos wdrożeniowy: Caddy → Nginx ze statycznym SPA → Spring Boot → PostgreSQL. Testowy projekt Compose uruchomił cztery zdrowe usługi na oddzielnych sieciach i wolumenach. Strona oraz `/api/health` odpowiedziały HTTP 200, Swagger był wyłączony (404), a pierwszy administrator zalogował się z rolą ADMIN. Potwierdzono cache zasobów, brak cache HTML, nagłówki bezpieczeństwa oraz brak publicznych portów bazy i backendu. Pełne testy backendu: 129/129; frontendu: 22/22; lint i build przeszły. Oba pliki Compose przeszły walidację.
 - 19.09.2026: zakończono etap 7A audytu backendu. Jeden bean `Clock` w strefie warsztatu zastąpił bezpośrednie odczyty czasu w kodzie produkcyjnym. Wydzielono mapery odpowiedzi zgłoszenia, historii i pozycji naprawy oraz walidator pozycji naprawy; `VehicleService` i `AppointmentService` nie duplikują już mapowania historii. Dodano 6 testów jednostkowych. Pełny wynik `mvn -B -ntp test`: 135 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Endpointy i schemat bazy pozostały bez zmian.
 - 20.09.2026: zakończono etap 7B audytu backendu. Monolityczny `AppointmentService` zastąpiono usługami rezerwacji, zapytań, operacji klienta, decyzji personelu i obsługi napraw. Reguły przejść statusów przeniesiono do `AppointmentRequest`; kontrolery zachowały dotychczasowy kontrakt HTTP, a kolejność blokad i granice transakcji pozostały bez zmian. Dodano 5 testów jednostkowych maszyny stanów. Pełny wynik `mvn -B -ntp test`: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Schemat bazy i frontend pozostały bez zmian.
+- 22.09.2026: wykonano pierwszą część etapu 7C. Produkcyjny moduł `appointment` podzielono na pakiety `api`, `application`, `domain`, `persistence`, `repair` i `schedule`, a DTO przypisano do obsługiwanych obszarów. Historia napraw nie zależy już od DTO pakietu pojazdów. Czysta kompilacja produkcji i testów przeszła, a pełny wynik `mvn -B -ntp test` pozostał 140/140. Endpointy, JSON, migracje i frontend nie zmieniły się. Pozostał osobny krok podziału `AppointmentIntegrationTest`.
 
 ## Jak działa poprawka grafiku
 

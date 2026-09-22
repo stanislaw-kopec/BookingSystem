@@ -1,6 +1,10 @@
 package pl.autoserwis.appointment;
 
 import org.junit.jupiter.api.Test;
+import pl.autoserwis.appointment.persistence.AppointmentRepository;
+import pl.autoserwis.appointment.schedule.AppointmentSchedule;
+import pl.autoserwis.appointment.schedule.WorkshopScheduleConfigService;
+import pl.autoserwis.appointment.schedule.domain.WorkshopScheduleSettings;
 
 import java.time.Clock;
 import java.time.Instant;

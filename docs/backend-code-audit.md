@@ -267,12 +267,18 @@ cyklu życia zgłoszenia; pełny wynik backendu to 140/140.
 
 ### Etap 7C — uporządkowanie pakietów i testów
 
-- [ ] Przenieść klasy do `api`, `application`, `domain`, `persistence`, `repair`
+- [x] Przenieść klasy do `api`, `application`, `domain`, `persistence`, `repair`
   oraz `schedule`.
-- [ ] Podzielić DTO według obsługiwanego obszaru.
+- [x] Podzielić DTO według obsługiwanego obszaru.
 - [ ] Rozdzielić duży test integracyjny według przypadków użycia.
 - [ ] Usunąć importy z gwiazdką w zmienianych plikach.
 - [ ] Opcjonalnie dodać test ArchUnit pilnujący kierunku zależności pakietów.
+
+Status częściowy: 22.09.2026 uporządkowano kod produkcyjny. Endpointy wizyt,
+napraw i grafiku mają osobne DTO, a `RepairHistoryEntryResponse` należy teraz do
+obszaru napraw zamiast katalogu pojazdów. Nie zmieniono adresów HTTP, JSON-u ani
+schematu bazy. Pełny zestaw backendu nadal przechodzi: 140/140 testów. Podział
+testu integracyjnego i porządkowanie jego importów pozostają drugim krokiem 7C.
 
 ### Etap 8 — wspólne reguły backendu
 

@@ -33,7 +33,7 @@ chroni danych przed ręcznie przygotowanym żądaniem HTTP.
 ## 2. Klient z kontem i gość
 
 Zalogowany klient wysyła `vehicleId`, `visitDate` i opis. Nie wysyła `clientId`, danych
-właściciela ani statusu. [AppointmentBookingService.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentBookingService.java)
+właściciela ani statusu. [AppointmentBookingService.java](../backend/src/main/java/pl/autoserwis/appointment/application/AppointmentBookingService.java)
 pobiera użytkownika z sesji, sprawdza własność pojazdu i wymaga uzupełnionego profilu.
 
 Gość podaje imię, nazwisko, co najmniej jeden sposób kontaktu oraz dane pojazdu.
@@ -53,7 +53,7 @@ których warsztat podejmował decyzję.
 
 ## 4. Dostępność dni
 
-[AppointmentSchedule.java](../backend/src/main/java/pl/autoserwis/appointment/AppointmentSchedule.java)
+[AppointmentSchedule.java](../backend/src/main/java/pl/autoserwis/appointment/schedule/AppointmentSchedule.java)
 łączy ustawienia administratora i wyjątki dla konkretnych dat. Domyślnie są to:
 
 - strefa `Europe/Warsaw`,

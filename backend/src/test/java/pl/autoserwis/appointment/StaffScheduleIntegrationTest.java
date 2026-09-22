@@ -16,8 +16,16 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.PostgresTestConfiguration;
-import pl.autoserwis.appointment.dto.ScheduleDayOverrideRequest;
-import pl.autoserwis.appointment.dto.ScheduleSettingsRequest;
+import pl.autoserwis.appointment.domain.AppointmentConflictException;
+import pl.autoserwis.appointment.domain.AppointmentRequest;
+import pl.autoserwis.appointment.domain.AppointmentRequesterType;
+import pl.autoserwis.appointment.persistence.AppointmentRepository;
+import pl.autoserwis.appointment.schedule.AppointmentSchedule;
+import pl.autoserwis.appointment.schedule.StaffScheduleService;
+import pl.autoserwis.appointment.schedule.WorkshopScheduleConfigService;
+import pl.autoserwis.appointment.schedule.dto.ScheduleDayOverrideRequest;
+import pl.autoserwis.appointment.schedule.dto.ScheduleSettingsRequest;
+import pl.autoserwis.appointment.schedule.persistence.ScheduleDayOverrideRepository;
 import pl.autoserwis.exception.ApiErrorCode;
 
 import java.time.*;

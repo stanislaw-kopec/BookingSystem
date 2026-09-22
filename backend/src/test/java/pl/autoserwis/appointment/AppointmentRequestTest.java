@@ -1,6 +1,12 @@
 package pl.autoserwis.appointment;
 
 import org.junit.jupiter.api.Test;
+import pl.autoserwis.appointment.domain.AppointmentConflictException;
+import pl.autoserwis.appointment.domain.AppointmentRequest;
+import pl.autoserwis.appointment.domain.AppointmentRequesterType;
+import pl.autoserwis.appointment.domain.AppointmentStatus;
+import pl.autoserwis.appointment.domain.RepairItemDraft;
+import pl.autoserwis.appointment.domain.RepairItemType;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRole;
 

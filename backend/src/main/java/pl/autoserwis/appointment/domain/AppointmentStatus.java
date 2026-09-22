@@ -1,0 +1,10 @@
+package pl.autoserwis.appointment.domain;
+public enum AppointmentStatus {
+    PENDING,
+    TIME_PROPOSED,
+    CONFIRMED,
+    READY_FOR_PICKUP,
+    COMPLETED,
+    CANCELLED,
+    REJECTED
+}
