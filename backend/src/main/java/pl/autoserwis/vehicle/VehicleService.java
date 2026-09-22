@@ -15,11 +15,7 @@ import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.dto.VehicleRequest;
 import pl.autoserwis.vehicle.dto.VehicleResponse;
 
-import java.time.Clock;
-import java.time.Year;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,17 +25,17 @@ public class VehicleService {
     private final AppointmentRepository appointments;
     private final InvoiceService invoices;
     private final RepairHistoryMapper repairHistory;
-    private final Clock clock;
+    private final VehicleDataNormalizer vehicleData;
 
     public VehicleService(VehicleRepository vehicles, UserRepository users,
             AppointmentRepository appointments, InvoiceService invoices,
-            RepairHistoryMapper repairHistory, Clock workshopClock) {
+            RepairHistoryMapper repairHistory, VehicleDataNormalizer vehicleData) {
         this.vehicles = vehicles;
         this.users = users;
         this.appointments = appointments;
         this.invoices = invoices;
         this.repairHistory = repairHistory;
-        this.clock = workshopClock;
+        this.vehicleData = vehicleData;
     }
 
     public List<VehicleResponse> getCurrentClientVehicles(Long userId) {
@@ -79,7 +75,7 @@ public class VehicleService {
     @Transactional
     public VehicleResponse create(Long userId, VehicleRequest request) {
         AppUser owner = user(userId);
-        NormalizedVehicle normalized = normalize(request);
+        VehicleDataNormalizer.NormalizedVehicleData normalized = normalize(request);
         validateUniqueIdentifiers(owner.getId(), normalized, null);
 
         Vehicle vehicle = new Vehicle(owner, normalized.make(), normalized.model(),
@@ -92,26 +88,25 @@ public class VehicleService {
         AppUser owner = user(userId);
         Vehicle vehicle = vehicles.findByIdAndOwner_Id(vehicleId, owner.getId())
             .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found."));
-        NormalizedVehicle normalized = normalize(request);
+        VehicleDataNormalizer.NormalizedVehicleData normalized = normalize(request);
         validateUniqueIdentifiers(owner.getId(), normalized, vehicle.getId());
         vehicle.update(normalized.make(), normalized.model(), normalized.productionYear(),
             normalized.registrationNumber(), normalized.vin());
         return response(vehicle);
     }
 
-    private NormalizedVehicle normalize(VehicleRequest request) {
-        validateProductionYear(request.productionYear());
-        String registrationNumber = request.registrationNumber().replaceAll("\\s+", "")
-            .toUpperCase(Locale.ROOT);
-        if (registrationNumber.length() < 2) {
-            throw new VehicleValidationException(Map.of("registrationNumber",
-                "Registration number must have at least 2 characters."));
+    private VehicleDataNormalizer.NormalizedVehicleData normalize(VehicleRequest request) {
+        VehicleDataNormalizer.NormalizationResult result = vehicleData.normalize(
+            request.make(), request.model(), request.productionYear(),
+            request.registrationNumber(), request.vin());
+        if (!result.isValid()) {
+            throw new VehicleValidationException(result.fieldErrors());
         }
-        return new NormalizedVehicle(request.make().strip(), request.model().strip(),
-            request.productionYear(), registrationNumber, optionalVin(request.vin()));
+        return result.data();
     }
 
-    private void validateUniqueIdentifiers(Long ownerId, NormalizedVehicle vehicle, Long currentVehicleId) {
+    private void validateUniqueIdentifiers(Long ownerId,
+            VehicleDataNormalizer.NormalizedVehicleData vehicle, Long currentVehicleId) {
         boolean registrationExists = currentVehicleId == null
             ? vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCase(ownerId, vehicle.registrationNumber())
             : vehicles.existsByOwner_IdAndRegistrationNumberIgnoreCaseAndIdNot(
@@ -129,21 +124,9 @@ public class VehicleService {
         }
     }
 
-    private void validateProductionYear(int productionYear) {
-        int latestAllowedYear = Year.now(clock).getValue() + 1;
-        if (productionYear > latestAllowedYear) {
-            throw new VehicleValidationException(Map.of("productionYear",
-                "Production year cannot be later than " + latestAllowedYear + "."));
-        }
-    }
-
     private AppUser user(Long userId) {
         return users.findById(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
-    }
-
-    private String optionalVin(String value) {
-        return value == null || value.isBlank() ? null : value.strip().toUpperCase(Locale.ROOT);
     }
 
     private VehicleResponse response(Vehicle vehicle) {
@@ -152,11 +135,4 @@ public class VehicleService {
             vehicle.getVin() == null ? "" : vehicle.getVin());
     }
 
-    private record NormalizedVehicle(
-        String make,
-        String model,
-        int productionYear,
-        String registrationNumber,
-        String vin
-    ) {}
 }

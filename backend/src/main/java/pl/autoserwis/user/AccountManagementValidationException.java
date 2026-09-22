@@ -1,22 +1,14 @@
 package pl.autoserwis.user;
 
+import org.springframework.http.HttpStatus;
+import pl.autoserwis.exception.ApiException;
 import pl.autoserwis.exception.ApiErrorCode;
 
 import java.util.Map;
 
-public class AccountManagementValidationException extends RuntimeException {
-    private final Map<String, String> fieldErrors;
-
+public class AccountManagementValidationException extends ApiException {
     public AccountManagementValidationException(Map<String, String> fieldErrors) {
-        super("Account management parameters are invalid.");
-        this.fieldErrors = Map.copyOf(fieldErrors);
-    }
-
-    public ApiErrorCode getCode() {
-        return ApiErrorCode.ACCOUNT_MANAGEMENT_VALIDATION_FAILED;
-    }
-
-    public Map<String, String> getFieldErrors() {
-        return fieldErrors;
+        super(HttpStatus.BAD_REQUEST, ApiErrorCode.ACCOUNT_MANAGEMENT_VALIDATION_FAILED,
+            "Account management parameters are invalid.", fieldErrors);
     }
 }

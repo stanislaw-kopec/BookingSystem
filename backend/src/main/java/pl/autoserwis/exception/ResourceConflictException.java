@@ -1,18 +1,14 @@
 package pl.autoserwis.exception;
 
-public class ResourceConflictException extends RuntimeException {
-    private final ApiErrorCode code;
+import org.springframework.http.HttpStatus;
+
+public class ResourceConflictException extends ApiException {
 
     public ResourceConflictException(String message) {
         this(ApiErrorCode.RESOURCE_CONFLICT, message);
     }
 
     public ResourceConflictException(ApiErrorCode code, String message) {
-        super(message);
-        this.code = code;
-    }
-
-    public ApiErrorCode getCode() {
-        return code;
+        super(HttpStatus.CONFLICT, code, message);
     }
 }

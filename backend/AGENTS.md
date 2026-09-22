@@ -38,6 +38,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - `AppointmentRequest` chroni dozwolone przejścia statusów. Serwisy aplikacyjne
   odpowiadają za transakcje, blokady, pobranie zależności oraz walidację danych
   wejściowych, a zmianę stanu wykonują przez metody encji.
+- `AppointmentRepository` pozostaje repozytorium agregatu `AppointmentRequest`, także
+  dla zapytań list, grafiku, historii i operacji wymagających blokad. Rozważ podział
+  dopiero po powstaniu osobnego modelu odczytu, niezależnego modułu albo wyraźnej
+  granicy domenowej; nie twórz nakładających się repozytoriów wyłącznie dla porządku.
 
 ## Model domeny i przepływy
 
@@ -113,6 +117,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Login ma 3–30 znaków i ograniczony alfabet, e-mail jest normalizowany do małych liter,
   a hasło ma 8–64 znaki i nie może przekroczyć limitu 72 bajtów BCrypt.
   Login i e-mail są unikalne bez rozróżniania wielkości liter.
+- Normalizację loginu i e-maila, zgodność haseł oraz limit bajtów BCrypt realizuj
+  przez `AccountCredentialsPolicy`. Serwisy rejestracji, zmiany hasła i administracji
+  kontami nie powinny powielać tych reguł; sprawdzenie unikalności pozostaje w
+  odpowiednim przypadku użycia.
 - Backend ponownie sprawdza zgodność haseł. Nigdy nie przyjmuj roli z formularza rejestracji.
   Po rejestracji frontend loguje użytkownika istniejącym mechanizmem sesji.
 - `GET /api/admin/accounts` zwraca stronicowaną listę kont CLIENT, MECHANIC i ADMIN z wyszukiwaniem po loginie lub e-mailu oraz filtrowaniem po roli i aktywności. Endpointy `POST /api/admin/accounts/mechanics`, `POST /api/admin/accounts/administrators`, `PUT /api/admin/accounts/{accountId}`, `PUT /api/admin/accounts/{accountId}/password` i `PUT /api/admin/accounts/{accountId}/status` są dostępne wyłącznie dla ADMIN.
@@ -148,6 +156,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
 - Numer rejestracyjny normalizuj do wielkich liter bez spacji, a VIN do wielkich liter.
   Numer rejestracyjny i podany VIN są unikalne dla jednego właściciela bez rozróżniania
   wielkości liter. Sprawdzaj konflikt w serwisie i zachowaj indeksy bazy na wypadek wyścigu.
+- Normalizację i walidację marki, modelu, roku, numeru rejestracyjnego i VIN wykonuj
+  przez `VehicleDataNormalizer` zarówno dla pojazdów klienta, jak i zgłoszeń gościa.
+  Normalizer zwraca kanoniczne nazwy pól pojazdu; przypadek użycia gościa mapuje je
+  na nazwy pól swojego DTO.
 - Edycja zmienia podstawowe dane wyłącznie pojazdu należącego do zalogowanego klienta.
   Podczas kontroli unikalności pomijaj aktualizowany pojazd, aby można było pozostawić jego dotychczasową rejestrację i VIN.
 - Pierwszy zapis zakończonej naprawy znajduje się przy zgłoszeniu ze statusem
@@ -245,6 +257,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   do ustalenia. Nie deklaruj zgodności księgowej na podstawie samego modelu danych.
 - Stosuj Bean Validation dla wejścia oraz walidację biznesową w serwisach.
   Utrzymuj spójny format błędów API bez ujawniania szczegółów bazy lub danych innych klientów.
+  Kontrolowane wyjątki aplikacji dziedziczą po `ApiException`, które przechowuje status
+  HTTP, stabilny `ApiErrorCode` i opcjonalne błędy pól. `GlobalExceptionHandler` mapuje
+  je wspólnym handlerem; osobny handler dodawaj tylko dla innego formatu lub sposobu
+  obsługi błędu, a nie dla kolejnej klasy wyjątku biznesowego.
   Docelowo błędy API powinny zawierać stabilny kod techniczny i angielski komunikat
   techniczny, a frontend powinien tłumaczyć znane kody na język wybrany w UI.
   Nie traktuj polskich tekstów z backendu jako docelowych komunikatów interfejsu.

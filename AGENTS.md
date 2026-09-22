@@ -159,10 +159,10 @@ Doprecyzowuj je przy etapie, którego dotyczą; nie blokują pozostałych prac.
 - Zrealizowane etapy: katalog usług, rejestracja, profil klienta, jego pojazdy,
   zgłoszenia wizyt z kalendarzem i decyzją personelu, zakończenie naprawy,
   odbiór auta, historia napraw, prosta faktura PDF, lokalne dane pokazowe oraz etapy
-  7A–7C audytu backendu: wspólny zegar, mapery DTO, wydzielona walidacja naprawy,
+  7A–8 audytu backendu: wspólny zegar, mapery DTO, wydzielona walidacja naprawy,
   podział obsługi wizyt według przypadków użycia, ochrona przejść statusów w encji,
-  uporządkowane pakiety i testy integracyjne modułu `appointment`. Kolejny krok
-  jakościowy to etap 8 — wspólne reguły backendu.
+  uporządkowane pakiety i testy integracyjne modułu `appointment`, wspólne reguły
+  kont i danych pojazdu oraz ujednolicone wyjątki API.
 - Dodawaj potrzebne testy wraz z funkcją. Priorytety to reguły rezerwacji,
   współbieżność, uprawnienia do cudzych danych i poprawne powiązania dokumentów.
 - Cele jakościowe portfolio: czytelne REST API i DTO, migracje bazy, walidacja,

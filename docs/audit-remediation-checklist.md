@@ -91,9 +91,9 @@ Status: zakończony 22.09.2026. Szczegółowy audyt i kolejność prac znajdują
 
 ## Etap 8 — wspólne reguły backendu
 
-Status: zaplanowany.
+Status: zakończony 22.09.2026.
 
-- [ ] Etap 8: wspólne reguły kont, danych pojazdu i wyjątków API.
+- [x] Etap 8: wspólne reguły kont, danych pojazdu i wyjątków API.
 
 ## Dziennik wykonania
 
@@ -110,6 +110,7 @@ Status: zaplanowany.
 - 20.09.2026: zakończono etap 7B audytu backendu. Monolityczny `AppointmentService` zastąpiono usługami rezerwacji, zapytań, operacji klienta, decyzji personelu i obsługi napraw. Reguły przejść statusów przeniesiono do `AppointmentRequest`; kontrolery zachowały dotychczasowy kontrakt HTTP, a kolejność blokad i granice transakcji pozostały bez zmian. Dodano 5 testów jednostkowych maszyny stanów. Pełny wynik `mvn -B -ntp test`: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Schemat bazy i frontend pozostały bez zmian.
 - 22.09.2026: wykonano pierwszą część etapu 7C. Produkcyjny moduł `appointment` podzielono na pakiety `api`, `application`, `domain`, `persistence`, `repair` i `schedule`, a DTO przypisano do obsługiwanych obszarów. Historia napraw nie zależy już od DTO pakietu pojazdów. Czysta kompilacja produkcji i testów przeszła, a pełny wynik `mvn -B -ntp test` pozostał 140/140. Endpointy, JSON, migracje i frontend nie zmieniły się. Pozostał osobny krok podziału `AppointmentIntegrationTest`.
 - 22.09.2026: zakończono etap 7C. Test `AppointmentIntegrationTest` podzielono na sześć klas obejmujących dostępność, tworzenie zgłoszeń, operacje klienta, workflow personelu, naprawy i autoryzację. Wspólne przygotowanie danych przeniesiono do `AppointmentIntegrationTestSupport`, testy współbieżności pozostawiono osobno, a importy w zmienianych testach są jawne. Test ArchUnit oceniono jako zbędną zależność na obecnym etapie. Pełny wynik backendu: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć.
+- 22.09.2026: zakończono etap 8. Wspólne reguły kont przeniesiono do `AccountCredentialsPolicy`, a normalizację i walidację danych pojazdu do `VehicleDataNormalizer`. Kontrolowane wyjątki aplikacji dziedziczą po `ApiException`, a `GlobalExceptionHandler` mapuje je jednym handlerem. `AppointmentRepository` pozostawiono jako repozytorium jednego agregatu; podział bez osobnego modelu odczytu powielałby interfejsy i utrudniał operacje z blokadami. Dodano 6 testów jednostkowych. Pełny wynik `mvn -B -ntp test`: 146 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Endpointy, JSON, schemat bazy i frontend pozostały bez zmian.
 
 ## Jak działa poprawka grafiku
 

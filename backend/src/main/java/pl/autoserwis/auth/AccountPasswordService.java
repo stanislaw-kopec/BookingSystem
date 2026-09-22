@@ -8,20 +8,20 @@ import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRepository;
 
-import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 @Service
 public class AccountPasswordService {
-    private static final int BCRYPT_MAX_BYTES = 72;
-
     private final UserRepository users;
     private final PasswordEncoder passwords;
+    private final AccountCredentialsPolicy credentials;
 
-    public AccountPasswordService(UserRepository users, PasswordEncoder passwords) {
+    public AccountPasswordService(UserRepository users, PasswordEncoder passwords,
+            AccountCredentialsPolicy credentials) {
         this.users = users;
         this.passwords = passwords;
+        this.credentials = credentials;
     }
 
     @Transactional
@@ -29,16 +29,13 @@ public class AccountPasswordService {
         AppUser user = users.findByIdForUpdate(userId)
             .orElseThrow(() -> new ResourceNotFoundException("User not found."));
         Map<String, String> errors = new LinkedHashMap<>();
-        if (request.currentPassword().getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES
+        if (!credentials.isWithinBcryptLimit(request.currentPassword())
                 || !passwords.matches(request.currentPassword(), user.getPasswordHash())) {
             errors.put("currentPassword", "Current password is incorrect.");
         }
-        if (!request.newPassword().equals(request.newPasswordConfirmation())) {
-            errors.put("newPasswordConfirmation", "Passwords do not match.");
-        }
-        if (request.newPassword().getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES) {
-            errors.put("newPassword", "Password is too long after encoding.");
-        }
+        errors.putAll(credentials.passwordValidationErrors(
+            request.newPassword(), request.newPasswordConfirmation(),
+            "newPassword", "newPasswordConfirmation"));
         if (!errors.isEmpty()) {
             throw new AccountPasswordValidationException(errors);
         }

@@ -1,24 +1,14 @@
 package pl.autoserwis.vehicle;
 
+import org.springframework.http.HttpStatus;
+import pl.autoserwis.exception.ApiException;
 import pl.autoserwis.exception.ApiErrorCode;
 
 import java.util.Map;
 
-public class VehicleValidationException extends RuntimeException {
-    private final ApiErrorCode code;
-    private final Map<String, String> fieldErrors;
-
+public class VehicleValidationException extends ApiException {
     public VehicleValidationException(Map<String, String> fieldErrors) {
-        super("Vehicle validation failed.");
-        this.code = ApiErrorCode.VEHICLE_VALIDATION_FAILED;
-        this.fieldErrors = Map.copyOf(fieldErrors);
-    }
-
-    public ApiErrorCode getCode() {
-        return code;
-    }
-
-    public Map<String, String> getFieldErrors() {
-        return fieldErrors;
+        super(HttpStatus.BAD_REQUEST, ApiErrorCode.VEHICLE_VALIDATION_FAILED,
+            "Vehicle validation failed.", fieldErrors);
     }
 }

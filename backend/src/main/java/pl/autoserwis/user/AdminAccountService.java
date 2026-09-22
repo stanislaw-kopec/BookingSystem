@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import pl.autoserwis.auth.RegistrationConflictException;
 import pl.autoserwis.auth.RegistrationValidationException;
+import pl.autoserwis.auth.AccountCredentialsPolicy;
 import pl.autoserwis.exception.ResourceNotFoundException;
 import pl.autoserwis.user.dto.AdminAccountPageResponse;
 import pl.autoserwis.user.dto.AdminAccountResponse;
@@ -18,7 +19,6 @@ import pl.autoserwis.user.dto.AdminAccountUpdateRequest;
 import pl.autoserwis.user.dto.AdminPasswordResetRequest;
 import pl.autoserwis.user.dto.ManagedAccountCreateRequest;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -28,15 +28,17 @@ import java.util.Map;
 @Service
 @Transactional(readOnly = true)
 public class AdminAccountService {
-    private static final int BCRYPT_MAX_BYTES = 72;
     private static final int MAX_PAGE_SIZE = 50;
 
     private final UserRepository users;
     private final PasswordEncoder passwords;
+    private final AccountCredentialsPolicy credentials;
 
-    public AdminAccountService(UserRepository users, PasswordEncoder passwords) {
+    public AdminAccountService(UserRepository users, PasswordEncoder passwords,
+            AccountCredentialsPolicy credentials) {
         this.users = users;
         this.passwords = passwords;
+        this.credentials = credentials;
     }
 
     public AdminAccountPageResponse accounts(UserRole role, Boolean enabled, String query, int page, int size) {
@@ -89,20 +91,21 @@ public class AdminAccountService {
 
     private AdminAccountResponse createAccount(ManagedAccountCreateRequest request, UserRole role, String conflictMessage) {
         validatePasswords(request.password(), request.passwordConfirmation());
-        String username = normalizedUsername(request.username());
-        String email = normalizedEmail(request.email());
-        validateUniqueAccount(username, email, null, conflictMessage);
+        AccountCredentialsPolicy.NormalizedCredentials normalized =
+            credentials.normalize(request.username(), request.email());
+        validateUniqueAccount(normalized.username(), normalized.email(), null, conflictMessage);
         return response(users.saveAndFlush(new AppUser(
-            username, email, passwords.encode(request.password()), role)));
+            normalized.username(), normalized.email(), passwords.encode(request.password()), role)));
     }
 
     @Transactional
     public AdminAccountResponse updateAccount(Long accountId, AdminAccountUpdateRequest request) {
         AppUser account = manageableAccount(accountId);
-        String username = normalizedUsername(request.username());
-        String email = normalizedEmail(request.email());
-        validateUniqueAccount(username, email, account.getId(), "Account cannot be updated.");
-        account.updateAccount(username, email);
+        AccountCredentialsPolicy.NormalizedCredentials normalized =
+            credentials.normalize(request.username(), request.email());
+        validateUniqueAccount(normalized.username(), normalized.email(), account.getId(),
+            "Account cannot be updated.");
+        account.updateAccount(normalized.username(), normalized.email());
         return response(account);
     }
 
@@ -152,13 +155,7 @@ public class AdminAccountService {
     }
 
     private void validatePasswords(String password, String passwordConfirmation) {
-        Map<String, String> errors = new LinkedHashMap<>();
-        if (!password.equals(passwordConfirmation)) {
-            errors.put("passwordConfirmation", "Passwords do not match.");
-        }
-        if (password.getBytes(StandardCharsets.UTF_8).length > BCRYPT_MAX_BYTES) {
-            errors.put("password", "Password is too long after encoding.");
-        }
+        Map<String, String> errors = credentials.passwordValidationErrors(password, passwordConfirmation);
         if (!errors.isEmpty()) {
             throw new RegistrationValidationException("Form data is invalid.", errors);
         }
@@ -175,14 +172,6 @@ public class AdminAccountService {
         if (!conflicts.isEmpty()) {
             throw new RegistrationConflictException(message, conflicts);
         }
-    }
-
-    private String normalizedUsername(String username) {
-        return username.strip();
-    }
-
-    private String normalizedEmail(String email) {
-        return email.strip().toLowerCase(Locale.ROOT);
     }
 
     private String escapeLike(String value) {

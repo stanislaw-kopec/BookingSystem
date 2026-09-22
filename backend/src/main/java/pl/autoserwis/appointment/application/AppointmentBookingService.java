@@ -21,11 +21,11 @@ import pl.autoserwis.profile.ClientProfileRepository;
 import pl.autoserwis.user.AppUser;
 import pl.autoserwis.user.UserRepository;
 import pl.autoserwis.vehicle.Vehicle;
+import pl.autoserwis.vehicle.VehicleDataNormalizer;
 import pl.autoserwis.vehicle.VehicleRepository;
 
 import java.time.Clock;
 import java.time.Instant;
-import java.time.Year;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -42,18 +42,21 @@ public class AppointmentBookingService {
     private final UserRepository users;
     private final ClientProfileRepository profiles;
     private final VehicleRepository vehicles;
+    private final VehicleDataNormalizer vehicleData;
     private final AppointmentResponseMapper responses;
     private final Clock clock;
 
     public AppointmentBookingService(AppointmentRepository appointments, AppointmentSchedule schedule,
             ScheduleLocks locks, UserRepository users, ClientProfileRepository profiles,
-            VehicleRepository vehicles, AppointmentResponseMapper responses, Clock workshopClock) {
+            VehicleRepository vehicles, VehicleDataNormalizer vehicleData,
+            AppointmentResponseMapper responses, Clock workshopClock) {
         this.appointments = appointments;
         this.schedule = schedule;
         this.locks = locks;
         this.users = users;
         this.profiles = profiles;
         this.vehicles = vehicles;
+        this.vehicleData = vehicleData;
         this.responses = responses;
         this.clock = workshopClock;
     }
@@ -84,15 +87,14 @@ public class AppointmentBookingService {
     @Transactional
     public AppointmentResponse createForGuest(GuestAppointmentRequest request) {
         locks.forBooking();
-        validateGuest(request);
+        VehicleDataNormalizer.NormalizedVehicleData normalizedVehicle = validateGuest(request);
         Instant startAt = schedule.validateAndNormalize(request.visitDate());
         AppointmentRequest appointment = new AppointmentRequest(UUID.randomUUID(),
             AppointmentRequesterType.GUEST, null, null,
             request.firstName().strip(), request.lastName().strip(), optional(request.phoneNumber()),
-            optionalLowercase(request.contactEmail()), request.vehicleMake().strip(),
-            request.vehicleModel().strip(), request.vehicleProductionYear(),
-            normalizedRegistration(request.vehicleRegistrationNumber()),
-            optionalUppercase(request.vehicleVin()), startAt,
+            optionalLowercase(request.contactEmail()), normalizedVehicle.make(),
+            normalizedVehicle.model(), normalizedVehicle.productionYear(),
+            normalizedVehicle.registrationNumber(), normalizedVehicle.vin(), startAt,
             normalizedDescription(request.problemDescription()), Instant.now(clock));
         return saveInAvailableDay(appointment);
     }
@@ -109,22 +111,18 @@ public class AppointmentBookingService {
         }
     }
 
-    private void validateGuest(GuestAppointmentRequest request) {
+    private VehicleDataNormalizer.NormalizedVehicleData validateGuest(GuestAppointmentRequest request) {
         Map<String, String> errors = new LinkedHashMap<>();
         if (blank(request.phoneNumber()) && blank(request.contactEmail())) {
             String message = "Enter a phone number or an email address.";
             errors.put("phoneNumber", message);
             errors.put("contactEmail", message);
         }
-        int latestAllowedYear = Year.now(clock).getValue() + 1;
-        if (request.vehicleProductionYear() > latestAllowedYear) {
-            errors.put("vehicleProductionYear",
-                "Production year cannot be later than " + latestAllowedYear + ".");
-        }
-        if (request.vehicleRegistrationNumber().replaceAll("\\s+", "").length() < 2) {
-            errors.put("vehicleRegistrationNumber",
-                "Registration number must have at least 2 characters.");
-        }
+        VehicleDataNormalizer.NormalizationResult vehicleResult = vehicleData.normalize(
+            request.vehicleMake(), request.vehicleModel(), request.vehicleProductionYear(),
+            request.vehicleRegistrationNumber(), request.vehicleVin());
+        vehicleResult.fieldErrors().forEach((field, message) ->
+            errors.put(guestVehicleField(field), message));
         if (request.problemDescription() != null
                 && request.problemDescription().strip().length() < MINIMUM_PROBLEM_DESCRIPTION_LENGTH) {
             errors.put("problemDescription", "Problem description must have at least 10 characters.");
@@ -132,6 +130,7 @@ public class AppointmentBookingService {
         if (!errors.isEmpty()) {
             throw new AppointmentValidationException(errors);
         }
+        return vehicleResult.data();
     }
 
     private String normalizedDescription(String value) {
@@ -141,10 +140,6 @@ public class AppointmentBookingService {
                 "Problem description must have at least 10 characters."));
         }
         return normalized;
-    }
-
-    private String normalizedRegistration(String value) {
-        return value.replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
     }
 
     private AppUser user(Long userId) {
@@ -170,8 +165,12 @@ public class AppointmentBookingService {
         return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
     }
 
-    private String optionalUppercase(String value) {
-        String normalized = optional(value);
-        return normalized == null ? null : normalized.toUpperCase(Locale.ROOT);
+    private String guestVehicleField(String field) {
+        return switch (field) {
+            case "productionYear" -> "vehicleProductionYear";
+            case "registrationNumber" -> "vehicleRegistrationNumber";
+            case "vin" -> "vehicleVin";
+            default -> throw new IllegalArgumentException("Unsupported vehicle field: " + field);
+        };
     }
 }

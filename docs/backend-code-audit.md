@@ -284,10 +284,26 @@ przechodzi: 140/140 testów.
 
 ### Etap 8 — wspólne reguły backendu
 
-- [ ] Wydzielić `AccountCredentialsPolicy` dla loginu, e-maila i haseł.
-- [ ] Wydzielić `VehicleDataNormalizer` używany przez pojazdy i zgłoszenie gościa.
-- [ ] Ujednolicić bazowe wyjątki API i uprościć `GlobalExceptionHandler`.
-- [ ] Ocenić podział `AppointmentRepository` dopiero po ustabilizowaniu usług.
+- [x] Wydzielić `AccountCredentialsPolicy` dla loginu, e-maila i haseł.
+- [x] Wydzielić `VehicleDataNormalizer` używany przez pojazdy i zgłoszenie gościa.
+- [x] Ujednolicić bazowe wyjątki API i uprościć `GlobalExceptionHandler`.
+- [x] Ocenić podział `AppointmentRepository` dopiero po ustabilizowaniu usług.
+
+Status: zakończony 22.09.2026. `AccountCredentialsPolicy` jest wspólnym miejscem
+normalizacji loginu i e-maila oraz walidacji haseł i limitu BCrypt. Reguły danych
+pojazdu współdzielą teraz katalog klienta i formularz gościa przez
+`VehicleDataNormalizer`, przy zachowaniu nazw pól właściwych dla obu kontraktów API.
+Kontrolowane wyjątki aplikacji dziedziczą po `ApiException`, dzięki czemu
+`GlobalExceptionHandler` mapuje je w jednym miejscu na status HTTP, stabilny kod,
+komunikat i błędy pól.
+
+`AppointmentRepository` pozostaje jednym repozytorium agregatu `AppointmentRequest`.
+Obecne zapytania obejmują różne przypadki użycia, ale nadal operują na tej samej encji,
+a część zapisów wymaga wspólnych blokad transakcyjnych. Podział na nakładające się
+repozytoria Spring Data zwiększyłby liczbę interfejsów bez wyznaczenia nowej granicy
+domenowej. Decyzję należy ocenić ponownie po pojawieniu się osobnego modelu odczytu,
+niezależnego modułu zleceń albo dalszym istotnym wzroście liczby zapytań. Dodano 6
+testów jednostkowych; pełny wynik backendu to 146/146.
 
 ## Kryteria bezpieczeństwa refaktoryzacji
 
