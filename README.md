@@ -1,190 +1,203 @@
-# Mietek Customs — system obsługi warsztatu samochodowego
+# Mietek Customs — Car Workshop Management System
 
 <p align="center">
-  <img src="frontend/src/assets/branding/mietek-customs-logo.png" alt="Logo warsztatu Mietek Customs" width="240">
+  <img src="frontend/src/assets/branding/mietek-customs-logo.png" alt="Mietek Customs workshop logo" width="240">
 </p>
 
-Pełnostackowa aplikacja portfolio do obsługi warsztatu samochodowego. Klient może
-zarządzać pojazdami i umawiać wizyty, mechanik prowadzi naprawę od przyjęcia auta
-do odbioru, a administrator konfiguruje grafik i zarządza kontami użytkowników.
+A full-stack portfolio application for managing a car workshop. Customers can manage
+their vehicles and request appointments, mechanics handle repairs from acceptance to
+pickup, and administrators configure workshop availability and user accounts.
 
-Projekt pokazuje praktyczne użycie Spring Boota, relacyjnej bazy danych,
-bezpieczeństwa sesyjnego, transakcji, testów integracyjnych oraz Reacta z TypeScriptem.
+The project demonstrates practical use of Spring Boot, a relational database, session
+security, transactional concurrency control, integration testing, and React with
+TypeScript. The application interface is in Polish, while source code and API messages
+use English naming.
 
-**Na skróty:** [Funkcje](#funkcje) · [Przepływ aplikacji](#jak-działa-aplikacja) ·
-[Technologie](#technologie) · [Architektura](#architektura) ·
-[Uruchomienie](#uruchomienie) · [Konta demo](#konta-demonstracyjne) ·
-[Wdrożenie](#wariant-wdrożeniowy) · [Decyzje i ograniczenia](#decyzje-i-ograniczenia) ·
-[Dokumentacja](#dokumentacja)
+**Quick navigation:** [Features](#features) · [Application flow](#application-flow) ·
+[Technology stack](#technology-stack) · [Architecture](#architecture) ·
+[Getting started](#getting-started) · [Demo accounts](#demo-accounts) ·
+[Deployment](#production-deployment) · [Decisions and limitations](#decisions-and-limitations) ·
+[Documentation](#documentation)
 
-## Funkcje
+## Features
 
-| Rola | Możliwości |
+| Role | Capabilities |
 | --- | --- |
-| Klient | Profil prywatny lub firmowy, własne pojazdy, rezerwacje, historia napraw i faktury PDF |
-| Gość | Zgłoszenie wizyty bez zakładania konta |
-| Mechanik | Tygodniowy grafik, obsługa zgłoszeń, robocizna i części, zakończenie naprawy i odbiór auta |
-| Administrator | Funkcje mechanika, konfiguracja grafiku oraz zarządzanie kontami klientów i personelu |
+| Customer | Personal or company profile, owned vehicles, appointment requests, repair history, and PDF invoices |
+| Guest | Appointment request without creating an account |
+| Mechanic | Weekly schedule, request handling, labor and parts, repair completion, and vehicle pickup |
+| Administrator | Mechanic capabilities, schedule configuration, and customer/staff account management |
 
-Dodatkowo aplikacja udostępnia publiczny katalog usług warsztatu zarządzany przez
-mechanika lub administratora.
+The application also provides a public workshop service catalog managed by mechanics
+and administrators.
 
-## Jak działa aplikacja?
+## Application flow
 
-Przykładowy scenariusz: klient zgłasza problem z hamulcami, warsztat przyjmuje auto,
-wykonuje naprawę, a po odbiorze klient otrzymuje wpis w historii pojazdu i fakturę PDF.
-Zrzuty przedstawiają dane demonstracyjne przygotowane przez profil `local`.
+Example scenario: a customer reports a braking problem, the workshop accepts the car,
+performs the repair, and records the pickup. The completed repair appears in the vehicle
+history with a downloadable PDF invoice. The screenshots use records prepared by the
+local demo-data profile.
 
-**Zgłoszenie → potwierdzenie → naprawa → odbiór i faktura**
+**Request → confirmation → repair → pickup and invoice**
 
-### 1. Klient zgłasza wizytę
+### 1. Customer requests an appointment
 
-Klient wybiera własny pojazd, dostępny dzień przyjęcia auta i opisuje usterkę.
-Zgłoszenie otrzymuje status „Oczekuje na decyzję” (`PENDING`). Backend ponownie
-sprawdza dostępność dnia podczas zapisu, aby nie przekroczyć limitu przyjęć.
+The customer selects an owned vehicle, an available drop-off day, and describes the
+problem. The request receives the `PENDING` status. The backend validates availability
+again inside the write transaction to prevent the daily capacity from being exceeded.
 
-![Zgłoszenie wizyty przez klienta](docs/screenshots/booking-request.png)
+![Customer appointment request](docs/screenshots/booking-request.png)
 
-### 2. Mechanik potwierdza termin
+### 2. Workshop reviews the requested date
 
-Mechanik widzi zgłoszenie w grafiku i otwiera jego szczegóły. Może je potwierdzić
-(`CONFIRMED`), odrzucić albo zaproponować inny dzień. Propozycję nowego dnia
-zalogowany klient zatwierdza w zakładce „Moje wizyty”.
+The mechanic sees active requests on the weekly schedule. Staff can confirm or reject a
+request, or propose another available day. A logged-in customer accepts the proposed day
+from the “My appointments” page.
 
-![Zgłoszenia w grafiku mechanika](docs/screenshots/03-staff-schedule.png)
+![Mechanic weekly schedule](docs/screenshots/03-staff-schedule.png)
 
-### 3. Warsztat zapisuje wykonaną naprawę
+### 3. Mechanic records the completed repair
 
-Mechanik wpisuje opis wykonanych prac oraz pozycje robocizny i części. Backend
-wylicza kwotę naprawy, a zgłoszenie przechodzi do „Czeka na odbiór” (`READY_FOR_PICKUP`).
-Klient widzi podsumowanie prac i kwotę do zapłaty na miejscu.
+The mechanic enters a work summary and separate labor and part items. The backend
+calculates the final gross amount and moves the request to `READY_FOR_PICKUP`. Payment is
+handled at the workshop outside the application.
 
-![Zapis wykonanych prac i części](docs/screenshots/repair-completion.png)
+![Repair completion form with labor and parts](docs/screenshots/repair-completion.png)
 
-### 4. Klient odbiera auto i pobiera fakturę
+### 4. Customer picks up the vehicle and downloads the invoice
 
-Personel oznacza samochód jako odebrany (`COMPLETED`). Naprawa pojawia się w historii
-pojazdu, skąd klient pobiera fakturę PDF z pozycjami oraz wartościami netto i brutto.
-Dokument jest zapisany przy odbiorze i zachowuje dane mimo późniejszej edycji profilu.
-Dane nabywcy są imienne lub firmowe, zależnie od uzupełnionego profilu.
+Staff marks the vehicle as picked up, changing the status to `COMPLETED`. The repair then
+appears in the vehicle history. The invoice snapshot and generated PDF are persisted, so
+later profile, logo, or pricing changes do not modify an issued document.
 
-![Faktura PDF za zakończoną naprawę](docs/screenshots/06-invoice-preview.png)
+![PDF invoice for a completed repair](docs/screenshots/06-invoice-preview.png)
 
-## Technologie
+## Technology stack
 
 - **Backend:** Java 25, Spring Boot 4.1.1, Spring MVC, Spring Data JPA, Spring Security
-- **Baza danych:** PostgreSQL 17, Hibernate, Flyway
+- **Database:** PostgreSQL 17, Hibernate, Flyway
 - **Frontend:** React 19.2.8, TypeScript 6.0.2, Vite 8.2.2, React Router 7.18.3
-- **Testy:** JUnit 5, MockMvc, AssertJ, Testcontainers
-- **Narzędzia:** Maven, Docker Compose, GitHub Actions, springdoc-openapi 3.1.1, OpenPDF 2.4.0
+- **Testing:** JUnit/Jupiter, MockMvc, AssertJ, Testcontainers, Vitest, React Testing Library
+- **Tooling:** Maven, Docker Compose, GitHub Actions, springdoc-openapi 3.1.1, OpenPDF 2.4.0
 
-## Architektura
+## Architecture
 
 ```mermaid
 flowchart LR
-    U[Przeglądarka] --> R[React + TypeScript]
-    R -->|REST /api, sesja i CSRF| C[Spring MVC]
-    C --> S[Serwisy i reguły biznesowe]
+    U[Browser] --> R[React + TypeScript]
+    R -->|REST /api, session and CSRF| C[Spring MVC]
+    C --> S[Application services and business rules]
     S --> J[Spring Data JPA]
     J --> P[(PostgreSQL)]
-    S --> F[Generator faktur PDF]
-    M[Flyway] --> P
+    S --> F[PDF invoice generator]
+    M[Flyway migrations] --> P
 ```
 
-Backend jest monolitem podzielonym na pakiety funkcjonalne. Uwierzytelnianie
-korzysta z sesji Spring Security i ciasteczka HttpOnly, a operacje zmieniające dane
-wymagają tokenu CSRF.
+The backend is a modular monolith organized by business capability. Spring Security uses
+server-side sessions with HttpOnly cookies, while state-changing requests require CSRF
+protection.
 
-## Najciekawsze elementy techniczne
+## Key technical highlights
 
-- Właściciel profilu, pojazdu i zgłoszenia wynika z uwierzytelnionej sesji.
-- Role `CLIENT`, `MECHANIC` i `ADMIN` są egzekwowane przez backend.
-- Transakcyjne blokady chronią limit przyjęć przed równoczesnymi rezerwacjami i zmianami konfiguracji grafiku.
-- Listy wizyt i kont mają backendową paginację, filtrowanie i sortowanie.
-- Flyway wersjonuje bazę, a profil `local` idempotentnie tworzy dane demonstracyjne.
-- Faktura PDF zawiera pozycje robocizny i części oraz wartości netto i brutto.
-- API używa wspólnego formatu błędów ze stabilnymi kodami technicznymi.
-- Testy integracyjne korzystają z odizolowanego PostgreSQL przez Testcontainers.
+- Profile, vehicle, appointment, and document ownership is derived from the authenticated
+  account ID rather than identifiers supplied by the browser.
+- `CLIENT`, `MECHANIC`, and `ADMIN` permissions are enforced by the backend.
+- Transactional PostgreSQL locks protect appointment capacity against concurrent bookings
+  and schedule-configuration changes.
+- Appointment and account lists provide backend pagination, filtering, and sorting.
+- Flyway versions the database schema; the `local` profile creates demo data idempotently.
+- Repair items use `BigDecimal`; invoice totals are calculated per line as net, VAT, and gross.
+- Issued invoice data and the generated PDF are persisted as an immutable snapshot.
+- The API exposes a consistent error format with stable technical error codes.
+- Integration tests run against an isolated PostgreSQL instance through Testcontainers.
 
-## Decyzje i ograniczenia
+## Decisions and limitations
 
-Projekt jest modularnym monolitem. Sesje Spring Security z CSRF pasują do jednej
-aplikacji webowej i nie wymagają JWT. Backend pozostaje źródłem prawdy dla uprawnień,
-pojemności grafiku, kwot oraz utrwalonych danych faktury. Rezerwacja dotyczy dnia,
-a blokady transakcyjne chronią limit przy równoczesnych żądaniach.
+The project uses a modular monolith because the current scope does not justify the
+operational cost of microservices. Session-based Spring Security with CSRF matches a
+single web application and avoids introducing JWT without a concrete requirement. The
+backend remains the source of truth for authorization, schedule capacity, repair totals,
+and persisted invoice data.
 
-Repozytorium zawiera wariant wdrożeniowy z automatycznym HTTPS, ale nie utrzymuje
-publicznej instancji ani domeny. Aplikacja nie obejmuje płatności online, korekt księgowych, powiadomień e-mail/SMS,
-automatycznego odzyskiwania hasła ani przydzielania zleceń do konkretnych mechaników.
-Publiczny formularz nie ma jeszcze limitowania nadużyć. Faktury są dokumentami
-demonstracyjnymi, a dane sprzedawcy i lokalizacja warsztatu są przykładowe.
+The repository contains a production-oriented deployment variant, but no public instance
+or domain is maintained. The application does not include online payments, accounting
+corrections, e-mail/SMS notifications, automatic password recovery, or assignment of jobs
+to individual mechanics. The public booking form does not yet have rate limiting. Invoice
+documents and workshop address data are demonstrational and are not presented as a
+complete legally compliant accounting system.
 
-## Roadmapa
+## Roadmap
 
-Podstawowy zakres portfolio jest domknięty. Dalszy rozwój może objąć ochronę
-publicznych formularzy, powiadomienia, obserwowalność oraz rozbudowę planowania pracy warsztatu. Pełna
-księgowość i płatności pozostają osobnymi integracjami, a nie częścią obecnej wersji.
+The core portfolio scope is complete. Possible next steps include rate limiting for public
+forms, notification delivery, request tracing and audit logging, and more advanced workshop
+resource planning. Full accounting and online payments would remain separate integrations.
 
-## Uruchomienie
+## Getting started
 
-Wymagany jest Docker Desktop z kontenerami Linux i Docker Compose w wersji co
-najmniej 2.20.3.
+Requirements:
+
+- Docker Desktop using Linux containers
+- Docker Compose 2.20.3 or newer
+
+From the repository root, run:
 
 ```powershell
 docker compose up --build -d --wait
 ```
 
-| Element | Adres |
+| Component | URL |
 | --- | --- |
-| Aplikacja | http://localhost:5173 |
+| Application | http://localhost:5173 |
 | Swagger UI | http://localhost:8080/swagger-ui.html |
-| Stan backendu | http://localhost:8080/api/health |
+| Backend health check | http://localhost:8080/api/health |
 
-Zatrzymanie aplikacji:
+Stop the application while preserving the database volume:
 
 ```powershell
 docker compose down
 ```
 
-## Wariant wdrożeniowy
+## Production deployment
 
-Osobny plik `compose.production.yaml` buduje statyczny frontend i serwuje go przez
-Nginx. Caddy jest publicznym reverse proxy i automatycznie obsługuje HTTPS dla
-prawidłowo skonfigurowanej domeny. Profil `production` nie tworzy danych demo,
-wyłącza Swaggera i wymaga pierwszego administratora przekazanego przez środowisko.
+`compose.production.yaml` builds a static React frontend served by Nginx. Caddy acts as
+the public reverse proxy and automatically configures HTTPS for a valid domain. The
+`production` Spring profile does not seed demo data, disables Swagger, enables secure
+session-cookie defaults, and creates the first administrator from environment variables.
 
-Konfigurację, przygotowanie domeny i bezpieczny pierwszy start opisuje
-[instrukcja wdrożenia](docs/deployment-guide.md). Plik `.env.production.example`
-jest wyłącznie wzorem — prawdziwy `.env.production` jest ignorowany przez Git.
+Domain configuration, secrets, and the first deployment are described in the
+[deployment guide](docs/deployment-guide.md). `.env.production.example` is only a
+template; the real `.env.production` file is ignored by Git.
 
-## Konta demonstracyjne
+## Demo accounts
 
-Profil Springa `local`, włączony w Docker Compose, przygotowuje następujące konta:
+The `local` Spring profile used by Docker Compose provides these accounts:
 
-| Login | Hasło | Rola |
+| Username | Password | Role |
 | --- | --- | --- |
-| `anna.demo` | `client-local-2026` | Klient z pojazdami, wizytami i fakturą |
-| `firma.demo` | `client-local-2026` | Klient firmowy z fakturą na firmę |
-| `mechanic` | `mechanic-local-2026` | Mechanik |
+| `anna.demo` | `client-local-2026` | Customer with vehicles, appointments, and an invoice |
+| `firma.demo` | `client-local-2026` | Company customer with a company invoice |
+| `mechanic` | `mechanic-local-2026` | Mechanic |
 | `admin` | `admin-local-2026` | Administrator |
 
-Konta i hasła służą wyłącznie do lokalnej prezentacji aplikacji.
+These credentials are intended only for local demonstration.
 
-## Weryfikacja
+## Verification
 
-GitHub Actions przy każdym pushu i pull requeście do `main` wykonuje:
+GitHub Actions runs the following checks for every push and pull request to `main`:
 
-- testy backendu z Testcontainers,
-- testy zachowania frontendu (Vitest i React Testing Library), lint i produkcyjny build,
-- sprawdzenie konfiguracji Docker Compose.
+- backend tests with PostgreSQL Testcontainers,
+- frontend behavior tests, linting, and a production build,
+- validation of the local and production Docker Compose configurations.
 
-Po nieudanym zadaniu CI publikuje raporty testów backendu lub frontendu jako artefakty
-przebiegu. Pełny scenariusz klient → mechanik → faktura i wyniki lokalnej weryfikacji
-opisuje [raport prezentacyjny](docs/portfolio-verification.md).
+The latest documented local verification includes **146 backend tests** and **22 frontend
+tests**, all passing. Failed CI jobs upload backend or frontend test reports as workflow
+artifacts. The full customer → mechanic → invoice scenario is described in the
+[portfolio verification report](docs/portfolio-verification.md).
 
-## Dokumentacja
+## Documentation
 
-Pełne instrukcje uruchamiania, opis modułów, tabela endpointów API oraz materiały
-do nauki znajdują się w [rozszerzonej dokumentacji projektu](docs/README.md).
+Extended setup instructions, module descriptions, API endpoint tables, audit notes, and
+learning materials are available in the [detailed project documentation](docs/README.md)
+(written in Polish).
 
-Swagger UI po uruchomieniu aplikacji: http://localhost:8080/swagger-ui.html
+Swagger UI is available after startup at http://localhost:8080/swagger-ui.html.
