@@ -1,2 +1,9 @@
 .idea
 .env.production
+
+
+# Local project documentation
+/AGENTS.md
+/docs/*
+!/docs/screenshots/
+!/docs/screenshots/**
