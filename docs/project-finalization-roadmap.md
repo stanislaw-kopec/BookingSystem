@@ -56,9 +56,9 @@ Obecny zakres:
 - krótki scenariusz demo,
 - sekcję „Najciekawsze elementy techniczne”,
 - diagram architektury,
-- placeholdery oraz instrukcję wykonania screenów aplikacji.
+- cztery zrzuty pokazujące przepływ od zgłoszenia do faktury.
 
-Przed publikacją repozytorium pozostaje wykonać zrzuty i zastąpić nimi placeholdery.
+Zrzuty wykonano 22.09.2026 i zastąpiono nimi placeholdery w głównym README.
 
 Mocne punkty do pokazania:
 

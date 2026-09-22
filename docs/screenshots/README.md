@@ -7,22 +7,22 @@ w formularzach.
 
 ## Stan
 
-Pełny scenariusz demonstracyjny wykonano 17.09.2026. Faktura z tego przebiegu została
-wyrenderowana i zapisana jako `06-invoice-preview.png`. Trzy kadry interfejsu do
-głównego README pozostają do ręcznego zapisania z przeglądarki; ich dokładna
-zawartość jest opisana poniżej.
+Komplet czterech obrazów do głównego README jest gotowy. Fakturę z pełnego scenariusza
+demonstracyjnego zapisano 17.09.2026, a trzy kadry interfejsu wykonano 22.09.2026
+z danych profilu `local`. Formularzy widocznych na zrzutach nie wysłano.
 
 ## Lista zrzutów
 
-Do głównego README przygotuj cztery obrazy pokazujące tę samą naprawę od zgłoszenia
-do faktury. Pozostałe widoki z tabeli poniżej są uzupełnieniem do `docs/README.md`.
+Główne README używa czterech obrazów przedstawiających etapy procesu od zgłoszenia
+do faktury. Pozostałe widoki z tabeli poniżej mogą w przyszłości uzupełnić
+`docs/README.md`.
 
 | Etap w głównym README | Plik | Widok i zawartość |
 | --- | --- | --- |
 | Zgłoszenie wizyty | `booking-request.png` | `/appointments`: wybrany pojazd, dostępny dzień i opis problemu z hamulcami |
-| Potwierdzenie terminu | `03-staff-schedule.png` | `/staff/schedule`: grafik zawierający zgłoszenie tego pojazdu |
+| Potwierdzenie terminu | `03-staff-schedule.png` | `/staff/schedule`: tydzień z aktywnymi zgłoszeniami i zamkniętymi dniami |
 | Zakończenie naprawy | `repair-completion.png` | `/staff/appointments`: rozwinięty formularz „Praca zakończona”, opis prac oraz pozycje robocizny i części |
-| Odbiór i faktura | `06-invoice-preview.png` | Gotowe: PDF pobrany po oznaczeniu odbioru tego samego auta |
+| Odbiór i faktura | `06-invoice-preview.png` | PDF pobrany po oznaczeniu odbioru auta |
 
 ## Dodatkowe widoki do dokumentacji technicznej
 
@@ -41,9 +41,6 @@ do faktury. Pozostałe widoki z tabeli poniżej są uzupełnieniem do `docs/READ
 - Kadruj zawartość aplikacji bez paska zakładek, pulpitu i innych programów.
 - Zachowaj ten sam motyw na wszystkich obrazach.
 - Dla faktury użyj wyłącznie danych demonstracyjnych.
-- W głównym README pod każdym etapem znajduje się widoczny placeholder i komentarz
-  HTML z gotowym odnośnikiem do obrazu. Po zapisaniu pliku usuń placeholder oraz
-  znaczniki komentarza `<!--` i `-->`, pozostawiając sam odnośnik Markdown.
 - W rozszerzonej dokumentacji możesz zastąpić tabelę placeholderów dodatkowymi
   obrazami. Stosuj tam ścieżki względem `docs`, np.
   `![Panel klienta](screenshots/02-client-appointments.png)`.

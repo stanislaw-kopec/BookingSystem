@@ -73,20 +73,24 @@ Security i ciasteczka HttpOnly, a operacje zmieniające dane wymagają tokenu CS
 
 ## Zrzuty ekranu
 
-Przykładowa faktura pochodzi z pełnego scenariusza demonstracyjnego opisanego w
-[`portfolio-verification.md`](portfolio-verification.md). Lista pozostałych kadrów
-do wykonania znajduje się w [`screenshots/README.md`](screenshots/README.md).
+Kadry pochodzą z danych demonstracyjnych profilu `local`. Pełny scenariusz prowadzący
+do faktury opisuje [`portfolio-verification.md`](portfolio-verification.md), a zasady
+przygotowania obrazów — [`screenshots/README.md`](screenshots/README.md).
+
+![Zgłoszenie wizyty przez klienta](screenshots/booking-request.png)
+
+![Tygodniowy grafik mechanika](screenshots/03-staff-schedule.png)
+
+![Formularz zakończenia naprawy](screenshots/repair-completion.png)
 
 ![Przykładowa faktura z pozycjami netto i brutto](screenshots/06-invoice-preview.png)
 
-| Widok | Docelowy plik | Co powinien pokazywać |
+| Dodatkowy widok | Docelowy plik | Co powinien pokazywać |
 | --- | --- | --- |
 | Strona główna | `docs/screenshots/01-home-page.png` | Logo, opis warsztatu i ofertę usług |
 | Panel klienta | `docs/screenshots/02-client-appointments.png` | Wizyty w różnych statusach, filtry i paginację |
-| Grafik mechanika | `docs/screenshots/03-staff-schedule.png` | Tygodniowy układ zgłoszeń warsztatu |
 | Szczegóły naprawy | `docs/screenshots/04-repair-details.png` | Dane pojazdu, historię oraz pozycje naprawy |
 | Panel administratora | `docs/screenshots/05-admin-panel.png` | Zarządzanie grafikiem albo kontami użytkowników |
-| Faktura | `docs/screenshots/06-invoice-preview.png` | Przykładowy dokument PDF bez danych prywatnych |
 
 ## Szybkie uruchomienie
 

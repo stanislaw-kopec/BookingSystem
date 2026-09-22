@@ -33,6 +33,7 @@ mechanika lub administratora.
 
 Przykładowy scenariusz: klient zgłasza problem z hamulcami, warsztat przyjmuje auto,
 wykonuje naprawę, a po odbiorze klient otrzymuje wpis w historii pojazdu i fakturę PDF.
+Zrzuty przedstawiają dane demonstracyjne przygotowane przez profil `local`.
 
 **Zgłoszenie → potwierdzenie → naprawa → odbiór i faktura**
 
@@ -42,10 +43,7 @@ Klient wybiera własny pojazd, dostępny dzień przyjęcia auta i opisuje usterk
 Zgłoszenie otrzymuje status „Oczekuje na decyzję” (`PENDING`). Backend ponownie
 sprawdza dostępność dnia podczas zapisu, aby nie przekroczyć limitu przyjęć.
 
-> **Miejsce na screen:** formularz „Umów wizytę” z wybranym pojazdem, dniem i opisem usterki.
-<!-- Po dodaniu pliku zastąp powyższy placeholder:
 ![Zgłoszenie wizyty przez klienta](docs/screenshots/booking-request.png)
--->
 
 ### 2. Mechanik potwierdza termin
 
@@ -53,10 +51,7 @@ Mechanik widzi zgłoszenie w grafiku i otwiera jego szczegóły. Może je potwie
 (`CONFIRMED`), odrzucić albo zaproponować inny dzień. Propozycję nowego dnia
 zalogowany klient zatwierdza w zakładce „Moje wizyty”.
 
-> **Miejsce na screen:** tygodniowy grafik mechanika ze zgłoszeniem opisywanego pojazdu.
-<!-- Po dodaniu pliku zastąp powyższy placeholder:
 ![Zgłoszenia w grafiku mechanika](docs/screenshots/03-staff-schedule.png)
--->
 
 ### 3. Warsztat zapisuje wykonaną naprawę
 
@@ -64,10 +59,7 @@ Mechanik wpisuje opis wykonanych prac oraz pozycje robocizny i części. Backend
 wylicza kwotę naprawy, a zgłoszenie przechodzi do „Czeka na odbiór” (`READY_FOR_PICKUP`).
 Klient widzi podsumowanie prac i kwotę do zapłaty na miejscu.
 
-> **Miejsce na screen:** formularz zakończenia naprawy z opisem, robocizną i częściami.
-<!-- Po dodaniu pliku zastąp powyższy placeholder:
 ![Zapis wykonanych prac i części](docs/screenshots/repair-completion.png)
--->
 
 ### 4. Klient odbiera auto i pobiera fakturę
 

@@ -48,16 +48,16 @@ Status: zakończony 17.09.2026. [Opis rozwiązania i testów](frontend-state-wal
 
 ## Etap 5 — weryfikacja i prezentacja
 
-Status: w toku od 17.09.2026. Cztery z pięciu punktów zakończone.
+Status: zakończony 22.09.2026.
 
 - [x] Scenariusz E2E: klient rezerwuje → personel potwierdza → naprawa → odbiór → PDF.
-- [ ] Screeny zamiast placeholderów w README, ewentualnie krótki film demonstracyjny.
+- [x] Screeny zamiast placeholderów w README; krótki film demonstracyjny pozostaje opcjonalny.
 - [x] Aktualne wersje technologii w dokumentacji i uporządkowana roadmapa.
 - [x] Raporty testów dostępne po nieudanym CI; sprawdzone uruchomienie z README.
 - [x] Krótki opis znanych ograniczeń i najważniejszych decyzji technicznych.
 
-Gotowy jest podgląd faktury `06-invoice-preview.png`. Pozostają trzy kadry interfejsu:
-formularz zgłoszenia, grafik mechanika i formularz zakończenia naprawy.
+Główne README pokazuje cztery etapy procesu: formularz zgłoszenia, grafik mechanika,
+formularz zakończenia naprawy oraz podgląd faktury PDF.
 
 ## Opcjonalne działania po głównych poprawkach
 
@@ -111,6 +111,7 @@ Status: zakończony 22.09.2026.
 - 22.09.2026: wykonano pierwszą część etapu 7C. Produkcyjny moduł `appointment` podzielono na pakiety `api`, `application`, `domain`, `persistence`, `repair` i `schedule`, a DTO przypisano do obsługiwanych obszarów. Historia napraw nie zależy już od DTO pakietu pojazdów. Czysta kompilacja produkcji i testów przeszła, a pełny wynik `mvn -B -ntp test` pozostał 140/140. Endpointy, JSON, migracje i frontend nie zmieniły się. Pozostał osobny krok podziału `AppointmentIntegrationTest`.
 - 22.09.2026: zakończono etap 7C. Test `AppointmentIntegrationTest` podzielono na sześć klas obejmujących dostępność, tworzenie zgłoszeń, operacje klienta, workflow personelu, naprawy i autoryzację. Wspólne przygotowanie danych przeniesiono do `AppointmentIntegrationTestSupport`, testy współbieżności pozostawiono osobno, a importy w zmienianych testach są jawne. Test ArchUnit oceniono jako zbędną zależność na obecnym etapie. Pełny wynik backendu: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć.
 - 22.09.2026: zakończono etap 8. Wspólne reguły kont przeniesiono do `AccountCredentialsPolicy`, a normalizację i walidację danych pojazdu do `VehicleDataNormalizer`. Kontrolowane wyjątki aplikacji dziedziczą po `ApiException`, a `GlobalExceptionHandler` mapuje je jednym handlerem. `AppointmentRepository` pozostawiono jako repozytorium jednego agregatu; podział bez osobnego modelu odczytu powielałby interfejsy i utrudniał operacje z blokadami. Dodano 6 testów jednostkowych. Pełny wynik `mvn -B -ntp test`: 146 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Endpointy, JSON, schemat bazy i frontend pozostały bez zmian.
+- 22.09.2026: zakończono etap 5 prezentacji. W profilu `local` wykonano trzy brakujące zrzuty: wypełniony formularz zgłoszenia bez wysłania, tygodniowy grafik z aktywnymi zgłoszeniami oraz formularz zakończenia naprawy z robocizną, częścią i podglądem sumy. Główne README nie zawiera już placeholderów i prezentuje pełny przepływ razem z istniejącym podglądem faktury. Nie zapisano nowego zgłoszenia ani zakończenia naprawy.
 
 ## Jak działa poprawka grafiku
 
