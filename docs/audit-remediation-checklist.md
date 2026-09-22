@@ -82,12 +82,17 @@ Status: zakończony 19.09.2026. [Instrukcja wdrożenia](deployment-guide.md).
 
 ## Etap 7 — czytelna architektura backendu
 
-Status: w toku od 19.09.2026; etapy 7A i 7B zakończone. Szczegółowy audyt i kolejność prac znajdują się w
+Status: zakończony 22.09.2026. Szczegółowy audyt i kolejność prac znajdują się w
 [planie refaktoryzacji backendu](backend-code-audit.md).
 
 - [x] 7A: wspólny zegar, mapery odpowiedzi i wydzielona walidacja naprawy.
 - [x] 7B: podział `AppointmentService` według przypadków użycia i ochrona przejść statusów w domenie.
-- [ ] 7C: pakiety produkcyjne i DTO uporządkowane; pozostał podział dużego testu integracyjnego.
+- [x] 7C: uporządkowanie pakietów, DTO i testów integracyjnych modułu `appointment`.
+
+## Etap 8 — wspólne reguły backendu
+
+Status: zaplanowany.
+
 - [ ] Etap 8: wspólne reguły kont, danych pojazdu i wyjątków API.
 
 ## Dziennik wykonania
@@ -104,6 +109,7 @@ Status: w toku od 19.09.2026; etapy 7A i 7B zakończone. Szczegółowy audyt i k
 - 19.09.2026: zakończono etap 7A audytu backendu. Jeden bean `Clock` w strefie warsztatu zastąpił bezpośrednie odczyty czasu w kodzie produkcyjnym. Wydzielono mapery odpowiedzi zgłoszenia, historii i pozycji naprawy oraz walidator pozycji naprawy; `VehicleService` i `AppointmentService` nie duplikują już mapowania historii. Dodano 6 testów jednostkowych. Pełny wynik `mvn -B -ntp test`: 135 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Endpointy i schemat bazy pozostały bez zmian.
 - 20.09.2026: zakończono etap 7B audytu backendu. Monolityczny `AppointmentService` zastąpiono usługami rezerwacji, zapytań, operacji klienta, decyzji personelu i obsługi napraw. Reguły przejść statusów przeniesiono do `AppointmentRequest`; kontrolery zachowały dotychczasowy kontrakt HTTP, a kolejność blokad i granice transakcji pozostały bez zmian. Dodano 5 testów jednostkowych maszyny stanów. Pełny wynik `mvn -B -ntp test`: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć. Schemat bazy i frontend pozostały bez zmian.
 - 22.09.2026: wykonano pierwszą część etapu 7C. Produkcyjny moduł `appointment` podzielono na pakiety `api`, `application`, `domain`, `persistence`, `repair` i `schedule`, a DTO przypisano do obsługiwanych obszarów. Historia napraw nie zależy już od DTO pakietu pojazdów. Czysta kompilacja produkcji i testów przeszła, a pełny wynik `mvn -B -ntp test` pozostał 140/140. Endpointy, JSON, migracje i frontend nie zmieniły się. Pozostał osobny krok podziału `AppointmentIntegrationTest`.
+- 22.09.2026: zakończono etap 7C. Test `AppointmentIntegrationTest` podzielono na sześć klas obejmujących dostępność, tworzenie zgłoszeń, operacje klienta, workflow personelu, naprawy i autoryzację. Wspólne przygotowanie danych przeniesiono do `AppointmentIntegrationTestSupport`, testy współbieżności pozostawiono osobno, a importy w zmienianych testach są jawne. Test ArchUnit oceniono jako zbędną zależność na obecnym etapie. Pełny wynik backendu: 140 testów, 0 niepowodzeń, 0 błędów i 0 pominięć.
 
 ## Jak działa poprawka grafiku
 

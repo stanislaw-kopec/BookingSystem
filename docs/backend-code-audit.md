@@ -270,15 +270,17 @@ cyklu życia zgłoszenia; pełny wynik backendu to 140/140.
 - [x] Przenieść klasy do `api`, `application`, `domain`, `persistence`, `repair`
   oraz `schedule`.
 - [x] Podzielić DTO według obsługiwanego obszaru.
-- [ ] Rozdzielić duży test integracyjny według przypadków użycia.
-- [ ] Usunąć importy z gwiazdką w zmienianych plikach.
-- [ ] Opcjonalnie dodać test ArchUnit pilnujący kierunku zależności pakietów.
+- [x] Rozdzielić duży test integracyjny według przypadków użycia.
+- [x] Usunąć importy z gwiazdką w zmienianych plikach.
+- [x] Ocenić test ArchUnit pilnujący kierunku zależności pakietów. Nie dodawać nowej
+  zależności, dopóki reguły między pakietami nie będą wymagały osobnego zabezpieczenia.
 
-Status częściowy: 22.09.2026 uporządkowano kod produkcyjny. Endpointy wizyt,
-napraw i grafiku mają osobne DTO, a `RepairHistoryEntryResponse` należy teraz do
-obszaru napraw zamiast katalogu pojazdów. Nie zmieniono adresów HTTP, JSON-u ani
-schematu bazy. Pełny zestaw backendu nadal przechodzi: 140/140 testów. Podział
-testu integracyjnego i porządkowanie jego importów pozostają drugim krokiem 7C.
+Status: zakończony 22.09.2026. Kod produkcyjny modułu `appointment` jest podzielony
+na obszary, a DTO należą do obsługiwanych endpointów. Dawny test integracyjny o 868
+liniach zastąpiło sześć klas według przypadków użycia i wspólna klasa przygotowująca
+dane. Testy współbieżności pozostały osobne, a importy zmienianych testów są jawne.
+Nie zmieniono adresów HTTP, JSON-u ani schematu bazy. Pełny zestaw backendu nadal
+przechodzi: 140/140 testów.
 
 ### Etap 8 — wspólne reguły backendu
 

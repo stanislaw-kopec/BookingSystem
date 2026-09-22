@@ -31,6 +31,10 @@ Ten plik dotyczy kodu i konfiguracji w `backend`.
   `AppointmentBookingService`, `AppointmentQueryService`, `ClientAppointmentService`
   i `StaffAppointmentService`, oraz `appointment.repair.RepairWorkflowService`.
   Nie twórz ponownie jednego serwisu pośredniczącego we wszystkich operacjach.
+- Testy integracyjne wizyt są podzielone na dostępność, tworzenie zgłoszeń, operacje
+  klienta, workflow personelu, naprawy i autoryzację. Wspólne dane testowe utrzymuje
+  `AppointmentIntegrationTestSupport`, a testy współbieżności pozostają osobnymi
+  klasami. Dodawaj scenariusz do klasy odpowiadającej jego przypadkowi użycia.
 - `AppointmentRequest` chroni dozwolone przejścia statusów. Serwisy aplikacyjne
   odpowiadają za transakcje, blokady, pobranie zależności oraz walidację danych
   wejściowych, a zmianę stanu wykonują przez metody encji.

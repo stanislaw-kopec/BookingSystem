@@ -28,15 +28,21 @@ import pl.autoserwis.appointment.schedule.dto.ScheduleSettingsRequest;
 import pl.autoserwis.appointment.schedule.persistence.ScheduleDayOverrideRepository;
 import pl.autoserwis.exception.ApiErrorCode;
 
-import java.time.*;
+import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static pl.autoserwis.DatabaseTestUsers.databaseUser;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static pl.autoserwis.DatabaseTestUsers.databaseUser;
 
 @SpringBootTest(properties = "spring.docker.compose.enabled=false")
 @AutoConfigureMockMvc
